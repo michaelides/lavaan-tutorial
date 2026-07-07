@@ -58,7 +58,8 @@ tutorials <- list(
   list(file = "tutorials/13-reporting.qmd",           title = "Reporting lavaan results",          subtitle = "APA write-ups, exporting tables with texreg, exporting path diagrams",        group = "Capstone",     order = 13, concept = FALSE),
   list(file = "tutorials/14-multilevel.qmd",          title = "Multilevel models",                 subtitle = "lme4 for MLM regression; lavaan for two-level SEM",                            group = "Advanced",     order = 14, concept = FALSE),
   list(file = "tutorials/15-growth.qmd",               title = "Growth curve models",              subtitle = "Latent growth in lavaan and growth in lme4; simulated longitudinal data",     group = "Advanced",     order = 15, concept = FALSE),
-  list(file = "tutorials/16-moderation.qmd",           title = "Moderation",                        subtitle = "Moderated regression with lm; multigroup lavaan; latent interaction (advanced)", group = "Advanced",     order = 16, concept = FALSE)
+  list(file = "tutorials/16-moderation.qmd",           title = "Moderation",                        subtitle = "Moderated regression with lm; multigroup SEM moderation; latent interaction (advanced)", group = "Advanced",     order = 16, concept = FALSE),
+  list(file = "tutorials/17-measurement-invariance.qmd", title = "Measurement invariance",          subtitle = "Multigroup CFA: configural, metric, scalar, and strict invariance; partial invariance; latent mean comparison", group = "Advanced", order = 17, concept = TRUE )
 )
 
 cross_cutting <- list(

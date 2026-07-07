@@ -12,7 +12,7 @@ Michaelides, G. (2026). *A step-by-step introduction to structural equation mode
 
 ## Audience
 
-MSc students in organisational psychology who are new to R, RStudio, and lavaan. The tutorials assume no prior R experience and walk the student through installing R, importing data, running simple inferential statistics (t-tests, ANOVA, regression), and then through the core lavaan toolkit: confirmatory factor analysis, path analysis, structural equation modelling, and mediation, with advanced coverage of multilevel models, growth curves, and moderation.
+MSc students in organisational psychology who are new to R, RStudio, and lavaan. The tutorials assume no prior R experience and walk the student through installing R, importing data, running simple inferential statistics (t-tests, ANOVA, regression), and then through the core lavaan toolkit: confirmatory factor analysis, path analysis, structural equation modelling, and mediation, with advanced coverage of multilevel models, growth curves, moderation, and measurement invariance.
 
 ## Author and attribution
 
@@ -24,7 +24,7 @@ This lavaan tutorial series is a port of teaching materials originally developed
 lavaan-tutorial/
 ├── _quarto.yml          Quarto site configuration
 ├── index.qmd            Landing page
-├── tutorials/           16 tutorial .qmd files in 5 sidebar groups
+├── tutorials/           17 tutorial .qmd files in 5 sidebar groups
 ├── data/                Teaching dataset (PS data) + data note
 ├── data-raw/            One-off scripts to build the .csv mirror and growth sim
 ├── assets/              Site CSS

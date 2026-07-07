@@ -82,6 +82,7 @@ website:
           - tutorials/14-multilevel.qmd
           - tutorials/15-growth.qmd
           - tutorials/16-moderation.qmd
+          - tutorials/17-measurement-invariance.qmd
 
   # --- Footer: author + institution + repository --------------------------
   page-footer:

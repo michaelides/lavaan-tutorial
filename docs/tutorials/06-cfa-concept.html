@@ -546,6 +546,12 @@ window.Quarto = {
  <span class="menu-text">Moderation</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/17-measurement-invariance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Measurement invariance</span></a>
+  </div>
+</li>
       </ul>
   </li>
     </ul>
@@ -671,8 +677,13 @@ window.Quarto = {
 <p>The path diagram looks like this:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
+<<<<<<< HEAD
 <div class="grViz html-widget html-fill-item" id="htmlwidget-246258495b8a8c093eec" style="width:85%;height:750px;"></div>
 <script type="application/json" data-for="htmlwidget-246258495b8a8c093eec">{"x":{"diagram":"\ndigraph {\n  graph [layout = neato]\n  node  [fontname = Helvetica, fontsize = 11]\n\n  PA  [label = \"PA\",  shape = ellipse, style = filled, fillcolor = \"#aed6f1\", pos = \"1.5,3!\"]\n  neg [label = \"neg\", shape = ellipse, style = filled, fillcolor = \"#aed6f1\", pos = \"5,3!\"]\n\n  pa1 [label = \"pa1\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"0,0!\"]\n  pa2 [label = \"pa2\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"1.5,0!\"]\n  pa3 [label = \"pa3\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"3,0!\"]\n\n  na1 [label = \"na1\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"4,0!\"]\n  na2 [label = \"na2\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"5.5,0!\"]\n  na3 [label = \"na3\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"7,0!\"]\n\n  PA -> pa1 [label = \"  λ\"]\n  PA -> pa2 [label = \"  λ\"]\n  PA -> pa3 [label = \"  λ\"]\n\n  neg -> na1 [label = \"  λ\"]\n  neg -> na2 [label = \"  λ\"]\n  neg -> na3 [label = \"  λ\"]\n\n  PA  -> neg [dir = both, label = \"  ψ\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+=======
+<div class="grViz html-widget html-fill-item" id="htmlwidget-0955a4f2f7167c3a03d8" style="width:85%;height:750px;"></div>
+<script type="application/json" data-for="htmlwidget-0955a4f2f7167c3a03d8">{"x":{"diagram":"\ndigraph {\n  graph [layout = neato]\n  node  [fontname = Helvetica, fontsize = 11]\n\n  PA  [label = \"PA\",  shape = ellipse, style = filled, fillcolor = \"#aed6f1\", pos = \"1.5,3!\"]\n  neg [label = \"neg\", shape = ellipse, style = filled, fillcolor = \"#aed6f1\", pos = \"5,3!\"]\n\n  pa1 [label = \"pa1\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"0,0!\"]\n  pa2 [label = \"pa2\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"1.5,0!\"]\n  pa3 [label = \"pa3\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"3,0!\"]\n\n  na1 [label = \"na1\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"4,0!\"]\n  na2 [label = \"na2\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"5.5,0!\"]\n  na3 [label = \"na3\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"7,0!\"]\n\n  PA -> pa1 [label = \"  λ\"]\n  PA -> pa2 [label = \"  λ\"]\n  PA -> pa3 [label = \"  λ\"]\n\n  neg -> na1 [label = \"  λ\"]\n  neg -> na2 [label = \"  λ\"]\n  neg -> na3 [label = \"  λ\"]\n\n  PA  -> neg [dir = both, label = \"  ψ\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+>>>>>>> bd17721 (add measurement invariance)
 <p>A two-factor CFA. Circles are latent factors (PA, neg); squares are observed indicators. Single-headed arrows from factors to indicators are factor loadings (λ). The double-headed arrow between the factors is their covariance (ψ). Small circles on each indicator are residual variances (θ).</p>
 </div>
 </div>

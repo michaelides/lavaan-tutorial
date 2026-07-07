@@ -38,6 +38,10 @@ Confirmatory factor analysis. A statistical technique for testing whether a hypo
 
 Variance shared between observed variables due to the measurement method (e.g. all items measured on the same Likert scale in the same questionnaire) rather than due to the latent construct. Can be modelled as residual covariances between items in CFA.
 
+### configural invariance {#configural-invariance}
+
+The weakest level of [measurement invariance](#measurement-invariance): the same factor structure (the same indicators loading on the same latent factors) holds in every group, but all parameters are freely estimated in each group. Also called *pattern* invariance. A prerequisite for testing stronger forms of invariance. See Tutorial 17.
+
 ### constraining parameters {#constraining}
 
 Forcing two or more model parameters to take the same value. In lavaan, achieved by labelling parameters with the same identifier — for example, `y ~ a*x1` and `z ~ a*x2` constrains the two regression coefficients to be equal.
@@ -154,6 +158,10 @@ Missing completely at random. The probability of a missing value is unrelated to
 
 The portion of an observed variable's variance that is not due to the latent construct — a combination of random error and item-specific systematic variance. Denoted $\theta$ (theta). Modelled as the residual variance of each indicator in CFA.
 
+### measurement invariance {#measurement-invariance}
+
+The property that the same measurement model — the same items measuring the same latent factors, with the same relationships between items and factors — holds in every group. Tested as a four-level hierarchy: [configural](#configural-invariance), [metric](#metric-invariance) (equal loadings), [scalar](#scalar-invariance) (equal loadings + intercepts), and [strict](#strict-invariance) (equal loadings + intercepts + residuals). A prerequisite for comparing latent means or structural paths across groups. See Tutorial 17.
+
 ### measurement model {#measurement-model}
 
 The part of a SEM that specifies how latent variables are measured by observed indicators — that is, the CFA portion of the model. Contrast with the [structural model](#structural-model).
@@ -161,6 +169,10 @@ The part of a SEM that specifies how latent variables are measured by observed i
 ### mediation {#mediation}
 
 A relationship in which an independent variable $X$ influences an outcome $Y$ through an intermediate variable $M$ (the mediator). The total effect of $X$ on $Y$ is decomposed into a direct effect ($c'$) and an indirect effect ($ab$). See Tutorials 11 and 12.
+
+### metric invariance {#metric-invariance}
+
+The second level of [measurement invariance](#measurement-invariance): factor loadings are equal across groups, in addition to the same factor structure ([configural invariance](#configural-invariance)). Also called *weak* invariance. Required before comparing structural paths or factor variances across groups. Tested in lavaan with `group.equal = "loadings"`. See Tutorial 17.
 
 ### missingness {#missingness}
 
@@ -177,6 +189,10 @@ Maximum likelihood with robust standard errors (Satorra–Bentler). The default 
 ### modification indices {#modification-indices}
 
 Statistics that estimate how much the model's $\chi^2$ would improve if a currently-fixed parameter were freely estimated. A value above 3.84 suggests a parameter worth considering for freeing ($\alpha = .05$). Should be used cautiously — they are data-driven and can lead to overfitting. In lavaan: `modindices(fit, minimum.value = 3.84, sort. = TRUE)`.
+
+### multigroup SEM {#multigroup-sem}
+
+A structural equation model fitted simultaneously in two or more groups, with parameters progressively constrained equal across groups. Used both for testing [measurement invariance](#measurement-invariance) (on the measurement model) and for testing moderation by a categorical variable (on the structural paths). Specified in lavaan with the `group` argument and `group.equal` / `group.partial`. See Tutorials 16 and 17.
 
 ## O
 
@@ -197,6 +213,10 @@ An aggregate — usually a mean or sum — of two or more items, used as a singl
 ### parameter {#parameter}
 
 A quantity in a model that is either estimated from the data ([free](#free-parameter)) or set by the researcher ([fixed](#fixed-parameter)). In SEM, parameters include factor loadings, regression coefficients, variances, and covariances.
+
+### partial invariance {#partial-invariance}
+
+A relaxed form of [measurement invariance](#measurement-invariance) in which most, but not all, parameters of a given type are equal across groups — for example, all but one or two factor loadings. As long as each factor retains at least two invariant indicators (the marker plus one other), the factor's scale remains comparable across groups and subsequent comparisons are interpretable. In lavaan, requested with `group.partial`. See Tutorial 17.
 
 ### path analysis {#path-analysis}
 
@@ -222,6 +242,10 @@ Root mean square error of approximation. A badness-of-fit index (lower is better
 
 See [just-identified](#just-identified).
 
+### scalar invariance {#scalar-invariance}
+
+The third level of [measurement invariance](#measurement-invariance): item intercepts are equal across groups, in addition to equal loadings ([metric invariance](#metric-invariance)). Also called *strong* invariance. Required before comparing **latent means** across groups, because equal intercepts fix the origin of each factor's scale. Tested in lavaan with `group.equal = c("loadings", "intercepts")`. See Tutorial 17.
+
 ### second-order factor {#second-order-factor}
 
 A latent variable whose indicators are themselves latent variables. For example, "burnout" might be a second-order factor measured by the first-order factors "emotional exhaustion" and "cynicism". See Tutorial 08.
@@ -245,6 +269,10 @@ Standardised root mean square residual. A badness-of-fit index (lower is better)
 ### standardised solution {#standardised-solution}
 
 Parameter estimates expressed in standard deviation units, so that loadings and path coefficients are comparable across variables on different scales. In lavaan: `summary(fit, standardized = TRUE)` or `standardizedSolution(fit)`. The `std.all` column fully standardises both observed and latent variables.
+
+### strict invariance {#strict-invariance}
+
+The strongest level of [measurement invariance](#measurement-invariance): item residual (measurement-error) variances are equal across groups, in addition to equal loadings and intercepts ([scalar invariance](#scalar-invariance)). Rarely required for substantive conclusions — scalar invariance is enough for comparing latent means — but tested for completeness. Tested in lavaan with `group.equal = c("loadings", "intercepts", "residuals")`. See Tutorial 17.
 
 ### structural model {#structural-model}
 

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+<<<<<<< HEAD
     <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/16-moderation.html</loc>
     <lastmod>2026-07-07T18:27:09.471Z</lastmod>
   </url>
@@ -75,13 +76,98 @@
   <url>
     <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/11-mediation-concept.html</loc>
     <lastmod>2026-07-07T18:27:09.471Z</lastmod>
+=======
+    <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/17-measurement-invariance.html</loc>
+    <lastmod>2026-07-07T18:59:52.685Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/15-growth.html</loc>
+    <lastmod>2026-07-07T10:54:04.784Z</lastmod>
+>>>>>>> bd17721 (add measurement invariance)
   </url>
   <url>
     <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/13-reporting.html</loc>
     <lastmod>2026-07-07T18:27:09.471Z</lastmod>
   </url>
   <url>
+<<<<<<< HEAD
     <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/15-growth.html</loc>
     <lastmod>2026-07-07T18:27:09.471Z</lastmod>
+=======
+    <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/11-mediation-concept.html</loc>
+    <lastmod>2026-07-07T10:45:44.882Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/09-path-analysis.html</loc>
+    <lastmod>2026-07-07T10:42:51.868Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/07-cfa-practical.html</loc>
+    <lastmod>2026-07-07T10:39:07.534Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/05-introducing-lavaan.html</loc>
+    <lastmod>2026-07-07T10:32:28.906Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/03-importing-data.html</loc>
+    <lastmod>2026-07-07T09:30:25.798Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/01-r-basics.html</loc>
+    <lastmod>2026-07-07T09:10:50.412Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/cheatsheet.html</loc>
+    <lastmod>2026-07-07T19:05:57.414Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/glossary.html</loc>
+    <lastmod>2026-07-07T19:05:17.035Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/index.html</loc>
+    <lastmod>2026-07-07T19:02:03.772Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/notation.html</loc>
+    <lastmod>2026-07-07T10:26:46.629Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/data/data-note.html</loc>
+    <lastmod>2026-07-07T10:27:58.311Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/02-rstudio.html</loc>
+    <lastmod>2026-07-07T09:16:23.428Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/04-simple-inference.html</loc>
+    <lastmod>2026-07-07T10:23:42.193Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/06-cfa-concept.html</loc>
+    <lastmod>2026-07-07T10:35:52.006Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/08-parcels-second-order.html</loc>
+    <lastmod>2026-07-07T10:41:22.007Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/10-sem-latent.html</loc>
+    <lastmod>2026-07-07T10:44:24.721Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/12-mediation-practical.html</loc>
+    <lastmod>2026-07-07T10:46:48.791Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/14-multilevel.html</loc>
+    <lastmod>2026-07-07T10:52:09.444Z</lastmod>
+  </url>
+  <url>
+    <loc>https://michaelides.github.io/lavaan-tutorial/tutorials/16-moderation.html</loc>
+    <lastmod>2026-07-07T19:01:20.717Z</lastmod>
+>>>>>>> bd17721 (add measurement invariance)
   </url>
 </urlset>

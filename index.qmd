@@ -17,10 +17,10 @@ East Anglia**.
 
 You are new to R, RStudio, and lavaan. You may have used SPSS before, but we will
 not assume that — every concept is taught from the ground up in R/lavaan. By the
-end of the 16 tutorials you will be able to specify, estimate, and report
+end of the 17 tutorials you will be able to specify, estimate, and report
 confirmatory factor analyses, path models, structural equation models, and
-mediation models in lavaan, and you will have a path into multilevel, growth, and
-moderation analyses.
+mediation models in lavaan, and you will have a path into multilevel, growth,
+moderation, and measurement-invariance analyses.
 
 ## Tutorials at a glance
 
@@ -100,18 +100,21 @@ digraph {
   t07 -> t13 [style = dashed, constraint = false, color = '#f39c12']
   t08 -> t13 [style = dashed, constraint = false, color = '#f39c12']
 
-  /* ---------- Advanced (14-16): two independent tracks ---------- */
+  /* ---------- Advanced (14-17): two independent tracks ---------- */
   subgraph cluster_A {
-    label = 'Advanced (14-16)'; style = filled; color = '#fadbd8'; fontsize = 10; labeljust = l
+    label = 'Advanced (14-17)'; style = filled; color = '#fadbd8'; fontsize = 10; labeljust = l
     t14 [label = '14\nMultilevel', fillcolor = '#fadbd8']
     t15 [label = '15\nGrowth\ncurves', fillcolor = '#fadbd8']
     t16 [label = '16\nModeration', fillcolor = '#fadbd8']
+    t17 [label = '17\nMeasurement\ninvariance', fillcolor = '#fadbd8']
     t14 -> t15
-    { rank = same; t14; t15; t16 }
+    t16 -> t17
+    { rank = same; t14; t15; t16; t17 }
   }
   t13 -> t14
   t13 -> t16 [style = dashed, color = '#c0392b']
   t12 -> t16 [style = dashed, constraint = false, color = '#c0392b']
+  t07 -> t17 [style = dashed, constraint = false, color = '#c0392b']
 }
 ", height = 600)
 ```
@@ -120,7 +123,7 @@ digraph {
 - **Bridging (5)** — Introducing lavaan: declarative model specification.
 - **Core lavaan (6–12)** — CFA, parcels and second-order factors, path analysis, SEM with latents, mediation.
 - **Capstone (13)** — Reporting and exporting tables, figures, and APA write-ups.
-- **Advanced (14–16)** — Multilevel models, growth curve models, moderation.
+- **Advanced (14–17)** — Multilevel models, growth curve models, moderation, measurement invariance.
 
 Start with **Tutorial 01** and work through in order; the later tutorials build on
 the dataset and concepts introduced earlier. You can also jump to any tutorial

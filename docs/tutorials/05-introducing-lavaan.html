@@ -546,6 +546,12 @@ window.Quarto = {
  <span class="menu-text">Moderation</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/17-measurement-invariance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Measurement invariance</span></a>
+  </div>
+</li>
       </ul>
   </li>
     </ul>
@@ -1051,8 +1057,13 @@ Note
 <p>The model we just fitted — one latent factor measured by three indicators — looks like this:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
+<<<<<<< HEAD
 <div class="grViz html-widget html-fill-item" id="htmlwidget-5abc52342bd4c2a88d24" style="width:70%;height:750px;"></div>
 <script type="application/json" data-for="htmlwidget-5abc52342bd4c2a88d24">{"x":{"diagram":"\ndigraph {\n  graph [layout = neato, rankdir = TB]\n  node  [fontname = Helvetica, fontsize = 11]\n\n  PA  [label = \"PA\", shape = ellipse, style = filled, fillcolor = \"#aed6f1\", pos = \"1.5,2!\"]\n  pa1 [label = \"pa1\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"0,0!\"]\n  pa2 [label = \"pa2\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"1.5,0!\"]\n  pa3 [label = \"pa3\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"3,0!\"]\n\n  e1  [label = \"\", shape = circle, style = filled, fillcolor = \"#d5dbdb\", width = 0.2, pos = \"0,1!\"]\n  e2  [label = \"\", shape = circle, style = filled, fillcolor = \"#d5dbdb\", width = 0.2, pos = \"1.5,1!\"]\n  e3  [label = \"\", shape = circle, style = filled, fillcolor = \"#d5dbdb\", width = 0.2, pos = \"3,1!\"]\n\n  PA -> pa1 [label = \"  λ1\"]\n  PA -> pa2 [label = \"  λ2\"]\n  PA -> pa3 [label = \"  λ3\"]\n\n  e1 -> pa1\n  e2 -> pa2\n  e3 -> pa3\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+=======
+<div class="grViz html-widget html-fill-item" id="htmlwidget-fd0b0495e64e015c41e1" style="width:70%;height:750px;"></div>
+<script type="application/json" data-for="htmlwidget-fd0b0495e64e015c41e1">{"x":{"diagram":"\ndigraph {\n  graph [layout = neato, rankdir = TB]\n  node  [fontname = Helvetica, fontsize = 11]\n\n  PA  [label = \"PA\", shape = ellipse, style = filled, fillcolor = \"#aed6f1\", pos = \"1.5,2!\"]\n  pa1 [label = \"pa1\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"0,0!\"]\n  pa2 [label = \"pa2\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"1.5,0!\"]\n  pa3 [label = \"pa3\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"3,0!\"]\n\n  e1  [label = \"\", shape = circle, style = filled, fillcolor = \"#d5dbdb\", width = 0.2, pos = \"0,1!\"]\n  e2  [label = \"\", shape = circle, style = filled, fillcolor = \"#d5dbdb\", width = 0.2, pos = \"1.5,1!\"]\n  e3  [label = \"\", shape = circle, style = filled, fillcolor = \"#d5dbdb\", width = 0.2, pos = \"3,1!\"]\n\n  PA -> pa1 [label = \"  λ1\"]\n  PA -> pa2 [label = \"  λ2\"]\n  PA -> pa3 [label = \"  λ3\"]\n\n  e1 -> pa1\n  e2 -> pa2\n  e3 -> pa3\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+>>>>>>> bd17721 (add measurement invariance)
 <p>A one-factor CFA with three indicators. The circle is the latent variable PA; the squares are the observed indicators. Arrows from the latent factor to the indicators are the factor loadings (λ). The small circles on each indicator are the residual variances (θ).</p>
 </div>
 </div>

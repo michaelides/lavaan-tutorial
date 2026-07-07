@@ -82,6 +82,35 @@ Pass these arguments to `cfa()`, `sem()`, or `lavaan()`:
 | `anova(fit1, fit2)` | Likelihood-ratio test between nested models | `anova(fit1, fit2)` |
 | `lavTestScore(fit)` | Score test for freeing fixed parameters | `lavTestScore(fit)` |
 
+## Multigroup and measurement invariance
+
+Fitting a model in several groups at once and testing whether parameters are equal across them. Used both for measurement invariance testing (Tutorial 17) and for moderation by a categorical variable (Tutorial 16).
+
+| Argument / function | Effect | Example |
+|---------------------|--------|---------|
+| `group = "gender"` | Fit the model separately in each group, freely by default | `cfa(model, data = df, group = "gender")` |
+| `group.equal = "loadings"` | Constrain factor loadings equal across groups (metric / weak invariance) | `cfa(model, data = df, group = "g", group.equal = "loadings")` |
+| `group.equal = c("loadings", "intercepts")` | Add equal item intercepts (scalar / strong invariance) | `cfa(model, data = df, group = "g", group.equal = c("loadings", "intercepts"))` |
+| `group.equal = c("loadings", "intercepts", "residuals")` | Add equal residual variances (strict invariance) | `cfa(model, data = df, group = "g", group.equal = c("loadings", "intercepts", "residuals"))` |
+| `group.partial = c("PA =~ pa3")` | Release specific equality constraints (partial invariance) | `cfa(model, data = df, group = "g", group.equal = "loadings", group.partial = c("PA =~ pa3"))` |
+| `meanstructure = TRUE` | Estimate intercepts and latent means (required for scalar invariance and latent-mean comparison) | `cfa(model, data = df, group = "g", group.equal = c("loadings","intercepts"), meanstructure = TRUE)` |
+| `lavTestLRT(fit1, fit2)` | Scaled $\chi^2$ difference test between nested multigroup models | `lavTestLRT(fit_config, fit_metric)` |
+| `lavTestScore(fit)$uni` | Univariate score tests: which equality constraints to release for partial invariance | `lavTestScore(fit_metric)$uni` |
+
+The invariance hierarchy, tested in order:
+
+```r
+fit_config <- cfa(model, data = df, group = "g", estimator = "MLR")              # 1. configural
+fit_metric <- cfa(model, data = df, group = "g", group.equal = "loadings",       # 2. metric (weak)
+                  estimator = "MLR")
+fit_scalar <- cfa(model, data = df, group = "g",                                  # 3. scalar (strong)
+                  group.equal = c("loadings", "intercepts"), estimator = "MLR")
+lavTestLRT(fit_config, fit_metric)   # non-sig => metric invariance holds
+lavTestLRT(fit_metric, fit_scalar)   # non-sig => scalar invariance holds
+```
+
+Supplement each LRT with fit-index change criteria (@chen2007): $\Delta$CFI $\leq .010$ and $\Delta$RMSEA $\leq .015$ indicate the constraint does not meaningfully worsen fit.
+
 ## Tables and figures
 
 | Function | What it does | Example |

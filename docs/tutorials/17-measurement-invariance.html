@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="George Michaelides">
+<meta name="dcterms.date" content="2026-01-01">
+
+<title>Measurement invariance – A Step-by-Step Introduction to Structural Equation Modeling with lavaan in R</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../tutorials/16-moderation.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-5dad907783eb94222aa6c9b08b9eb4a6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-bc5b62d811c1c94b7e95d620c4441ad7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-5dad907783eb94222aa6c9b08b9eb4a6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "textbox",
+  "limit": 15,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="../site_libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<script src="../site_libs/viz-1.8.2/viz.js"></script>
+<link href="../site_libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet">
+<script src="../site_libs/grViz-binding-1.0.12/grViz.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../assets/styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">A Step-by-Step Introduction to Structural Equation Modeling with lavaan in R</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../glossary.html"> 
+<span class="menu-text">Glossary</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../notation.html"> 
+<span class="menu-text">Notation</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../cheatsheet.html"> 
+<span class="menu-text">Cheat sheet</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/michaelides/lavaan-tutorial"> <i class="bi bi-github" role="img" aria-label="GitHub repository">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../tutorials/14-multilevel.html">Advanced</a></li><li class="breadcrumb-item"><a href="../tutorials/17-measurement-invariance.html">Measurement invariance</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Foundations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/01-r-basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">R basics</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/02-rstudio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">RStudio</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/03-importing-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Importing data</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/04-simple-inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Simple inference: t-test, ANOVA, lm</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Bridging</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/05-introducing-lavaan.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducing lavaan</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Core lavaan</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/06-cfa-concept.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CFA — concept</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/07-cfa-practical.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CFA — practical</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/08-parcels-second-order.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Parcels and second-order CFA</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/09-path-analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Path analysis with observed variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/10-sem-latent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SEM with latent variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/11-mediation-concept.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mediation — concept</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/12-mediation-practical.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mediation — practical</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Capstone</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/13-reporting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Reporting lavaan results</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Advanced</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/14-multilevel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multilevel models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/15-growth.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Growth curve models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/16-moderation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Moderation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/17-measurement-invariance.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Measurement invariance</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives">Learning objectives</a></li>
+  <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup">Setup</a></li>
+  <li><a href="#what-is-measurement-invariance" id="toc-what-is-measurement-invariance" class="nav-link" data-scroll-target="#what-is-measurement-invariance">What is measurement invariance?</a>
+  <ul class="collapse">
+  <li><a href="#why-it-matters" id="toc-why-it-matters" class="nav-link" data-scroll-target="#why-it-matters">Why it matters</a></li>
+  <li><a href="#the-four-levels" id="toc-the-four-levels" class="nav-link" data-scroll-target="#the-four-levels">The four levels</a></li>
+  </ul></li>
+  <li><a href="#specifying-a-multigroup-model-in-lavaan" id="toc-specifying-a-multigroup-model-in-lavaan" class="nav-link" data-scroll-target="#specifying-a-multigroup-model-in-lavaan">Specifying a multigroup model in lavaan</a></li>
+  <li><a href="#testing-the-invariance-hierarchy" id="toc-testing-the-invariance-hierarchy" class="nav-link" data-scroll-target="#testing-the-invariance-hierarchy">Testing the invariance hierarchy</a>
+  <ul class="collapse">
+  <li><a href="#metric-weak-invariance-equal-loadings" id="toc-metric-weak-invariance-equal-loadings" class="nav-link" data-scroll-target="#metric-weak-invariance-equal-loadings">Metric (weak) invariance — equal loadings</a></li>
+  <li><a href="#supplementing-the-lrt-with-fit-index-change-criteria" id="toc-supplementing-the-lrt-with-fit-index-change-criteria" class="nav-link" data-scroll-target="#supplementing-the-lrt-with-fit-index-change-criteria">Supplementing the LRT with fit-index change criteria</a></li>
+  </ul></li>
+  <li><a href="#partial-invariance" id="toc-partial-invariance" class="nav-link" data-scroll-target="#partial-invariance">Partial invariance</a>
+  <ul class="collapse">
+  <li><a href="#identifying-the-non-invariant-parameters" id="toc-identifying-the-non-invariant-parameters" class="nav-link" data-scroll-target="#identifying-the-non-invariant-parameters">Identifying the non-invariant parameters</a></li>
+  <li><a href="#fitting-a-partial-metric-model" id="toc-fitting-a-partial-metric-model" class="nav-link" data-scroll-target="#fitting-a-partial-metric-model">Fitting a partial metric model</a></li>
+  <li><a href="#scalar-strong-invariance-adding-equal-intercepts" id="toc-scalar-strong-invariance-adding-equal-intercepts" class="nav-link" data-scroll-target="#scalar-strong-invariance-adding-equal-intercepts">Scalar (strong) invariance — adding equal intercepts</a></li>
+  <li><a href="#strict-invariance-optional" id="toc-strict-invariance-optional" class="nav-link" data-scroll-target="#strict-invariance-optional">Strict invariance (optional)</a></li>
+  </ul></li>
+  <li><a href="#comparing-latent-means-across-groups" id="toc-comparing-latent-means-across-groups" class="nav-link" data-scroll-target="#comparing-latent-means-across-groups">Comparing latent means across groups</a></li>
+  <li><a href="#reporting-measurement-invariance" id="toc-reporting-measurement-invariance" class="nav-link" data-scroll-target="#reporting-measurement-invariance">Reporting measurement invariance</a></li>
+  <li><a href="#common-errors" id="toc-common-errors" class="nav-link" data-scroll-target="#common-errors">Common errors</a></li>
+  <li><a href="#summary-next-tutorial" id="toc-summary-next-tutorial" class="nav-link" data-scroll-target="#summary-next-tutorial">Summary &amp; next tutorial</a></li>
+  <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading">Further reading</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/michaelides/lavaan-tutorial/edit/main/tutorials/17-measurement-invariance.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/michaelides/lavaan-tutorial/blob/main/tutorials/17-measurement-invariance.qmd" class="toc-action"><i class="bi empty"></i>View source</a></li><li><a href="https://github.com/michaelides/lavaan-tutorial/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../tutorials/14-multilevel.html">Advanced</a></li><li class="breadcrumb-item"><a href="../tutorials/17-measurement-invariance.html">Measurement invariance</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Measurement invariance</h1>
+<p class="subtitle lead">Multigroup CFA: configural, metric, scalar, and strict invariance; partial invariance; latent mean comparison</p>
+</div>
+
+
+<div class="quarto-title-meta-author">
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author">George Michaelides </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            School of Psychology, University of East Anglia
+          </p>
+      </div>
+  </div>
+
+<div class="quarto-title-meta">
+
+      
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">January 1, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="learning-objectives" class="level2">
+<h2 class="anchored" data-anchor-id="learning-objectives">Learning objectives</h2>
+<p>By the end of this tutorial you will be able to:</p>
+<ul>
+<li>explain what <a href="https://en.wikipedia.org/wiki/Measurement_invariance">measurement invariance</a> is and why it is a prerequisite for comparing latent means or structural paths across groups</li>
+<li>fit a multigroup CFA in lavaan and read the per-group output</li>
+<li>test the four-level invariance hierarchy (configural, metric, scalar, strict) using <code>group.equal</code> and <code>lavTestLRT()</code></li>
+<li>supplement the likelihood-ratio test with fit-index change criteria (<span class="math inline">\(\Delta\)</span>CFI, <span class="math inline">\(\Delta\)</span>RMSEA)</li>
+<li>diagnose and handle <strong>partial invariance</strong> by freeing specific non-invariant parameters with <code>group.partial</code></li>
+<li>compare latent means across groups once (partial) scalar invariance is established</li>
+<li>report a measurement-invariance analysis in APA format</li>
+</ul>
+</section>
+<section id="setup" class="level2">
+<h2 class="anchored" data-anchor-id="setup">Setup</h2>
+<details>
+<summary>
+Setup code (you have seen this before)
+</summary>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lavaan)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</details>
+<p>We use the same two-factor Positive Affect (PA) / Negative Affect (<code>neg</code>) measurement model introduced in Tutorial 07, fitted separately for males and females. There are 178 males and 154 females in the <code>ps</code> dataset — enough per group for a stable multigroup CFA.</p>
+</section>
+<section id="what-is-measurement-invariance" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-measurement-invariance">What is measurement invariance?</h2>
+<p><a href="https://en.wikipedia.org/wiki/Measurement_invariance">Measurement invariance</a> means that the <strong>same measurement model</strong> holds in every group. Concretely: the same items measure the same latent factors, with the same relationships between items and factors, in males and females, or in any other groups you want to compare.</p>
+<section id="why-it-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-it-matters">Why it matters</h3>
+<p>Suppose you find that females score higher than males on a “positive affect” factor. Before you interpret that as a real psychological difference, you must rule out a measurement artefact: maybe the items <em>load differently</em> on the factor in the two groups, so a “unit” of PA is not the same quantity for males and females. Measurement invariance testing establishes whether the measurement model is equivalent across groups. Without it, any group difference in latent means or structural paths could be a difference in <em>what the items measure</em>, not a difference in <em>the construct itself</em>.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Measurement invariance is a prerequisite for group comparison
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Before you can compare latent means or structural paths across groups, you must establish that the measurement model is equivalent — that the same items measure the same factors in the same way in both groups. This is what measurement invariance testing does. Without it, observed group differences could be due to measurement artefacts rather than true group differences. We introduced this idea in Tutorial 16; here we develop it fully.</p>
+</div>
+</div>
+</section>
+<section id="the-four-levels" class="level3">
+<h3 class="anchored" data-anchor-id="the-four-levels">The four levels</h3>
+<p>Measurement invariance is tested as a <strong>hierarchy</strong>: you start with the most liberal model and progressively constrain parameters to be equal across groups, checking at each step whether the constraint damages fit.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 20%">
+<col style="width: 41%">
+<col style="width: 27%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Level</th>
+<th>Also called</th>
+<th>What is constrained equal</th>
+<th>What it licenses</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Configural</strong></td>
+<td>pattern</td>
+<td>Same factor structure (same items on same factors)</td>
+<td>Comparing model <em>form</em> across groups</td>
+</tr>
+<tr class="even">
+<td><strong>Metric</strong></td>
+<td>weak</td>
+<td>Factor <strong>loadings</strong></td>
+<td>Comparing structural paths / variances across groups</td>
+</tr>
+<tr class="odd">
+<td><strong>Scalar</strong></td>
+<td>strong</td>
+<td>Loadings + item <strong>intercepts</strong></td>
+<td>Comparing <strong>latent means</strong> across groups</td>
+</tr>
+<tr class="even">
+<td><strong>Strict</strong></td>
+<td>strict</td>
+<td>Loadings + intercepts + <strong>residual variances</strong></td>
+<td>Comparing observed score variances</td>
+</tr>
+</tbody>
+</table>
+<p>Each level nests inside the one above it: scalar invariance implies metric invariance implies configural invariance. You test them in order, and you stop when a constraint clearly damages fit.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="htmlwidget-4a56f16f3ed59bc719da" style="width:85%;height:420px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-4a56f16f3ed59bc719da">{"x":{"diagram":"\ndigraph {\n  graph [rankdir = TB, fontsize = 10, fontname = Helvetica,\n         compound = true, nodesep = 0.3, ranksep = 0.35]\n  node  [shape = box, style = \"filled,rounded\", fontname = Helvetica,\n         fontsize = 10, margin = \"0.12,0.06\", penwidth = 1]\n  edge  [color = \"#2c3e50\", arrowsize = 0.8, penwidth = 1.1]\n\n  cfg  [label = \"Configural\nSame structure\",           fillcolor = \"#d6eaf8\"]\n  met  [label = \"Metric (weak)\n+ equal loadings\",      fillcolor = \"#d5dbdb\"]\n  sca  [label = \"Scalar (strong)\n+ equal intercepts\",  fillcolor = \"#fadbd8\"]\n  str  [label = \"Strict\n+ equal residuals\",            fillcolor = \"#f2d7d5\"]\n\n  cfg -> met -> sca -> str\n\n  l1 [label = \"compare structure\",  shape = plaintext, fontsize = 9, fontcolor = \"#566573\"]\n  l2 [label = \"compare paths/variances\", shape = plaintext, fontsize = 9, fontcolor = \"#566573\"]\n  l3 [label = \"compare latent means\",     shape = plaintext, fontsize = 9, fontcolor = \"#566573\"]\n  l4 [label = \"compare observed variances\", shape = plaintext, fontsize = 9, fontcolor = \"#566573\"]\n\n  { rank = same; met; l2 }\n  { rank = same; sca; l3 }\n  { rank = same; str; l4 }\n  { rank = same; cfg; l1 }\n\n  cfg -> l1 [style = invis]\n  met -> l2 [style = invis]\n  sca -> l3 [style = invis]\n  str -> l4 [style = invis]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<p>The measurement-invariance hierarchy. Each level adds equality constraints and licenses a stronger kind of cross-group comparison.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="specifying-a-multigroup-model-in-lavaan" class="level2">
+<h2 class="anchored" data-anchor-id="specifying-a-multigroup-model-in-lavaan">Specifying a multigroup model in lavaan</h2>
+<p>The measurement model is the two-factor CFA from Tutorial 07:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>model_cfa <span class="ot">&lt;-</span> <span class="st">'</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="st">  PA  =~ pa1 + pa2 + pa3</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="st">  neg =~ na1 + na2 + na3</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="st">  PA  ~~ neg</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="st">'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>To fit it for both groups at once, pass the <code>group</code> argument to <code>cfa()</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>fit_config <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model_cfa, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>, <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit_config, <span class="at">standardized =</span> <span class="cn">TRUE</span>, <span class="at">fit.measures =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>## lavaan 0.6-21 ended normally after 37 iterations
+## 
+##   Estimator                                         ML
+##   Optimization method                           NLMINB
+##   Number of model parameters                        38
+## 
+##   Number of observations per group:               Used       Total
+##     Female                                         152         154
+##     Male                                           178         178
+## 
+## Model Test User Model:
+##                                               Standard      Scaled
+##   Test Statistic                                17.150      17.710
+##   Degrees of freedom                                16          16
+##   P-value (Chi-square)                           0.376       0.341
+##   Scaling correction factor                                  0.968
+##     Yuan-Bentler correction (Mplus variant)                       
+##   Test statistic for each group:
+##     Female                                       6.244       6.244
+##     Male                                        11.466      11.466
+## 
+## Model Test Baseline Model:
+## 
+##   Test statistic                              1020.405     987.924
+##   Degrees of freedom                                30          30
+##   P-value                                        0.000       0.000
+##   Scaling correction factor                                  1.033
+## 
+## User Model versus Baseline Model:
+## 
+##   Comparative Fit Index (CFI)                    0.999       0.998
+##   Tucker-Lewis Index (TLI)                       0.998       0.997
+##                                                                   
+##   Robust Comparative Fit Index (CFI)                         0.998
+##   Robust Tucker-Lewis Index (TLI)                            0.997
+## 
+## Loglikelihood and Information Criteria:
+## 
+##   Loglikelihood user model (H0)              -2594.689   -2594.689
+##   Scaling correction factor                                  0.963
+##       for the MLR correction                                      
+##   Loglikelihood unrestricted model (H1)      -2586.114   -2586.114
+##   Scaling correction factor                                  0.965
+##       for the MLR correction                                      
+##                                                                   
+##   Akaike (AIC)                                5265.378    5265.378
+##   Bayesian (BIC)                              5409.744    5409.744
+##   Sample-size adjusted Bayesian (SABIC)       5289.207    5289.207
+## 
+## Root Mean Square Error of Approximation:
+## 
+##   RMSEA                                          0.021       0.025
+##   90 Percent confidence interval - lower         0.000       0.000
+##   90 Percent confidence interval - upper         0.076       0.079
+##   P-value H_0: RMSEA &lt;= 0.050                    0.747       0.714
+##   P-value H_0: RMSEA &gt;= 0.080                    0.037       0.047
+##                                                                   
+##   Robust RMSEA                                               0.025
+##   90 Percent confidence interval - lower                     0.000
+##   90 Percent confidence interval - upper                     0.077
+##   P-value H_0: Robust RMSEA &lt;= 0.050                         0.728
+##   P-value H_0: Robust RMSEA &gt;= 0.080                         0.039
+## 
+## Standardized Root Mean Square Residual:
+## 
+##   SRMR                                           0.021       0.021
+## 
+## Parameter Estimates:
+## 
+##   Standard errors                             Sandwich
+##   Information bread                           Observed
+##   Observed information based on                Hessian
+## 
+## 
+## Group 1 [Female]:
+## 
+## Latent Variables:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##   PA =~                                                                 
+##     pa1               1.000                               1.098    0.879
+##     pa2               0.949    0.076   12.544    0.000    1.041    0.789
+##     pa3               0.941    0.072   13.128    0.000    1.033    0.843
+##   neg =~                                                                
+##     na1               1.000                               0.901    0.847
+##     na2               1.073    0.085   12.552    0.000    0.967    0.872
+##     na3               1.026    0.088   11.699    0.000    0.925    0.808
+## 
+## Covariances:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##   PA ~~                                                                 
+##     neg              -0.429    0.111   -3.857    0.000   -0.433   -0.433
+## 
+## Intercepts:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##    .pa1               3.421    0.101   33.774    0.000    3.421    2.739
+##    .pa2               3.276    0.107   30.627    0.000    3.276    2.484
+##    .pa3               3.309    0.099   33.278    0.000    3.309    2.699
+##    .na1               2.895    0.086   33.519    0.000    2.895    2.719
+##    .na2               2.796    0.090   31.106    0.000    2.796    2.523
+##    .na3               2.638    0.093   28.419    0.000    2.638    2.305
+## 
+## Variances:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##    .pa1               0.355    0.075    4.762    0.000    0.355    0.228
+##    .pa2               0.655    0.105    6.214    0.000    0.655    0.377
+##    .pa3               0.435    0.080    5.429    0.000    0.435    0.290
+##    .na1               0.321    0.058    5.559    0.000    0.321    0.283
+##    .na2               0.293    0.067    4.379    0.000    0.293    0.239
+##    .na3               0.455    0.067    6.817    0.000    0.455    0.347
+##     PA                1.205    0.157    7.697    0.000    1.000    1.000
+##     neg               0.812    0.115    7.035    0.000    1.000    1.000
+## 
+## 
+## Group 2 [Male]:
+## 
+## Latent Variables:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##   PA =~                                                                 
+##     pa1               1.000                               0.829    0.774
+##     pa2               1.076    0.105   10.229    0.000    0.892    0.729
+##     pa3               1.288    0.125   10.272    0.000    1.067    0.871
+##   neg =~                                                                
+##     na1               1.000                               0.982    0.852
+##     na2               0.828    0.076   10.955    0.000    0.814    0.771
+##     na3               0.958    0.071   13.502    0.000    0.941    0.864
+## 
+## Covariances:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##   PA ~~                                                                 
+##     neg              -0.346    0.084   -4.109    0.000   -0.426   -0.426
+## 
+## Intercepts:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##    .pa1               3.820    0.080   47.581    0.000    3.820    3.566
+##    .pa2               3.500    0.092   38.163    0.000    3.500    2.860
+##    .pa3               3.590    0.092   39.102    0.000    3.590    2.931
+##    .na1               2.685    0.086   31.090    0.000    2.685    2.330
+##    .na2               2.652    0.079   33.509    0.000    2.652    2.512
+##    .na3               2.590    0.082   31.732    0.000    2.590    2.378
+## 
+## Variances:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##    .pa1               0.461    0.066    6.964    0.000    0.461    0.402
+##    .pa2               0.702    0.095    7.405    0.000    0.702    0.469
+##    .pa3               0.361    0.096    3.773    0.000    0.361    0.241
+##    .na1               0.364    0.070    5.224    0.000    0.364    0.274
+##    .na2               0.453    0.067    6.732    0.000    0.453    0.406
+##    .na3               0.301    0.057    5.238    0.000    0.301    0.254
+##     PA                0.687    0.119    5.755    0.000    1.000    1.000
+##     neg               0.964    0.126    7.680    0.000    1.000    1.000</code></pre>
+</div>
+</div>
+<p>By default lavaan fits the <strong>configural invariance</strong> model — the same factor structure in both groups, but all parameters (loadings, intercepts, residual variances, factor variances/covariances) freely estimated in each group. The output shows a separate parameter block for each group. The fit is good (<span class="math inline">\(\chi^2(16) = 17.15\)</span>, <span class="math inline">\(p = .376\)</span>, CFI = .999, RMSEA = .021), so the same two-factor structure is tenable in both males and females. Configural invariance holds.</p>
+</section>
+<section id="testing-the-invariance-hierarchy" class="level2">
+<h2 class="anchored" data-anchor-id="testing-the-invariance-hierarchy">Testing the invariance hierarchy</h2>
+<p>To test whether the parameters are equivalent across groups, progressively constrain them with the <code>group.equal</code> argument and compare each model to the previous one with <code>lavTestLRT()</code> (the scaled likelihood-ratio test for <code>MLR</code> models — see Tutorial 13).</p>
+<section id="metric-weak-invariance-equal-loadings" class="level3">
+<h3 class="anchored" data-anchor-id="metric-weak-invariance-equal-loadings">Metric (weak) invariance — equal loadings</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Metric invariance: constrain all loadings equal across groups</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>fit_metric <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model_cfa, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">group.equal =</span> <span class="st">"loadings"</span>, <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">lavTestLRT</span>(fit_config, fit_metric)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>## 
+## Scaled Chi-Squared Difference Test (method = "satorra.bentler.2001")
+## 
+## lavaan-&gt;lavTestLRT():  
+##    lavaan NOTE: The "Chisq" column contains standard test statistics, not the 
+##    robust test that should be reported per model. A robust difference test is 
+##    a function of two standard (not robust) statistics.
+## 
+##            Df    AIC    BIC  Chisq Chisq diff   RMSEA Df diff Pr(&gt;Chisq)  
+## fit_config 16 5265.4 5409.7 17.150                                        
+## fit_metric 20 5268.1 5397.2 27.835     12.714 0.10534       4    0.01276 *
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+<p>The scaled <span class="math inline">\(\chi^2\)</span> difference is significant (<span class="math inline">\(\Delta\chi^2 = 12.71\)</span>, <span class="math inline">\(\Delta df = 4\)</span>, <span class="math inline">\(p = .013\)</span>): by the strict likelihood-ratio test, the loadings are <strong>not</strong> equivalent across groups, and metric invariance does not hold. Before we decide what to do, compare the fit indices:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rbind</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">configural =</span> <span class="fu">fitMeasures</span>(fit_config, <span class="fu">c</span>(<span class="st">"cfi"</span>, <span class="st">"rmsea"</span>)),</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">metric     =</span> <span class="fu">fitMeasures</span>(fit_metric, <span class="fu">c</span>(<span class="st">"cfi"</span>, <span class="st">"rmsea"</span>))</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>##                  cfi      rmsea
+## configural 0.9988387 0.02087302
+## metric     0.9920891 0.04872611</code></pre>
+</div>
+</div>
+<p>CFI drops from .999 to .992 (<span class="math inline">\(\Delta\)</span>CFI = .007) and RMSEA rises from .021 to .049 (<span class="math inline">\(\Delta\)</span>RMSEA = .028).</p>
+</section>
+<section id="supplementing-the-lrt-with-fit-index-change-criteria" class="level3">
+<h3 class="anchored" data-anchor-id="supplementing-the-lrt-with-fit-index-change-criteria">Supplementing the LRT with fit-index change criteria</h3>
+<p>With anything but the smallest samples, the <span class="math inline">\(\chi^2\)</span> difference test is overpowered — it flags as “significant” constraints that differ only trivially. A widely used supplement is <strong>change in fit indices</strong>. <span class="citation" data-cites="chen2007">Chen (<a href="#ref-chen2007" role="doc-biblioref">2007</a>)</span>’s simulation-based criteria, for two groups and <span class="math inline">\(N\)</span> in the hundreds, are:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Index</th>
+<th>Criterion for invariance to hold</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\Delta\)</span>CFI</td>
+<td><span class="math inline">\(\leq .010\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\Delta\)</span>RMSEA</td>
+<td><span class="math inline">\(\leq .015\)</span></td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>The LRT and the fit-index criteria can disagree
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Here they do. The LRT says metric invariance fails (<span class="math inline">\(p = .013\)</span>). But <span class="math inline">\(\Delta\)</span>CFI = .007 is below the .010 threshold, while <span class="math inline">\(\Delta\)</span>RMSEA = .028 exceeds the .015 threshold. The two indices disagree. This is common in real data and is exactly the situation <strong>partial invariance</strong> analysis was designed for: rather than abandon metric invariance, we ask <em>which</em> loadings differ and free just those.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="partial-invariance" class="level2">
+<h2 class="anchored" data-anchor-id="partial-invariance">Partial invariance</h2>
+<p><strong>Partial invariance</strong> holds when most, but not all, of a parameter type is equivalent across groups — for example, when most loadings are equal but one or two differ. <span class="citation" data-cites="byrne1989">Byrne et al. (<a href="#ref-byrne1989" role="doc-biblioref">1989</a>)</span> argued that as long as at least two loadings per factor (the marker plus at least one other) are invariant, the factor’s scale is comparable across groups and subsequent comparisons are interpretable.</p>
+<section id="identifying-the-non-invariant-parameters" class="level3">
+<h3 class="anchored" data-anchor-id="identifying-the-non-invariant-parameters">Identifying the non-invariant parameters</h3>
+<p>The correct lavaan tool for finding equality constraints to release is <code>lavTestScore()</code>, which gives a univariate score test for each constrained parameter:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lavTestScore</span>(fit_metric)<span class="sc">$</span>uni</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>## 
+## univariate score tests:
+## 
+##    lhs op   rhs    X2 df p.value
+## 1 .p2. == .p25. 0.057  1   0.812
+## 2 .p3. == .p26. 4.875  1   0.027
+## 3 .p5. == .p28. 4.474  1   0.034
+## 4 .p6. == .p29. 0.300  1   0.584</code></pre>
+</div>
+</div>
+<p>The two largest univariate score tests (both <span class="math inline">\(p &lt; .05\)</span>) flag two of the four freely estimated loadings. We can confirm which by looking at the configural model’s loadings by group:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>pe <span class="ot">&lt;-</span> <span class="fu">parameterEstimates</span>(fit_config, <span class="at">standardized =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>pe[pe<span class="sc">$</span>op <span class="sc">==</span> <span class="st">"=~"</span>, <span class="fu">c</span>(<span class="st">"lhs"</span>, <span class="st">"rhs"</span>, <span class="st">"group"</span>, <span class="st">"est"</span>, <span class="st">"std.all"</span>)]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>##    lhs rhs group   est std.all
+## 1   PA pa1     1 1.000   0.879
+## 2   PA pa2     1 0.949   0.789
+## 3   PA pa3     1 0.941   0.843
+## 4  neg na1     1 1.000   0.847
+## 5  neg na2     1 1.073   0.872
+## 6  neg na3     1 1.026   0.808
+## 24  PA pa1     2 1.000   0.774
+## 25  PA pa2     2 1.076   0.729
+## 26  PA pa3     2 1.288   0.871
+## 27 neg na1     2 1.000   0.852
+## 28 neg na2     2 0.828   0.771
+## 29 neg na3     2 0.958   0.864</code></pre>
+</div>
+</div>
+<p>The marker indicators (<code>pa1</code>, <code>na1</code>) are fixed to 1 in both groups by default, so they cannot differ. Of the free loadings, <code>pa3</code> (0.941 in males vs 1.288 in females) and <code>na2</code> (1.073 vs 0.828) differ the most — the same two parameters the score test flagged.</p>
+</section>
+<section id="fitting-a-partial-metric-model" class="level3">
+<h3 class="anchored" data-anchor-id="fitting-a-partial-metric-model">Fitting a partial metric model</h3>
+<p>Free specific parameters with <code>group.partial</code> while keeping the rest constrained:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Partial metric invariance: loadings equal except for pa3 and na2</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>fit_partial <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model_cfa, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>,</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">group.equal =</span> <span class="st">"loadings"</span>,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">group.partial =</span> <span class="fu">c</span>(<span class="st">"PA =~ pa3"</span>, <span class="st">"neg =~ na2"</span>),</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>                   <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="fu">lavTestLRT</span>(fit_config, fit_partial)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>## 
+## Scaled Chi-Squared Difference Test (method = "satorra.bentler.2001")
+## 
+## lavaan-&gt;lavTestLRT():  
+##    lavaan NOTE: The "Chisq" column contains standard test statistics, not the 
+##    robust test that should be reported per model. A robust difference test is 
+##    a function of two standard (not robust) statistics.
+## 
+##             Df    AIC    BIC  Chisq Chisq diff RMSEA Df diff Pr(&gt;Chisq)
+## fit_config  16 5265.4 5409.7 17.150                                    
+## fit_partial 18 5262.5 5399.3 18.287     1.3876     0       2     0.4997</code></pre>
+</div>
+</div>
+<p>Freeing just two loadings makes the model fit as well as the configural model (<span class="math inline">\(\Delta\chi^2 = 1.39\)</span>, <span class="math inline">\(\Delta df = 2\)</span>, <span class="math inline">\(p = .500\)</span>; <span class="math inline">\(\Delta\)</span>CFI <span class="math inline">\(\approx .0001\)</span>). <strong>Partial metric invariance holds.</strong> The PA and <code>neg</code> factors still have at least two invariant loadings each (<code>pa1</code>/<code>pa2</code> and <code>na1</code>/<code>na3</code>), so their scales remain comparable across gender.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span><code>group.partial</code> frees in <em>both</em> groups
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>group.partial = c("PA =~ pa3", "neg =~ na2")</code> releases the equality constraint on those loadings — they are freely estimated in both groups, while all other loadings remain equal. You do not need to specify group-specific labels unless you want to constrain two parameters equal <em>within</em> a group.</p>
+</div>
+</div>
+</section>
+<section id="scalar-strong-invariance-adding-equal-intercepts" class="level3">
+<h3 class="anchored" data-anchor-id="scalar-strong-invariance-adding-equal-intercepts">Scalar (strong) invariance — adding equal intercepts</h3>
+<p>With partial metric invariance established, test whether the item <strong>intercepts</strong> are also equal:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Partial scalar invariance: equal loadings (except pa3, na2) + equal intercepts</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>fit_scalar <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model_cfa, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>,</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">group.equal =</span> <span class="fu">c</span>(<span class="st">"loadings"</span>, <span class="st">"intercepts"</span>),</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">group.partial =</span> <span class="fu">c</span>(<span class="st">"PA =~ pa3"</span>, <span class="st">"neg =~ na2"</span>),</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>                  <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="fu">lavTestLRT</span>(fit_partial, fit_scalar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>## 
+## Scaled Chi-Squared Difference Test (method = "satorra.bentler.2001")
+## 
+## lavaan-&gt;lavTestLRT():  
+##    lavaan NOTE: The "Chisq" column contains standard test statistics, not the 
+##    robust test that should be reported per model. A robust difference test is 
+##    a function of two standard (not robust) statistics.
+## 
+##             Df    AIC    BIC  Chisq Chisq diff   RMSEA Df diff Pr(&gt;Chisq)
+## fit_partial 18 5262.5 5399.3 18.287                                      
+## fit_scalar  22 5261.4 5383.0 25.165     6.8986 0.06617       4     0.1413</code></pre>
+</div>
+</div>
+<p>The intercept constraints do not damage fit (<span class="math inline">\(\Delta\chi^2 = 6.90\)</span>, <span class="math inline">\(\Delta df = 4\)</span>, <span class="math inline">\(p = .141\)</span>; <span class="math inline">\(\Delta\)</span>CFI = .003). <strong>Partial scalar invariance holds.</strong> This is the level required to compare latent means across groups.</p>
+</section>
+<section id="strict-invariance-optional" class="level3">
+<h3 class="anchored" data-anchor-id="strict-invariance-optional">Strict invariance (optional)</h3>
+<p>Adding equal residual variances tests <strong>strict</strong> invariance. This level is rarely required for substantive conclusions — scalar invariance is enough for comparing latent means — so we test it only for completeness:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>fit_strict <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model_cfa, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>,</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">group.equal =</span> <span class="fu">c</span>(<span class="st">"loadings"</span>, <span class="st">"intercepts"</span>, <span class="st">"residuals"</span>),</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">group.partial =</span> <span class="fu">c</span>(<span class="st">"PA =~ pa3"</span>, <span class="st">"neg =~ na2"</span>),</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="fu">lavTestLRT</span>(fit_scalar, fit_strict)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>## 
+## Scaled Chi-Squared Difference Test (method = "satorra.bentler.2001")
+## 
+## lavaan-&gt;lavTestLRT():  
+##    lavaan NOTE: The "Chisq" column contains standard test statistics, not the 
+##    robust test that should be reported per model. A robust difference test is 
+##    a function of two standard (not robust) statistics.
+## 
+##            Df    AIC    BIC  Chisq Chisq diff    RMSEA Df diff Pr(&gt;Chisq)
+## fit_scalar 22 5261.4 5383.0 25.165                                       
+## fit_strict 28 5257.4 5356.1 33.128     7.8205 0.043272       6     0.2516</code></pre>
+</div>
+</div>
+<p>Strict invariance also holds (<span class="math inline">\(p = .252\)</span>). In practice you would usually stop at scalar.</p>
+</section>
+</section>
+<section id="comparing-latent-means-across-groups" class="level2">
+<h2 class="anchored" data-anchor-id="comparing-latent-means-across-groups">Comparing latent means across groups</h2>
+<p>Once (partial) scalar invariance is established, the factor scale is fixed across groups and latent means become comparable. Refit the partial scalar model with <code>meanstructure = TRUE</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>fit_means <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model_cfa, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>,</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">group.equal =</span> <span class="fu">c</span>(<span class="st">"loadings"</span>, <span class="st">"intercepts"</span>),</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">group.partial =</span> <span class="fu">c</span>(<span class="st">"PA =~ pa3"</span>, <span class="st">"neg =~ na2"</span>),</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">estimator =</span> <span class="st">"MLR"</span>, <span class="at">meanstructure =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Latent mean of group 1 (Male) is fixed to 0; group 2 (Female) is estimated</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>pe_means <span class="ot">&lt;-</span> <span class="fu">parameterEstimates</span>(fit_means)</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>pe_means[pe_means<span class="sc">$</span>op <span class="sc">==</span> <span class="st">"~1"</span> <span class="sc">&amp;</span> pe_means<span class="sc">$</span>lhs <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"PA"</span>, <span class="st">"neg"</span>),</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>         <span class="fu">c</span>(<span class="st">"lhs"</span>, <span class="st">"group"</span>, <span class="st">"est"</span>, <span class="st">"se"</span>, <span class="st">"z"</span>, <span class="st">"pvalue"</span>)]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>##    lhs group    est    se      z pvalue
+## 22  PA     1  0.000 0.000     NA     NA
+## 23 neg     1  0.000 0.000     NA     NA
+## 45  PA     2  0.263 0.115  2.291  0.022
+## 46 neg     2 -0.131 0.116 -1.127  0.260</code></pre>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="17-measurement-invariance_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" style="width:75.0%"></p>
+<figcaption>Latent factor means by gender (males fixed at 0 as the reference). Females score significantly higher on Positive Affect; the Negative Affect difference is not significant.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<ul>
+<li><strong>Positive Affect</strong>: the female latent mean is 0.263 higher than the male mean (<span class="math inline">\(z = 2.29\)</span>, <span class="math inline">\(p = .022\)</span>). Females report significantly higher PA, in the metric of the <code>pa1</code> marker indicator.</li>
+<li><strong>Negative Affect</strong>: the female mean is 0.131 lower (<span class="math inline">\(z = -1.13\)</span>, <span class="math inline">\(p = .260\)</span>) — not significantly different from males.</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Why the reference group mean is zero
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In multigroup lavaan, the first group’s latent mean is fixed to 0 (identification), and the other group’s latent mean is estimated as a difference from that reference. The signs and <span class="math inline">\(p\)</span>-values are therefore group-order dependent in form but not in substance — reversing the group order flips the sign of the estimate and leaves the <span class="math inline">\(p\)</span>-value unchanged. The factor order in <code>factor()</code> determines the reference group; here Male is level 1.</p>
+</div>
+</div>
+</section>
+<section id="reporting-measurement-invariance" class="level2">
+<h2 class="anchored" data-anchor-id="reporting-measurement-invariance">Reporting measurement invariance</h2>
+<p>An APA-style summary of the analysis above:</p>
+<blockquote class="blockquote">
+<p>To establish the measurement equivalence of the Positive Affect and Negative Affect scales across gender, we tested a sequence of multigroup confirmatory factor models using robust maximum likelihood (MLR). The configural model fitted well, <span class="math inline">\(\chi^2(16) = 17.15\)</span>, <span class="math inline">\(p = .376\)</span>, CFI = .999, RMSEA = .021, establishing that the same two-factor structure held in both groups. Imposing equal loadings significantly worsened fit according to the scaled chi-square difference test, <span class="math inline">\(\Delta\chi^2_{\text{SB}}(4) = 12.71\)</span>, <span class="math inline">\(p = .013\)</span>, although the change in CFI (.007) was below the .010 criterion recommended by Chen (2007). Score tests identified two loadings (<code>pa3</code>, <code>na2</code>) as non-invariant; freeing these yielded partial metric invariance, <span class="math inline">\(\Delta\chi^2_{\text{SB}}(2) = 1.39\)</span>, <span class="math inline">\(p = .500\)</span>. Adding equal intercepts did not worsen fit, <span class="math inline">\(\Delta\chi^2_{\text{SB}}(4) = 6.90\)</span>, <span class="math inline">\(p = .141\)</span>, establishing partial scalar invariance. Under this model, females reported significantly higher Positive Affect than males (latent mean difference = 0.263, <span class="math inline">\(z = 2.29\)</span>, <span class="math inline">\(p = .022\)</span>); the Negative Affect difference was not significant (difference = -0.131, <span class="math inline">\(z = -1.13\)</span>, <span class="math inline">\(p = .260\)</span>).</p>
+</blockquote>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Try it
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Re-run the hierarchy above using <code>age</code> (recoded into two broad bands, e.g.&nbsp;1–3 vs 4–5) as the grouping variable instead of <code>gender</code>. Does partial scalar invariance hold? If so, do the two age bands differ in latent PA or <code>neg</code>?</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-caution callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Caution</span>Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Collapse age into two bands</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>ps<span class="sc">$</span>age_band <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(ps<span class="sc">$</span>age <span class="sc">&lt;=</span> <span class="dv">3</span>, <span class="st">"Younger"</span>, <span class="st">"Older"</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>ps<span class="sc">$</span>age_band <span class="ot">&lt;-</span> <span class="fu">factor</span>(ps<span class="sc">$</span>age_band, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Younger"</span>, <span class="st">"Older"</span>))</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(ps<span class="sc">$</span>age_band)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>## 
+## Younger   Older 
+##     202     128</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>fit_cfg_a <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model_cfa, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"age_band"</span>, <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>fit_met_a <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model_cfa, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"age_band"</span>,</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">group.equal =</span> <span class="st">"loadings"</span>, <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>fit_sca_a <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model_cfa, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"age_band"</span>,</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">group.equal =</span> <span class="fu">c</span>(<span class="st">"loadings"</span>, <span class="st">"intercepts"</span>), <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="fu">lavTestLRT</span>(fit_cfg_a, fit_met_a)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>## 
+## Scaled Chi-Squared Difference Test (method = "satorra.bentler.2001")
+## 
+## lavaan-&gt;lavTestLRT():  
+##    lavaan NOTE: The "Chisq" column contains standard test statistics, not the 
+##    robust test that should be reported per model. A robust difference test is 
+##    a function of two standard (not robust) statistics.
+## 
+##           Df    AIC    BIC  Chisq Chisq diff  RMSEA Df diff Pr(&gt;Chisq)  
+## fit_cfg_a 16 5268.8 5413.2 33.772                                       
+## fit_met_a 20 5268.5 5397.7 41.435     9.0521 0.0805       4    0.05981 .
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lavTestLRT</span>(fit_met_a, fit_sca_a)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>## 
+## Scaled Chi-Squared Difference Test (method = "satorra.bentler.2001")
+## 
+## lavaan-&gt;lavTestLRT():  
+##    lavaan NOTE: The "Chisq" column contains standard test statistics, not the 
+##    robust test that should be reported per model. A robust difference test is 
+##    a function of two standard (not robust) statistics.
+## 
+##           Df    AIC    BIC  Chisq Chisq diff   RMSEA Df diff Pr(&gt;Chisq)  
+## fit_met_a 20 5268.5 5397.7 41.435                                        
+## fit_sca_a 24 5269.9 5383.9 50.819     9.7171 0.09146       4    0.04547 *
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># If scalar holds, compare latent means</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>fit_means_a <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model_cfa, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"age_band"</span>,</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">group.equal =</span> <span class="fu">c</span>(<span class="st">"loadings"</span>, <span class="st">"intercepts"</span>),</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">estimator =</span> <span class="st">"MLR"</span>, <span class="at">meanstructure =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>pe_a <span class="ot">&lt;-</span> <span class="fu">parameterEstimates</span>(fit_means_a)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>pe_a[pe_a<span class="sc">$</span>op <span class="sc">==</span> <span class="st">"~1"</span> <span class="sc">&amp;</span> pe_a<span class="sc">$</span>lhs <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"PA"</span>, <span class="st">"neg"</span>),</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>     <span class="fu">c</span>(<span class="st">"lhs"</span>, <span class="st">"group"</span>, <span class="st">"est"</span>, <span class="st">"se"</span>, <span class="st">"z"</span>, <span class="st">"pvalue"</span>)]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>##    lhs group    est    se      z pvalue
+## 22  PA     1  0.000 0.000     NA     NA
+## 23 neg     1  0.000 0.000     NA     NA
+## 45  PA     2 -0.208 0.116 -1.793  0.073
+## 46 neg     2  0.079 0.115  0.683  0.494</code></pre>
+</div>
+</div>
+<p>If the <code>lavTestLRT(fit_cfg_a, fit_met_a)</code> result is non-significant, full metric invariance holds and you can skip partial invariance. If it is significant, run <code>lavTestScore(fit_met_a)$uni</code> and free the flagged loadings with <code>group.partial</code>, as we did for gender.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="common-errors" class="level2">
+<h2 class="anchored" data-anchor-id="common-errors">Common errors</h2>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Comparing latent means without scalar invariance
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Latent mean differences are only meaningful if the factor scale is fixed across groups, which requires (partial) scalar invariance. If you compare latent means after only configural or metric invariance, a group difference could reflect different item intercepts — i.e.&nbsp;different baseline response levels — rather than a real latent mean difference. Always establish scalar invariance first.</p>
+<section id="abandoning-the-hierarchy-too-early" class="level3">
+<h3 class="anchored" data-anchor-id="abandoning-the-hierarchy-too-early">Abandoning the hierarchy too early</h3>
+<p>If metric invariance fails, do not jump straight to “the factor is not comparable across groups.” First check the <span class="math inline">\(\Delta\)</span>CFI / <span class="math inline">\(\Delta\)</span>RMSEA criteria — the LRT is overpowered at typical <span class="math inline">\(N\)</span> — and then run <code>lavTestScore()</code> to see whether the failure is driven by one or two items. Partial invariance often rescues an otherwise usable model.</p>
+</section>
+<section id="comparing-structural-paths-without-measurement-invariance" class="level3">
+<h3 class="anchored" data-anchor-id="comparing-structural-paths-without-measurement-invariance">Comparing structural paths without measurement invariance</h3>
+<p>If you compare structural paths across groups (the multigroup-SEM moderation strategy in Tutorial 16) without first establishing metric invariance, any path differences you find could be artefacts of the items measuring the factors differently in the two groups. Always establish at least (partial) metric invariance before comparing structural paths.</p>
+</section>
+<section id="insufficient-sample-size-per-group" class="level3">
+<h3 class="anchored" data-anchor-id="insufficient-sample-size-per-group">Insufficient sample size per group</h3>
+<p>Multigroup CFA needs enough participants per group to estimate the model reliably. A rough rule of thumb is 100+ per group. With smaller groups, models may fail to converge or produce unstable estimates. The PS dataset’s 178 males and 154 females are adequate; its five age bands (the smallest has 21) are not — collapse bands or use a different grouping variable if a group is too small.</p>
+</section>
+</div>
+</div>
+</section>
+<section id="summary-next-tutorial" class="level2">
+<h2 class="anchored" data-anchor-id="summary-next-tutorial">Summary &amp; next tutorial</h2>
+<p>You have now seen how to establish that a measurement model means the same thing in different groups — the prerequisite for any cross-group comparison of latent means or structural paths. The key ideas:</p>
+<ul>
+<li>Test the <strong>hierarchy</strong> in order: configural <span class="math inline">\(\rightarrow\)</span> metric <span class="math inline">\(\rightarrow\)</span> scalar <span class="math inline">\(\rightarrow\)</span> (optional) strict.</li>
+<li>Use <code>lavTestLRT()</code> for the scaled <span class="math inline">\(\chi^2\)</span> difference test, <strong>and</strong> check <span class="math inline">\(\Delta\)</span>CFI / <span class="math inline">\(\Delta\)</span>RMSEA against Chen’s (2007) criteria — the two can disagree, especially with larger <span class="math inline">\(N\)</span>.</li>
+<li>When full invariance fails, use <code>lavTestScore()</code> to identify the culprits and <code>group.partial</code> to free them — <strong>partial invariance</strong> is usually enough.</li>
+<li>Compare <strong>latent means</strong> only after (partial) scalar invariance is established, using <code>meanstructure = TRUE</code>.</li>
+</ul>
+<p>For multigroup SEM as a <strong>moderation</strong> strategy — testing whether structural paths differ across groups once measurement invariance is established — see Tutorial 16. For reporting the results, see Tutorial 13.</p>
+</section>
+<section id="further-reading" class="level2">
+<h2 class="anchored" data-anchor-id="further-reading">Further reading</h2>
+<ul>
+<li><span class="citation" data-cites="vandenberg2000">Vandenberg &amp; Lance (<a href="#ref-vandenberg2000" role="doc-biblioref">2000</a>)</span> — the canonical review of measurement invariance: definitions, the hierarchy, and a checklist for reporting.</li>
+<li><span class="citation" data-cites="chen2007">Chen (<a href="#ref-chen2007" role="doc-biblioref">2007</a>)</span> — the simulation study behind the <span class="math inline">\(\Delta\)</span>CFI and <span class="math inline">\(\Delta\)</span>RMSEA criteria used throughout this tutorial.</li>
+<li><span class="citation" data-cites="putnick2016">Putnick &amp; Bornstein (<a href="#ref-putnick2016" role="doc-biblioref">2016</a>)</span> — a more recent, accessible overview of measurement invariance conventions and reporting, with worked examples.</li>
+<li><span class="citation" data-cites="byrne1989">Byrne et al. (<a href="#ref-byrne1989" role="doc-biblioref">1989</a>)</span> — the original argument for partial invariance: as long as a factor has enough invariant indicators, its scale is comparable across groups.</li>
+<li><span class="citation" data-cites="rosseel2012">Rosseel (<a href="#ref-rosseel2012" role="doc-biblioref">2012</a>)</span> — the lavaan reference; the <code>group.equal</code> and <code>group.partial</code> arguments are documented in the package help pages.</li>
+<li><span class="citation" data-cites="hoyle2012">Hoyle (<a href="#ref-hoyle2012" role="doc-biblioref">2012</a>)</span> — the <em>Handbook of Structural Equation Modeling</em> includes chapters on multigroup SEM and measurement invariance.</li>
+</ul>
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2" role="list">
+<div id="ref-byrne1989" class="csl-entry" role="listitem">
+Byrne, B. M., Shavelson, R. J., &amp; Muthén, B. (1989). Testing for the equivalence of factor covariance and mean structures: The issue of partial measurement invariance. <em>Psychological Bulletin</em>, <em>105</em>(3), 456–466. <a href="https://doi.org/10.1037/0033-2909.105.3.456">https://doi.org/10.1037/0033-2909.105.3.456</a>
+</div>
+<div id="ref-chen2007" class="csl-entry" role="listitem">
+Chen, F. F. (2007). Sensitivity of goodness of fit indexes to lack of measurement invariance. <em>Structural Equation Modeling: A Multidisciplinary Journal</em>, <em>14</em>(3), 464–504. <a href="https://doi.org/10.1080/10705510701301834">https://doi.org/10.1080/10705510701301834</a>
+</div>
+<div id="ref-hoyle2012" class="csl-entry" role="listitem">
+Hoyle, R. H. (2012). <em>Handbook of structural equation modeling</em>.
+</div>
+<div id="ref-putnick2016" class="csl-entry" role="listitem">
+Putnick, D. L., &amp; Bornstein, M. H. (2016). Measurement invariance conventions and reporting: The state of the art and future directions for psychological research. <em>Developmental Review</em>, <em>41</em>, 71–90. <a href="https://doi.org/10.1016/j.dr.2016.06.004">https://doi.org/10.1016/j.dr.2016.06.004</a>
+</div>
+<div id="ref-rosseel2012" class="csl-entry" role="listitem">
+Rosseel, Y. (2012). Lavaan: An r package for structural equation modeling. <em>Journal of Statistical Software</em>, <em>48</em>(2), 1–36. <a href="https://doi.org/10.18637/jss.v048.i02">https://doi.org/10.18637/jss.v048.i02</a>
+</div>
+<div id="ref-vandenberg2000" class="csl-entry" role="listitem">
+Vandenberg, R. J., &amp; Lance, C. E. (2000). A review and synthesis of the measurement invariance literature: Suggestions, practices, and recommendations for organizational research. <em>Organizational Research Methods</em>, <em>3</em>(1), 4–70. <a href="https://doi.org/10.1177/109442810031002">https://doi.org/10.1177/109442810031002</a>
+</div>
+</div></section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/michaelides\.github\.io\/lavaan-tutorial\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../tutorials/16-moderation.html" class="pagination-link" aria-label="Moderation">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Moderation</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 George Michaelides, University of East Anglia · MSc Organisational Psychology · Statistical Skills</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/michaelides/lavaan-tutorial/edit/main/tutorials/17-measurement-invariance.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/michaelides/lavaan-tutorial/blob/main/tutorials/17-measurement-invariance.qmd" class="toc-action"><i class="bi empty"></i>View source</a></li><li><a href="https://github.com/michaelides/lavaan-tutorial/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/michaelides/lavaan-tutorial">
+      <i class="bi bi-github" role="img" aria-label="GitHub repository">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

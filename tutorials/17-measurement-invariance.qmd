@@ -1,0 +1,378 @@
+---
+title: "Measurement invariance"
+subtitle: "Multigroup CFA: configural, metric, scalar, and strict invariance; partial invariance; latent mean comparison"
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+## Learning objectives
+
+By the end of this tutorial you will be able to:
+
+- explain what [measurement invariance](https://en.wikipedia.org/wiki/Measurement_invariance) is and why it is a prerequisite for comparing latent means or structural paths across groups
+- fit a multigroup CFA in lavaan and read the per-group output
+- test the four-level invariance hierarchy (configural, metric, scalar, strict) using `group.equal` and `lavTestLRT()`
+- supplement the likelihood-ratio test with fit-index change criteria ($\Delta$CFI, $\Delta$RMSEA)
+- diagnose and handle **partial invariance** by freeing specific non-invariant parameters with `group.partial`
+- compare latent means across groups once (partial) scalar invariance is established
+- report a measurement-invariance analysis in APA format
+
+## Setup
+
+<details>
+<summary>Setup code (you have seen this before)</summary>
+
+```{r}
+#| include: false
+knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(comment = "##")
+```
+
+```{r}
+library(haven)
+library(lavaan)
+library(ggplot2)
+```
+
+```{r}
+#| include: false
+ps <- haven::read_sav("data/ps_data_reduced.sav")
+ps <- haven::zap_labels(ps)
+ps[ps == -99] <- NA
+ps$gender <- factor(ps$gender, levels = c(0, 1), labels = c("Male", "Female"))
+```
+
+</details>
+
+We use the same two-factor Positive Affect (PA) / Negative Affect (`neg`) measurement model introduced in Tutorial 07, fitted separately for males and females. There are 178 males and 154 females in the `ps` dataset — enough per group for a stable multigroup CFA.
+
+## What is measurement invariance?
+
+[Measurement invariance](https://en.wikipedia.org/wiki/Measurement_invariance) means that the **same measurement model** holds in every group. Concretely: the same items measure the same latent factors, with the same relationships between items and factors, in males and females, or in any other groups you want to compare.
+
+### Why it matters
+
+Suppose you find that females score higher than males on a "positive affect" factor. Before you interpret that as a real psychological difference, you must rule out a measurement artefact: maybe the items *load differently* on the factor in the two groups, so a "unit" of PA is not the same quantity for males and females. Measurement invariance testing establishes whether the measurement model is equivalent across groups. Without it, any group difference in latent means or structural paths could be a difference in *what the items measure*, not a difference in *the construct itself*.
+
+::: {.callout-note}
+### Measurement invariance is a prerequisite for group comparison
+
+Before you can compare latent means or structural paths across groups, you must establish that the measurement model is equivalent — that the same items measure the same factors in the same way in both groups. This is what measurement invariance testing does. Without it, observed group differences could be due to measurement artefacts rather than true group differences. We introduced this idea in Tutorial 16; here we develop it fully.
+:::
+
+### The four levels
+
+Measurement invariance is tested as a **hierarchy**: you start with the most liberal model and progressively constrain parameters to be equal across groups, checking at each step whether the constraint damages fit.
+
+| Level | Also called | What is constrained equal | What it licenses |
+|-------|-------------|---------------------------|------------------|
+| **Configural** | pattern | Same factor structure (same items on same factors) | Comparing model *form* across groups |
+| **Metric** | weak | Factor **loadings** | Comparing structural paths / variances across groups |
+| **Scalar** | strong | Loadings + item **intercepts** | Comparing **latent means** across groups |
+| **Strict** | strict | Loadings + intercepts + **residual variances** | Comparing observed score variances |
+
+Each level nests inside the one above it: scalar invariance implies metric invariance implies configural invariance. You test them in order, and you stop when a constraint clearly damages fit.
+
+```{r}
+#| echo: false
+#| fig-align: center
+#| out-width: "85%"
+#| fig-cap: "The measurement-invariance hierarchy. Each level adds equality constraints and licenses a stronger kind of cross-group comparison."
+DiagrammeR::grViz("
+digraph {
+  graph [rankdir = TB, fontsize = 10, fontname = Helvetica,
+         compound = true, nodesep = 0.3, ranksep = 0.35]
+  node  [shape = box, style = 'filled,rounded', fontname = Helvetica,
+         fontsize = 10, margin = '0.12,0.06', penwidth = 1]
+  edge  [color = '#2c3e50', arrowsize = 0.8, penwidth = 1.1]
+
+  cfg  [label = 'Configural\nSame structure',           fillcolor = '#d6eaf8']
+  met  [label = 'Metric (weak)\n+ equal loadings',      fillcolor = '#d5dbdb']
+  sca  [label = 'Scalar (strong)\n+ equal intercepts',  fillcolor = '#fadbd8']
+  str  [label = 'Strict\n+ equal residuals',            fillcolor = '#f2d7d5']
+
+  cfg -> met -> sca -> str
+
+  l1 [label = 'compare structure',  shape = plaintext, fontsize = 9, fontcolor = '#566573']
+  l2 [label = 'compare paths/variances', shape = plaintext, fontsize = 9, fontcolor = '#566573']
+  l3 [label = 'compare latent means',     shape = plaintext, fontsize = 9, fontcolor = '#566573']
+  l4 [label = 'compare observed variances', shape = plaintext, fontsize = 9, fontcolor = '#566573']
+
+  { rank = same; met; l2 }
+  { rank = same; sca; l3 }
+  { rank = same; str; l4 }
+  { rank = same; cfg; l1 }
+
+  cfg -> l1 [style = invis]
+  met -> l2 [style = invis]
+  sca -> l3 [style = invis]
+  str -> l4 [style = invis]
+}
+", height = 420)
+```
+
+## Specifying a multigroup model in lavaan
+
+The measurement model is the two-factor CFA from Tutorial 07:
+
+```{r}
+model_cfa <- '
+  PA  =~ pa1 + pa2 + pa3
+  neg =~ na1 + na2 + na3
+  PA  ~~ neg
+'
+```
+
+To fit it for both groups at once, pass the `group` argument to `cfa()`:
+
+```{r}
+fit_config <- cfa(model_cfa, data = ps, group = "gender", estimator = "MLR")
+summary(fit_config, standardized = TRUE, fit.measures = TRUE)
+```
+
+By default lavaan fits the **configural invariance** model — the same factor structure in both groups, but all parameters (loadings, intercepts, residual variances, factor variances/covariances) freely estimated in each group. The output shows a separate parameter block for each group. The fit is good ($\chi^2(16) = 17.15$, $p = .376$, CFI = .999, RMSEA = .021), so the same two-factor structure is tenable in both males and females. Configural invariance holds.
+
+## Testing the invariance hierarchy
+
+To test whether the parameters are equivalent across groups, progressively constrain them with the `group.equal` argument and compare each model to the previous one with `lavTestLRT()` (the scaled likelihood-ratio test for `MLR` models — see Tutorial 13).
+
+### Metric (weak) invariance — equal loadings
+
+```{r}
+# Metric invariance: constrain all loadings equal across groups
+fit_metric <- cfa(model_cfa, data = ps, group = "gender",
+                  group.equal = "loadings", estimator = "MLR")
+
+lavTestLRT(fit_config, fit_metric)
+```
+
+The scaled $\chi^2$ difference is significant ($\Delta\chi^2 = 12.71$, $\Delta df = 4$, $p = .013$): by the strict likelihood-ratio test, the loadings are **not** equivalent across groups, and metric invariance does not hold. Before we decide what to do, compare the fit indices:
+
+```{r}
+rbind(
+  configural = fitMeasures(fit_config, c("cfi", "rmsea")),
+  metric     = fitMeasures(fit_metric, c("cfi", "rmsea"))
+)
+```
+
+CFI drops from .999 to .992 ($\Delta$CFI = .007) and RMSEA rises from .021 to .049 ($\Delta$RMSEA = .028).
+
+### Supplementing the LRT with fit-index change criteria
+
+With anything but the smallest samples, the $\chi^2$ difference test is overpowered — it flags as "significant" constraints that differ only trivially. A widely used supplement is **change in fit indices**. @chen2007's simulation-based criteria, for two groups and $N$ in the hundreds, are:
+
+| Index | Criterion for invariance to hold |
+|-------|----------------------------------|
+| $\Delta$CFI | $\leq .010$ |
+| $\Delta$RMSEA | $\leq .015$ |
+
+::: {.callout-warning}
+### The LRT and the fit-index criteria can disagree
+
+Here they do. The LRT says metric invariance fails ($p = .013$). But $\Delta$CFI = .007 is below the .010 threshold, while $\Delta$RMSEA = .028 exceeds the .015 threshold. The two indices disagree. This is common in real data and is exactly the situation **partial invariance** analysis was designed for: rather than abandon metric invariance, we ask *which* loadings differ and free just those.
+:::
+
+## Partial invariance
+
+**Partial invariance** holds when most, but not all, of a parameter type is equivalent across groups — for example, when most loadings are equal but one or two differ. @byrne1989 argued that as long as at least two loadings per factor (the marker plus at least one other) are invariant, the factor's scale is comparable across groups and subsequent comparisons are interpretable.
+
+### Identifying the non-invariant parameters
+
+The correct lavaan tool for finding equality constraints to release is `lavTestScore()`, which gives a univariate score test for each constrained parameter:
+
+```{r}
+lavTestScore(fit_metric)$uni
+```
+
+The two largest univariate score tests (both $p < .05$) flag two of the four freely estimated loadings. We can confirm which by looking at the configural model's loadings by group:
+
+```{r}
+pe <- parameterEstimates(fit_config, standardized = TRUE)
+pe[pe$op == "=~", c("lhs", "rhs", "group", "est", "std.all")]
+```
+
+The marker indicators (`pa1`, `na1`) are fixed to 1 in both groups by default, so they cannot differ. Of the free loadings, `pa3` (0.941 in males vs 1.288 in females) and `na2` (1.073 vs 0.828) differ the most — the same two parameters the score test flagged.
+
+### Fitting a partial metric model
+
+Free specific parameters with `group.partial` while keeping the rest constrained:
+
+```{r}
+# Partial metric invariance: loadings equal except for pa3 and na2
+fit_partial <- cfa(model_cfa, data = ps, group = "gender",
+                   group.equal = "loadings",
+                   group.partial = c("PA =~ pa3", "neg =~ na2"),
+                   estimator = "MLR")
+
+lavTestLRT(fit_config, fit_partial)
+```
+
+Freeing just two loadings makes the model fit as well as the configural model ($\Delta\chi^2 = 1.39$, $\Delta df = 2$, $p = .500$; $\Delta$CFI $\approx .0001$). **Partial metric invariance holds.** The PA and `neg` factors still have at least two invariant loadings each (`pa1`/`pa2` and `na1`/`na3`), so their scales remain comparable across gender.
+
+::: {.callout-note}
+### `group.partial` frees in *both* groups
+
+`group.partial = c("PA =~ pa3", "neg =~ na2")` releases the equality constraint on those loadings — they are freely estimated in both groups, while all other loadings remain equal. You do not need to specify group-specific labels unless you want to constrain two parameters equal *within* a group.
+:::
+
+### Scalar (strong) invariance — adding equal intercepts
+
+With partial metric invariance established, test whether the item **intercepts** are also equal:
+
+```{r}
+# Partial scalar invariance: equal loadings (except pa3, na2) + equal intercepts
+fit_scalar <- cfa(model_cfa, data = ps, group = "gender",
+                  group.equal = c("loadings", "intercepts"),
+                  group.partial = c("PA =~ pa3", "neg =~ na2"),
+                  estimator = "MLR")
+
+lavTestLRT(fit_partial, fit_scalar)
+```
+
+The intercept constraints do not damage fit ($\Delta\chi^2 = 6.90$, $\Delta df = 4$, $p = .141$; $\Delta$CFI = .003). **Partial scalar invariance holds.** This is the level required to compare latent means across groups.
+
+### Strict invariance (optional)
+
+Adding equal residual variances tests **strict** invariance. This level is rarely required for substantive conclusions — scalar invariance is enough for comparing latent means — so we test it only for completeness:
+
+```{r}
+fit_strict <- cfa(model_cfa, data = ps, group = "gender",
+                  group.equal = c("loadings", "intercepts", "residuals"),
+                  group.partial = c("PA =~ pa3", "neg =~ na2"),
+                  estimator = "MLR")
+
+lavTestLRT(fit_scalar, fit_strict)
+```
+
+Strict invariance also holds ($p = .252$). In practice you would usually stop at scalar.
+
+## Comparing latent means across groups
+
+Once (partial) scalar invariance is established, the factor scale is fixed across groups and latent means become comparable. Refit the partial scalar model with `meanstructure = TRUE`:
+
+```{r}
+fit_means <- cfa(model_cfa, data = ps, group = "gender",
+                 group.equal = c("loadings", "intercepts"),
+                 group.partial = c("PA =~ pa3", "neg =~ na2"),
+                 estimator = "MLR", meanstructure = TRUE)
+
+# Latent mean of group 1 (Male) is fixed to 0; group 2 (Female) is estimated
+pe_means <- parameterEstimates(fit_means)
+pe_means[pe_means$op == "~1" & pe_means$lhs %in% c("PA", "neg"),
+         c("lhs", "group", "est", "se", "z", "pvalue")]
+```
+
+```{r}
+#| echo: false
+#| fig-align: center
+#| out-width: "75%"
+#| fig-cap: "Latent factor means by gender (males fixed at 0 as the reference). Females score significantly higher on Positive Affect; the Negative Affect difference is not significant."
+means_df <- data.frame(
+  factor = c("PA", "PA", "neg", "neg"),
+  gender = c("Male", "Female", "Male", "Female"),
+  mean = c(0, 0.263, 0, -0.131),
+  se   = c(NA, 0.115, NA, 0.116)
+)
+
+ggplot(means_df, aes(x = factor, y = mean, fill = gender)) +
+  geom_col(position = position_dodge(0.8), width = 0.7) +
+  geom_errorbar(aes(ymin = mean - 1.96 * se, ymax = mean + 1.96 * se),
+                position = position_dodge(0.8), width = 0.25) +
+  geom_hline(yintercept = 0, colour = "grey50", linetype = "dashed") +
+  labs(x = "Latent factor", y = "Latent mean (Male = 0 reference)",
+       fill = "Gender",
+       title = "Latent factor means by gender") +
+  theme_minimal()
+```
+
+- **Positive Affect**: the female latent mean is 0.263 higher than the male mean ($z = 2.29$, $p = .022$). Females report significantly higher PA, in the metric of the `pa1` marker indicator.
+- **Negative Affect**: the female mean is 0.131 lower ($z = -1.13$, $p = .260$) — not significantly different from males.
+
+::: {.callout-note}
+### Why the reference group mean is zero
+
+In multigroup lavaan, the first group's latent mean is fixed to 0 (identification), and the other group's latent mean is estimated as a difference from that reference. The signs and $p$-values are therefore group-order dependent in form but not in substance — reversing the group order flips the sign of the estimate and leaves the $p$-value unchanged. The factor order in `factor()` determines the reference group; here Male is level 1.
+:::
+
+## Reporting measurement invariance
+
+An APA-style summary of the analysis above:
+
+> To establish the measurement equivalence of the Positive Affect and Negative Affect scales across gender, we tested a sequence of multigroup confirmatory factor models using robust maximum likelihood (MLR). The configural model fitted well, $\chi^2(16) = 17.15$, $p = .376$, CFI = .999, RMSEA = .021, establishing that the same two-factor structure held in both groups. Imposing equal loadings significantly worsened fit according to the scaled chi-square difference test, $\Delta\chi^2_{\text{SB}}(4) = 12.71$, $p = .013$, although the change in CFI (.007) was below the .010 criterion recommended by Chen (2007). Score tests identified two loadings (`pa3`, `na2`) as non-invariant; freeing these yielded partial metric invariance, $\Delta\chi^2_{\text{SB}}(2) = 1.39$, $p = .500$. Adding equal intercepts did not worsen fit, $\Delta\chi^2_{\text{SB}}(4) = 6.90$, $p = .141$, establishing partial scalar invariance. Under this model, females reported significantly higher Positive Affect than males (latent mean difference = 0.263, $z = 2.29$, $p = .022$); the Negative Affect difference was not significant (difference = -0.131, $z = -1.13$, $p = .260$).
+
+::: {.callout-tip}
+### Try it
+
+Re-run the hierarchy above using `age` (recoded into two broad bands, e.g. 1–3 vs 4–5) as the grouping variable instead of `gender`. Does partial scalar invariance hold? If so, do the two age bands differ in latent PA or `neg`?
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{r}
+# Collapse age into two bands
+ps$age_band <- ifelse(ps$age <= 3, "Younger", "Older")
+ps$age_band <- factor(ps$age_band, levels = c("Younger", "Older"))
+table(ps$age_band)
+
+fit_cfg_a <- cfa(model_cfa, data = ps, group = "age_band", estimator = "MLR")
+fit_met_a <- cfa(model_cfa, data = ps, group = "age_band",
+                 group.equal = "loadings", estimator = "MLR")
+fit_sca_a <- cfa(model_cfa, data = ps, group = "age_band",
+                 group.equal = c("loadings", "intercepts"), estimator = "MLR")
+
+lavTestLRT(fit_cfg_a, fit_met_a)
+lavTestLRT(fit_met_a, fit_sca_a)
+
+# If scalar holds, compare latent means
+fit_means_a <- cfa(model_cfa, data = ps, group = "age_band",
+                   group.equal = c("loadings", "intercepts"),
+                   estimator = "MLR", meanstructure = TRUE)
+pe_a <- parameterEstimates(fit_means_a)
+pe_a[pe_a$op == "~1" & pe_a$lhs %in% c("PA", "neg"),
+     c("lhs", "group", "est", "se", "z", "pvalue")]
+```
+
+If the `lavTestLRT(fit_cfg_a, fit_met_a)` result is non-significant, full metric invariance holds and you can skip partial invariance. If it is significant, run `lavTestScore(fit_met_a)$uni` and free the flagged loadings with `group.partial`, as we did for gender.
+:::
+
+## Common errors
+
+::: {.callout-warning}
+### Comparing latent means without scalar invariance
+
+Latent mean differences are only meaningful if the factor scale is fixed across groups, which requires (partial) scalar invariance. If you compare latent means after only configural or metric invariance, a group difference could reflect different item intercepts — i.e. different baseline response levels — rather than a real latent mean difference. Always establish scalar invariance first.
+
+### Abandoning the hierarchy too early
+
+If metric invariance fails, do not jump straight to "the factor is not comparable across groups." First check the $\Delta$CFI / $\Delta$RMSEA criteria — the LRT is overpowered at typical $N$ — and then run `lavTestScore()` to see whether the failure is driven by one or two items. Partial invariance often rescues an otherwise usable model.
+
+### Comparing structural paths without measurement invariance
+
+If you compare structural paths across groups (the multigroup-SEM moderation strategy in Tutorial 16) without first establishing metric invariance, any path differences you find could be artefacts of the items measuring the factors differently in the two groups. Always establish at least (partial) metric invariance before comparing structural paths.
+
+### Insufficient sample size per group
+
+Multigroup CFA needs enough participants per group to estimate the model reliably. A rough rule of thumb is 100+ per group. With smaller groups, models may fail to converge or produce unstable estimates. The PS dataset's 178 males and 154 females are adequate; its five age bands (the smallest has 21) are not — collapse bands or use a different grouping variable if a group is too small.
+:::
+
+## Summary & next tutorial
+
+You have now seen how to establish that a measurement model means the same thing in different groups — the prerequisite for any cross-group comparison of latent means or structural paths. The key ideas:
+
+- Test the **hierarchy** in order: configural $\rightarrow$ metric $\rightarrow$ scalar $\rightarrow$ (optional) strict.
+- Use `lavTestLRT()` for the scaled $\chi^2$ difference test, **and** check $\Delta$CFI / $\Delta$RMSEA against Chen's (2007) criteria — the two can disagree, especially with larger $N$.
+- When full invariance fails, use `lavTestScore()` to identify the culprits and `group.partial` to free them — **partial invariance** is usually enough.
+- Compare **latent means** only after (partial) scalar invariance is established, using `meanstructure = TRUE`.
+
+For multigroup SEM as a **moderation** strategy — testing whether structural paths differ across groups once measurement invariance is established — see Tutorial 16. For reporting the results, see Tutorial 13.
+
+## Further reading
+
+- @vandenberg2000 — the canonical review of measurement invariance: definitions, the hierarchy, and a checklist for reporting.
+- @chen2007 — the simulation study behind the $\Delta$CFI and $\Delta$RMSEA criteria used throughout this tutorial.
+- @putnick2016 — a more recent, accessible overview of measurement invariance conventions and reporting, with worked examples.
+- @byrne1989 — the original argument for partial invariance: as long as a factor has enough invariant indicators, its scale is comparable across groups.
+- @rosseel2012 — the lavaan reference; the `group.equal` and `group.partial` arguments are documented in the package help pages.
+- @hoyle2012 — the *Handbook of Structural Equation Modeling* includes chapters on multigroup SEM and measurement invariance.

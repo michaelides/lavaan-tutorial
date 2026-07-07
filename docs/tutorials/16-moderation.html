@@ -90,6 +90,7 @@ div.csl-indent {
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
+<link href="../tutorials/17-measurement-invariance.html" rel="next">
 <link href="../tutorials/15-growth.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -540,6 +541,12 @@ window.Quarto = {
  <span class="menu-text">Moderation</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/17-measurement-invariance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Measurement invariance</span></a>
+  </div>
+</li>
       </ul>
   </li>
     </ul>
@@ -567,8 +574,6 @@ window.Quarto = {
   </ul></li>
   <li><a href="#multigroup-sem-in-lavaan" id="toc-multigroup-sem-in-lavaan" class="nav-link" data-scroll-target="#multigroup-sem-in-lavaan">Multigroup SEM in lavaan</a>
   <ul class="collapse">
-  <li><a href="#specifying-a-multigroup-model" id="toc-specifying-a-multigroup-model" class="nav-link" data-scroll-target="#specifying-a-multigroup-model">Specifying a multigroup model</a></li>
-  <li><a href="#testing-measurement-invariance" id="toc-testing-measurement-invariance" class="nav-link" data-scroll-target="#testing-measurement-invariance">Testing measurement invariance</a></li>
   <li><a href="#testing-moderation-of-structural-paths" id="toc-testing-moderation-of-structural-paths" class="nav-link" data-scroll-target="#testing-moderation-of-structural-paths">Testing moderation of structural paths</a></li>
   </ul></li>
   <li><a href="#latent-variable-interaction-advanced" id="toc-latent-variable-interaction-advanced" class="nav-link" data-scroll-target="#latent-variable-interaction-advanced">Latent variable interaction (advanced)</a></li>
@@ -586,7 +591,7 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../tutorials/14-multilevel.html">Advanced</a></li><li class="breadcrumb-item"><a href="../tutorials/16-moderation.html">Moderation</a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title">Moderation</h1>
-<p class="subtitle lead">Moderated regression with lm; multigroup lavaan; latent interaction (advanced)</p>
+<p class="subtitle lead">Moderated regression with lm; multigroup SEM moderation; latent interaction (advanced)</p>
 </div>
 
 
@@ -630,7 +635,7 @@ window.Quarto = {
 <li>fit a moderated regression model with <code>lm()</code> and interpret an interaction term</li>
 <li>centre predictors at their mean and compute <a href="../glossary.html#simple-slopes">simple slopes</a></li>
 <li>plot an interaction with <code>ggplot2</code></li>
-<li>fit a multigroup SEM in lavaan to test moderation by a categorical variable</li>
+<li>test moderation by a categorical variable with multigroup SEM, assuming measurement invariance (Tutorial 17)</li>
 <li>recognise the syntax for latent variable interaction (advanced, beyond MSc scope)</li>
 </ul>
 </section>
@@ -909,247 +914,36 @@ Setup code (you have seen this before)
 </section>
 <section id="multigroup-sem-in-lavaan" class="level2">
 <h2 class="anchored" data-anchor-id="multigroup-sem-in-lavaan">Multigroup SEM in lavaan</h2>
-<p>When the moderator is a <strong>categorical variable</strong> (like gender) and you have <strong>latent variables</strong> in your model, you can test moderation with <strong>multigroup SEM</strong>. Instead of adding an interaction term, you fit the model separately for each group and test whether the parameters are equal across groups.</p>
-<section id="specifying-a-multigroup-model" class="level3">
-<h3 class="anchored" data-anchor-id="specifying-a-multigroup-model">Specifying a multigroup model</h3>
-<p>Pass the <code>group</code> argument to <code>cfa()</code> or <code>sem()</code>:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>model_cfa <span class="ot">&lt;-</span> <span class="st">'</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="st">  PA  =~ pa1 + pa2 + pa3</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="st">  neg =~ na1 + na2 + na3</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="st">  PA  ~~ neg</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="st">'</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>fit_config <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model_cfa, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>, <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit_config, <span class="at">standardized =</span> <span class="cn">TRUE</span>, <span class="at">fit.measures =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>## lavaan 0.6-21 ended normally after 37 iterations
-## 
-##   Estimator                                         ML
-##   Optimization method                           NLMINB
-##   Number of model parameters                        38
-## 
-##   Number of observations per group:               Used       Total
-##     Female                                         152         154
-##     Male                                           178         178
-## 
-## Model Test User Model:
-##                                               Standard      Scaled
-##   Test Statistic                                17.150      17.710
-##   Degrees of freedom                                16          16
-##   P-value (Chi-square)                           0.376       0.341
-##   Scaling correction factor                                  0.968
-##     Yuan-Bentler correction (Mplus variant)                       
-##   Test statistic for each group:
-##     Female                                       6.244       6.244
-##     Male                                        11.466      11.466
-## 
-## Model Test Baseline Model:
-## 
-##   Test statistic                              1020.405     987.924
-##   Degrees of freedom                                30          30
-##   P-value                                        0.000       0.000
-##   Scaling correction factor                                  1.033
-## 
-## User Model versus Baseline Model:
-## 
-##   Comparative Fit Index (CFI)                    0.999       0.998
-##   Tucker-Lewis Index (TLI)                       0.998       0.997
-##                                                                   
-##   Robust Comparative Fit Index (CFI)                         0.998
-##   Robust Tucker-Lewis Index (TLI)                            0.997
-## 
-## Loglikelihood and Information Criteria:
-## 
-##   Loglikelihood user model (H0)              -2594.689   -2594.689
-##   Scaling correction factor                                  0.963
-##       for the MLR correction                                      
-##   Loglikelihood unrestricted model (H1)      -2586.114   -2586.114
-##   Scaling correction factor                                  0.965
-##       for the MLR correction                                      
-##                                                                   
-##   Akaike (AIC)                                5265.378    5265.378
-##   Bayesian (BIC)                              5409.744    5409.744
-##   Sample-size adjusted Bayesian (SABIC)       5289.207    5289.207
-## 
-## Root Mean Square Error of Approximation:
-## 
-##   RMSEA                                          0.021       0.025
-##   90 Percent confidence interval - lower         0.000       0.000
-##   90 Percent confidence interval - upper         0.076       0.079
-##   P-value H_0: RMSEA &lt;= 0.050                    0.747       0.714
-##   P-value H_0: RMSEA &gt;= 0.080                    0.037       0.047
-##                                                                   
-##   Robust RMSEA                                               0.025
-##   90 Percent confidence interval - lower                     0.000
-##   90 Percent confidence interval - upper                     0.077
-##   P-value H_0: Robust RMSEA &lt;= 0.050                         0.728
-##   P-value H_0: Robust RMSEA &gt;= 0.080                         0.039
-## 
-## Standardized Root Mean Square Residual:
-## 
-##   SRMR                                           0.021       0.021
-## 
-## Parameter Estimates:
-## 
-##   Standard errors                             Sandwich
-##   Information bread                           Observed
-##   Observed information based on                Hessian
-## 
-## 
-## Group 1 [Female]:
-## 
-## Latent Variables:
-##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##   PA =~                                                                 
-##     pa1               1.000                               1.098    0.879
-##     pa2               0.949    0.076   12.544    0.000    1.041    0.789
-##     pa3               0.941    0.072   13.128    0.000    1.033    0.843
-##   neg =~                                                                
-##     na1               1.000                               0.901    0.847
-##     na2               1.073    0.085   12.552    0.000    0.967    0.872
-##     na3               1.026    0.088   11.699    0.000    0.925    0.808
-## 
-## Covariances:
-##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##   PA ~~                                                                 
-##     neg              -0.429    0.111   -3.857    0.000   -0.433   -0.433
-## 
-## Intercepts:
-##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##    .pa1               3.421    0.101   33.774    0.000    3.421    2.739
-##    .pa2               3.276    0.107   30.627    0.000    3.276    2.484
-##    .pa3               3.309    0.099   33.278    0.000    3.309    2.699
-##    .na1               2.895    0.086   33.519    0.000    2.895    2.719
-##    .na2               2.796    0.090   31.106    0.000    2.796    2.523
-##    .na3               2.638    0.093   28.419    0.000    2.638    2.305
-## 
-## Variances:
-##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##    .pa1               0.355    0.075    4.762    0.000    0.355    0.228
-##    .pa2               0.655    0.105    6.214    0.000    0.655    0.377
-##    .pa3               0.435    0.080    5.429    0.000    0.435    0.290
-##    .na1               0.321    0.058    5.559    0.000    0.321    0.283
-##    .na2               0.293    0.067    4.379    0.000    0.293    0.239
-##    .na3               0.455    0.067    6.817    0.000    0.455    0.347
-##     PA                1.205    0.157    7.697    0.000    1.000    1.000
-##     neg               0.812    0.115    7.035    0.000    1.000    1.000
-## 
-## 
-## Group 2 [Male]:
-## 
-## Latent Variables:
-##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##   PA =~                                                                 
-##     pa1               1.000                               0.829    0.774
-##     pa2               1.076    0.105   10.229    0.000    0.892    0.729
-##     pa3               1.288    0.125   10.272    0.000    1.067    0.871
-##   neg =~                                                                
-##     na1               1.000                               0.982    0.852
-##     na2               0.828    0.076   10.955    0.000    0.814    0.771
-##     na3               0.958    0.071   13.502    0.000    0.941    0.864
-## 
-## Covariances:
-##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##   PA ~~                                                                 
-##     neg              -0.346    0.084   -4.109    0.000   -0.426   -0.426
-## 
-## Intercepts:
-##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##    .pa1               3.820    0.080   47.581    0.000    3.820    3.566
-##    .pa2               3.500    0.092   38.163    0.000    3.500    2.860
-##    .pa3               3.590    0.092   39.102    0.000    3.590    2.931
-##    .na1               2.685    0.086   31.090    0.000    2.685    2.330
-##    .na2               2.652    0.079   33.509    0.000    2.652    2.512
-##    .na3               2.590    0.082   31.732    0.000    2.590    2.378
-## 
-## Variances:
-##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##    .pa1               0.461    0.066    6.964    0.000    0.461    0.402
-##    .pa2               0.702    0.095    7.405    0.000    0.702    0.469
-##    .pa3               0.361    0.096    3.773    0.000    0.361    0.241
-##    .na1               0.364    0.070    5.224    0.000    0.364    0.274
-##    .na2               0.453    0.067    6.732    0.000    0.453    0.406
-##    .na3               0.301    0.057    5.238    0.000    0.301    0.254
-##     PA                0.687    0.119    5.755    0.000    1.000    1.000
-##     neg               0.964    0.126    7.680    0.000    1.000    1.000</code></pre>
-</div>
-</div>
-<p>By default, lavaan fits the <strong>configural invariance</strong> model — the same factor structure in both groups, but all parameters (loadings, variances, covariances) are freely estimated in each group. The output shows parameter estimates for each group separately.</p>
-</section>
-<section id="testing-measurement-invariance" class="level3">
-<h3 class="anchored" data-anchor-id="testing-measurement-invariance">Testing measurement invariance</h3>
-<p>To test whether the factor structure is the same across groups, you progressively constrain parameters to be equal and compare the models:</p>
-<ol type="1">
-<li><strong>Configural invariance</strong> — same structure, all parameters free (fitted above)</li>
-<li><strong>Weak invariance</strong> — factor loadings equal across groups</li>
-<li><strong>Strong invariance</strong> — loadings and intercepts equal</li>
-<li><strong>Strict invariance</strong> — loadings, intercepts, and residual variances equal</li>
-</ol>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Weak invariance (equal loadings)</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>fit_weak <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model_cfa, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>,</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">group.equal =</span> <span class="st">"loadings"</span>, <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="fu">lavTestLRT</span>(fit_config, fit_weak)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>## 
-## Scaled Chi-Squared Difference Test (method = "satorra.bentler.2001")
-## 
-## lavaan-&gt;lavTestLRT():  
-##    lavaan NOTE: The "Chisq" column contains standard test statistics, not the 
-##    robust test that should be reported per model. A robust difference test is 
-##    a function of two standard (not robust) statistics.
-## 
-##            Df    AIC    BIC  Chisq Chisq diff   RMSEA Df diff Pr(&gt;Chisq)  
-## fit_config 16 5265.4 5409.7 17.150                                        
-## fit_weak   20 5268.1 5397.2 27.835     12.714 0.10534       4    0.01276 *
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
-</div>
-</div>
-<p>A non-significant result means the loadings are equivalent across groups — weak invariance holds. If weak invariance holds, you can proceed to test strong and strict invariance. If it does not hold, the factor structure is not equivalent across groups, and comparing latent means across groups would be misleading.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Measurement invariance is a prerequisite for group comparison
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Before you can compare latent means or structural paths across groups, you must establish that the measurement model is equivalent — that the same items measure the same factors in the same way in both groups. This is what measurement invariance testing does. Without it, observed group differences could be due to measurement artefacts rather than true group differences.</p>
-</div>
-</div>
-</section>
+<p>When the moderator is a <strong>categorical variable</strong> (like gender) and you have <strong>latent variables</strong> in your model, you can test moderation with <strong>multigroup SEM</strong>: you fit the model separately for each group and test whether the structural paths are equal across groups.</p>
+<p>A prerequisite is <strong>measurement invariance</strong> — establishing that the measurement model (the factor loadings and item intercepts) is equivalent across groups. Without it, any path differences you find could be artefacts of the items measuring the factors differently in the two groups rather than true structural differences. Measurement invariance testing is involved enough to warrant its own tutorial; we cover it in full in Tutorial 17. The rest of this section assumes (partial) metric invariance has been established, which is the level required to compare structural paths.</p>
 <section id="testing-moderation-of-structural-paths" class="level3">
 <h3 class="anchored" data-anchor-id="testing-moderation-of-structural-paths">Testing moderation of structural paths</h3>
-<p>Once measurement invariance is established, you can test whether the <strong>structural paths</strong> differ across groups. In the context of our mediation model (Tutorial 12), you could test whether the indirect effect of <code>con</code> on <code>creat</code> through <code>pa</code> differs between males and females:</p>
+<p>Once (partial) metric invariance is established, you can test whether the <strong>structural paths</strong> differ across groups. In the context of our mediation model (Tutorial 12), you could test whether the indirect effect of <code>con</code> on <code>creat</code> through <code>pa</code> differs between males and females:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>model_med <span class="ot">&lt;-</span> <span class="st">'</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="st">  con   =~ p1 + p2 + p3</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="st">  pa    =~ pa1 + pa2 + pa3</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="st">  creat =~ creat1 + creat2 + creat3</span></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="st">  creat ~ b * pa + c * con</span></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="st">  pa    ~ a * con</span></span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="st">  indirect := a * b</span></span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="st">  direct   := c</span></span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="st">  total    := c + (a * b)</span></span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="st">'</span></span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit with equal measurement model across groups</span></span>
-<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a><span class="co"># but free structural paths</span></span>
-<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>fit_med_group <span class="ot">&lt;-</span> <span class="fu">sem</span>(model_med, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>,</span>
-<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>                     <span class="at">group.equal =</span> <span class="st">"loadings"</span>, <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
-<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Now constrain structural paths to be equal</span></span>
-<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>fit_med_group_eq <span class="ot">&lt;-</span> <span class="fu">sem</span>(model_med, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>,</span>
-<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>                        <span class="at">group.equal =</span> <span class="fu">c</span>(<span class="st">"loadings"</span>, <span class="st">"regressions"</span>),</span>
-<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>                        <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
-<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a><span class="fu">lavTestLRT</span>(fit_med_group, fit_med_group_eq)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>model_med <span class="ot">&lt;-</span> <span class="st">'</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="st">  con   =~ p1 + p2 + p3</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="st">  pa    =~ pa1 + pa2 + pa3</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="st">  creat =~ creat1 + creat2 + creat3</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="st">  creat ~ b * pa + c * con</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="st">  pa    ~ a * con</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="st">  indirect := a * b</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="st">  direct   := c</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="st">  total    := c + (a * b)</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="st">'</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit with equal measurement model across groups</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="co"># but free structural paths</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>fit_med_group <span class="ot">&lt;-</span> <span class="fu">sem</span>(model_med, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>,</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>                     <span class="at">group.equal =</span> <span class="st">"loadings"</span>, <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Now constrain structural paths to be equal</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>fit_med_group_eq <span class="ot">&lt;-</span> <span class="fu">sem</span>(model_med, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>,</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>                        <span class="at">group.equal =</span> <span class="fu">c</span>(<span class="st">"loadings"</span>, <span class="st">"regressions"</span>),</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>                        <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a><span class="fu">lavTestLRT</span>(fit_med_group, fit_med_group_eq)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>A significant result means the structural paths differ across groups — gender moderates the mediation. A non-significant result means the paths are equivalent — no moderation.</p>
 <div class="callout callout-style-default callout-warning callout-titled">
@@ -1172,13 +966,13 @@ Setup code (you have seen this before)
 <p>When both the predictor and the moderator are <strong>latent variables</strong> (factors measured by multiple indicators), testing moderation requires modelling the <strong>interaction between two latent variables</strong>. This is more complex than a product term between observed variables.</p>
 <p>lavaan supports latent interactions via the <code>~*~</code> operator (the product-indicator approach), but this is a PhD-level technique and beyond the scope of an MSc dissertation. We mention it here so you are aware it exists:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>model_int <span class="ot">&lt;-</span> <span class="st">'</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="st">  pa   =~ pa1 + pa2 + pa3</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="st">  con  =~ p1 + p2 + p3</span></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="st">  pa ~*~ con   # latent interaction between pa and con</span></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="st">  creat ~ pa + con + pa.con    # pa.con is the latent interaction term</span></span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="st">'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>model_int <span class="ot">&lt;-</span> <span class="st">'</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="st">  pa   =~ pa1 + pa2 + pa3</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="st">  con  =~ p1 + p2 + p3</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="st">  pa ~*~ con   # latent interaction between pa and con</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="st">  creat ~ pa + con + pa.con    # pa.con is the latent interaction term</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="st">'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="callout callout-style-default callout-important callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -1217,10 +1011,6 @@ Setup code (you have seen this before)
 <h3 class="anchored" data-anchor-id="standardising-the-moderator-before-centring">Standardising the moderator before centring</h3>
 <p><code>scale(x, scale = TRUE)</code> both centres and standardises (divides by the SD). This changes the scale of the coefficient — it is now in SD units, not original units. Use <code>scale = FALSE</code> for centring only; use <code>scale = TRUE</code> only if you want standardised coefficients.</p>
 </section>
-<section id="multigroup-sem-without-measurement-invariance" class="level3">
-<h3 class="anchored" data-anchor-id="multigroup-sem-without-measurement-invariance">Multigroup SEM without measurement invariance</h3>
-<p>If you compare structural paths across groups without first establishing measurement invariance, any differences you find could be due to the items measuring different things in the two groups, not to true group differences in the structural paths. Always test measurement invariance first.</p>
-</section>
 </div>
 </div>
 </section>
@@ -1228,12 +1018,11 @@ Setup code (you have seen this before)
 <h2 class="anchored" data-anchor-id="exercises">Exercises</h2>
 <ol type="1">
 <li><p>Fit a moderated regression of <code>creat</code> on <code>con</code> (centred) and <code>gender</code>. Is the interaction significant? Compute the simple slopes for each gender group. Plot the interaction with <code>ggplot2</code>.</p></li>
-<li><p>Fit a multigroup CFA on the two-factor PA/neg model with <code>gender</code> as the grouping variable. Test configural, weak, and strong invariance using <code>lavTestLRT()</code>. Does measurement invariance hold?</p></li>
-<li><p>If measurement invariance holds in Exercise 2, fit a multigroup SEM with the mediation model (Tutorial 12) and test whether the structural paths are equal across groups. Is the mediation moderated by gender?</p></li>
+<li><p>Assuming (partial) metric invariance holds for the two-factor PA/neg model across gender — see Tutorial 17 — fit a multigroup SEM with the mediation model (Tutorial 12) and test whether the structural paths are equal across groups. Is the mediation moderated by gender?</p></li>
 <li><p>A researcher wants to test whether <strong>age</strong> moderates the effect of job control on creativity. Age is categorical (5 levels) in the PS dataset. Describe two ways they could test this: (a) with <code>lm()</code> and (b) with multigroup lavaan. What are the trade-offs?</p></li>
 </ol>
 <div class="callout callout-style-default callout-caution callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -1242,12 +1031,12 @@ Setup code (you have seen this before)
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p><strong>Exercise 1</strong></p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>fit_ex1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(creat <span class="sc">~</span> con_c <span class="sc">*</span> gender, <span class="at">data =</span> ps)</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit_ex1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>fit_ex1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(creat <span class="sc">~</span> con_c <span class="sc">*</span> gender, <span class="at">data =</span> ps)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit_ex1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>## 
 ## Call:
@@ -1271,27 +1060,27 @@ Setup code (you have seen this before)
 ## Multiple R-squared:  0.003309,   Adjusted R-squared:  -0.005807 
 ## F-statistic: 0.363 on 3 and 328 DF,  p-value: 0.7798</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>coef_male   <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">lm</span>(creat <span class="sc">~</span> con_c, <span class="at">data =</span> <span class="fu">subset</span>(ps, gender <span class="sc">==</span> <span class="st">"Male"</span>)))[<span class="st">"con_c"</span>]</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>coef_female <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">lm</span>(creat <span class="sc">~</span> con_c, <span class="at">data =</span> <span class="fu">subset</span>(ps, gender <span class="sc">==</span> <span class="st">"Female"</span>)))[<span class="st">"con_c"</span>]</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>coef_male</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>coef_male   <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">lm</span>(creat <span class="sc">~</span> con_c, <span class="at">data =</span> <span class="fu">subset</span>(ps, gender <span class="sc">==</span> <span class="st">"Male"</span>)))[<span class="st">"con_c"</span>]</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>coef_female <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">lm</span>(creat <span class="sc">~</span> con_c, <span class="at">data =</span> <span class="fu">subset</span>(ps, gender <span class="sc">==</span> <span class="st">"Female"</span>)))[<span class="st">"con_c"</span>]</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>coef_male</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>##       con_c 
 ## -0.09413823</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>coef_female</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>coef_female</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>##       con_c 
 ## 0.002985641</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(ps, <span class="fu">aes</span>(<span class="at">x =</span> con_c, <span class="at">y =</span> creat, <span class="at">colour =</span> gender)) <span class="sc">+</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Job control (centred)"</span>, <span class="at">y =</span> <span class="st">"Creativity"</span>, <span class="at">colour =</span> <span class="st">"Gender"</span>) <span class="sc">+</span></span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(ps, <span class="fu">aes</span>(<span class="at">x =</span> con_c, <span class="at">y =</span> creat, <span class="at">colour =</span> gender)) <span class="sc">+</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Job control (centred)"</span>, <span class="at">y =</span> <span class="st">"Creativity"</span>, <span class="at">colour =</span> <span class="st">"Gender"</span>) <span class="sc">+</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="16-moderation_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="975"></p>
+<p><img src="16-moderation_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="975"></p>
 </figure>
 </div>
 </div>
@@ -1299,69 +1088,29 @@ Setup code (you have seen this before)
 <p>The interaction is significant if the <code>con_c:genderFemale</code> p-value is below .05. The simple slopes (<code>coef_male</code>, <code>coef_female</code>) show how the effect of job control differs by gender.</p>
 <p><strong>Exercise 2</strong></p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>fit_config <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model_cfa, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>, <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>fit_weak   <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model_cfa, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>,</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">group.equal =</span> <span class="st">"loadings"</span>, <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>fit_strong <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model_cfa, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>,</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>                  <span class="at">group.equal =</span> <span class="fu">c</span>(<span class="st">"loadings"</span>, <span class="st">"intercepts"</span>), <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="fu">lavTestLRT</span>(fit_config, fit_weak)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>## 
-## Scaled Chi-Squared Difference Test (method = "satorra.bentler.2001")
-## 
-## lavaan-&gt;lavTestLRT():  
-##    lavaan NOTE: The "Chisq" column contains standard test statistics, not the 
-##    robust test that should be reported per model. A robust difference test is 
-##    a function of two standard (not robust) statistics.
-## 
-##            Df    AIC    BIC  Chisq Chisq diff   RMSEA Df diff Pr(&gt;Chisq)  
-## fit_config 16 5265.4 5409.7 17.150                                        
-## fit_weak   20 5268.1 5397.2 27.835     12.714 0.10534       4    0.01276 *
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lavTestLRT</span>(fit_weak, fit_strong)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>## 
-## Scaled Chi-Squared Difference Test (method = "satorra.bentler.2001")
-## 
-## lavaan-&gt;lavTestLRT():  
-##    lavaan NOTE: The "Chisq" column contains standard test statistics, not the 
-##    robust test that should be reported per model. A robust difference test is 
-##    a function of two standard (not robust) statistics.
-## 
-##            Df    AIC    BIC  Chisq Chisq diff    RMSEA Df diff Pr(&gt;Chisq)
-## fit_weak   20 5268.1 5397.2 27.835                                       
-## fit_strong 24 5266.0 5379.9 33.735     5.9235 0.053879       4     0.2049</code></pre>
-</div>
-</div>
-<p>Configural → weak: if non-significant, loadings are equal (weak invariance holds). Weak → strong: if non-significant, intercepts are also equal (strong invariance holds). If strong invariance holds, you can compare latent means across groups.</p>
-<p><strong>Exercise 3</strong></p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>ps<span class="sc">$</span>p1 <span class="ot">&lt;-</span> (ps<span class="sc">$</span>con9 <span class="sc">+</span> ps<span class="sc">$</span>con10) <span class="sc">/</span> <span class="dv">2</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>ps<span class="sc">$</span>p2 <span class="ot">&lt;-</span> (ps<span class="sc">$</span>con1 <span class="sc">+</span> ps<span class="sc">$</span>con8)  <span class="sc">/</span> <span class="dv">2</span></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>ps<span class="sc">$</span>p3 <span class="ot">&lt;-</span> (ps<span class="sc">$</span>con3 <span class="sc">+</span> ps<span class="sc">$</span>con6)  <span class="sc">/</span> <span class="dv">2</span></span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>model_med <span class="ot">&lt;-</span> <span class="st">'</span></span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="st">  con   =~ p1 + p2 + p3</span></span>
-<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="st">  pa    =~ pa1 + pa2 + pa3</span></span>
-<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a><span class="st">  creat =~ creat1 + creat2 + creat3</span></span>
-<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a><span class="st">  creat ~ b * pa + c * con</span></span>
-<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a><span class="st">  pa    ~ a * con</span></span>
-<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a><span class="st">  indirect := a * b</span></span>
-<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a><span class="st">  direct   := c</span></span>
-<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a><span class="st">  total    := c + (a * b)</span></span>
-<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a><span class="st">'</span></span>
-<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>fit_free <span class="ot">&lt;-</span> <span class="fu">sem</span>(model_med, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>,</span>
-<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>                <span class="at">group.equal =</span> <span class="st">"loadings"</span>, <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
-<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>fit_eq   <span class="ot">&lt;-</span> <span class="fu">sem</span>(model_med, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>,</span>
-<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a>                <span class="at">group.equal =</span> <span class="fu">c</span>(<span class="st">"loadings"</span>, <span class="st">"regressions"</span>), <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
-<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a><span class="fu">lavTestLRT</span>(fit_free, fit_eq)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>ps<span class="sc">$</span>p1 <span class="ot">&lt;-</span> (ps<span class="sc">$</span>con9 <span class="sc">+</span> ps<span class="sc">$</span>con10) <span class="sc">/</span> <span class="dv">2</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>ps<span class="sc">$</span>p2 <span class="ot">&lt;-</span> (ps<span class="sc">$</span>con1 <span class="sc">+</span> ps<span class="sc">$</span>con8)  <span class="sc">/</span> <span class="dv">2</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>ps<span class="sc">$</span>p3 <span class="ot">&lt;-</span> (ps<span class="sc">$</span>con3 <span class="sc">+</span> ps<span class="sc">$</span>con6)  <span class="sc">/</span> <span class="dv">2</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>model_med <span class="ot">&lt;-</span> <span class="st">'</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="st">  con   =~ p1 + p2 + p3</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="st">  pa    =~ pa1 + pa2 + pa3</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="st">  creat =~ creat1 + creat2 + creat3</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="st">  creat ~ b * pa + c * con</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="st">  pa    ~ a * con</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="st">  indirect := a * b</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a><span class="st">  direct   := c</span></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="st">  total    := c + (a * b)</span></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a><span class="st">'</span></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>fit_free <span class="ot">&lt;-</span> <span class="fu">sem</span>(model_med, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>,</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>                <span class="at">group.equal =</span> <span class="st">"loadings"</span>, <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>fit_eq   <span class="ot">&lt;-</span> <span class="fu">sem</span>(model_med, <span class="at">data =</span> ps, <span class="at">group =</span> <span class="st">"gender"</span>,</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>                <span class="at">group.equal =</span> <span class="fu">c</span>(<span class="st">"loadings"</span>, <span class="st">"regressions"</span>), <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a><span class="fu">lavTestLRT</span>(fit_free, fit_eq)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>A significant result means the structural paths differ by gender — the mediation is moderated. A non-significant result means the paths are equivalent — no moderation.</p>
-<p><strong>Exercise 4</strong></p>
+<p><strong>Exercise 3</strong></p>
 <p><strong>(a) With <code>lm()</code>:</strong> Recode <code>age</code> as a factor and fit <code>lm(creat ~ con * age, data = ps)</code>. The interaction terms <code>con:age2</code>, <code>con:age3</code>, etc. test whether the slope of <code>con</code> differs for each age band relative to the reference band. This is simple but does not separate measurement error from structural effects.</p>
 <p><strong>(b) With multigroup lavaan:</strong> Fit the latent SEM mediation model with <code>group = "age"</code>. This tests whether the structural paths among the latent factors differ across age groups. This is more appropriate if you want to remove measurement error, but it requires sufficient sample size per age band (the PS dataset has only 21 participants in age band 1, which is too few for a stable multigroup SEM).</p>
 <p><strong>Trade-offs:</strong> <code>lm()</code> is simpler, faster, and works with small per-group samples, but uses manifest scores (with measurement error). Multigroup lavaan removes measurement error but requires larger per-group samples and is more complex to specify and interpret.</p>
@@ -1377,6 +1126,7 @@ Setup code (you have seen this before)
 <li>Report results in APA format with <code>texreg</code> tables and <code>tidySEM</code> diagrams (Tutorial 13)</li>
 <li>Extend to multilevel and growth curve models (Tutorials 14–15)</li>
 <li>Test moderation with <code>lm()</code> and multigroup SEM (Tutorial 16)</li>
+<li>Establish measurement invariance across groups (Tutorial 17)</li>
 </ul>
 <p>These are the core tools you need for a quantitative dissertation in organisational psychology. The <a href="../cheatsheet.html">cheat sheet</a>, <a href="../glossary.html">glossary</a>, and <a href="../notation.html">notation key</a> are there for quick reference. When you encounter a technique we have not covered — latent profile analysis, EFA, categorical outcome SEM — the lavaan documentation and the further reading lists in each tutorial are your next stop.</p>
 <p>Good luck with your dissertation.</p>
@@ -1824,6 +1574,9 @@ Kelloway, E. K. (2015). <em>Using mplus for structural equation modeling</em> (2
       </a>          
   </div>
   <div class="nav-page nav-page-next">
+      <a href="../tutorials/17-measurement-invariance.html" class="pagination-link" aria-label="Measurement invariance">
+        <span class="nav-page-text">Measurement invariance</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
   </div>
 </nav>
 </div> <!-- /content -->

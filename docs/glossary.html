@@ -484,6 +484,12 @@ window.Quarto = {
  <span class="menu-text">Moderation</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tutorials/17-measurement-invariance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Measurement invariance</span></a>
+  </div>
+</li>
       </ul>
   </li>
     </ul>
@@ -510,6 +516,7 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#cfa" id="toc-cfa" class="nav-link" data-scroll-target="#cfa">CFA</a></li>
   <li><a href="#common-method-variance" id="toc-common-method-variance" class="nav-link" data-scroll-target="#common-method-variance">common method variance</a></li>
+  <li><a href="#configural-invariance" id="toc-configural-invariance" class="nav-link" data-scroll-target="#configural-invariance">configural invariance</a></li>
   <li><a href="#constraining" id="toc-constraining" class="nav-link" data-scroll-target="#constraining">constraining parameters</a></li>
   <li><a href="#convergence" id="toc-convergence" class="nav-link" data-scroll-target="#convergence">convergence</a></li>
   </ul></li>
@@ -559,12 +566,15 @@ window.Quarto = {
   <li><a href="#mar" id="toc-mar" class="nav-link" data-scroll-target="#mar">MAR</a></li>
   <li><a href="#mcar" id="toc-mcar" class="nav-link" data-scroll-target="#mcar">MCAR</a></li>
   <li><a href="#measurement-error" id="toc-measurement-error" class="nav-link" data-scroll-target="#measurement-error">measurement error</a></li>
+  <li><a href="#measurement-invariance" id="toc-measurement-invariance" class="nav-link" data-scroll-target="#measurement-invariance">measurement invariance</a></li>
   <li><a href="#measurement-model" id="toc-measurement-model" class="nav-link" data-scroll-target="#measurement-model">measurement model</a></li>
   <li><a href="#mediation" id="toc-mediation" class="nav-link" data-scroll-target="#mediation">mediation</a></li>
+  <li><a href="#metric-invariance" id="toc-metric-invariance" class="nav-link" data-scroll-target="#metric-invariance">metric invariance</a></li>
   <li><a href="#missingness" id="toc-missingness" class="nav-link" data-scroll-target="#missingness">missingness</a></li>
   <li><a href="#mnar" id="toc-mnar" class="nav-link" data-scroll-target="#mnar">MNAR</a></li>
   <li><a href="#mlr" id="toc-mlr" class="nav-link" data-scroll-target="#mlr">MLR</a></li>
   <li><a href="#modification-indices" id="toc-modification-indices" class="nav-link" data-scroll-target="#modification-indices">modification indices</a></li>
+  <li><a href="#multigroup-sem" id="toc-multigroup-sem" class="nav-link" data-scroll-target="#multigroup-sem">multigroup SEM</a></li>
   </ul></li>
   <li><a href="#o" id="toc-o" class="nav-link" data-scroll-target="#o">O</a>
   <ul class="collapse">
@@ -575,6 +585,7 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#parcel" id="toc-parcel" class="nav-link" data-scroll-target="#parcel">parcel</a></li>
   <li><a href="#parameter" id="toc-parameter" class="nav-link" data-scroll-target="#parameter">parameter</a></li>
+  <li><a href="#partial-invariance" id="toc-partial-invariance" class="nav-link" data-scroll-target="#partial-invariance">partial invariance</a></li>
   <li><a href="#path-analysis" id="toc-path-analysis" class="nav-link" data-scroll-target="#path-analysis">path analysis</a></li>
   <li><a href="#psi" id="toc-psi" class="nav-link" data-scroll-target="#psi">psi</a></li>
   </ul></li>
@@ -586,12 +597,14 @@ window.Quarto = {
   <li><a href="#s" id="toc-s" class="nav-link" data-scroll-target="#s">S</a>
   <ul class="collapse">
   <li><a href="#saturated" id="toc-saturated" class="nav-link" data-scroll-target="#saturated">saturated model</a></li>
+  <li><a href="#scalar-invariance" id="toc-scalar-invariance" class="nav-link" data-scroll-target="#scalar-invariance">scalar invariance</a></li>
   <li><a href="#second-order-factor" id="toc-second-order-factor" class="nav-link" data-scroll-target="#second-order-factor">second-order factor</a></li>
   <li><a href="#sem" id="toc-sem" class="nav-link" data-scroll-target="#sem">SEM</a></li>
   <li><a href="#simple-slopes" id="toc-simple-slopes" class="nav-link" data-scroll-target="#simple-slopes">simple slopes</a></li>
   <li><a href="#sobel-test" id="toc-sobel-test" class="nav-link" data-scroll-target="#sobel-test">Sobel test</a></li>
   <li><a href="#srmr" id="toc-srmr" class="nav-link" data-scroll-target="#srmr">SRMR</a></li>
   <li><a href="#standardised-solution" id="toc-standardised-solution" class="nav-link" data-scroll-target="#standardised-solution">standardised solution</a></li>
+  <li><a href="#strict-invariance" id="toc-strict-invariance" class="nav-link" data-scroll-target="#strict-invariance">strict invariance</a></li>
   <li><a href="#structural-model" id="toc-structural-model" class="nav-link" data-scroll-target="#structural-model">structural model</a></li>
   </ul></li>
   <li><a href="#t" id="toc-t" class="nav-link" data-scroll-target="#t">T</a>
@@ -688,6 +701,10 @@ window.Quarto = {
 <section id="common-method-variance" class="level3">
 <h3 class="anchored" data-anchor-id="common-method-variance">common method variance</h3>
 <p>Variance shared between observed variables due to the measurement method (e.g.&nbsp;all items measured on the same Likert scale in the same questionnaire) rather than due to the latent construct. Can be modelled as residual covariances between items in CFA.</p>
+</section>
+<section id="configural-invariance" class="level3">
+<h3 class="anchored" data-anchor-id="configural-invariance">configural invariance</h3>
+<p>The weakest level of <a href="#measurement-invariance">measurement invariance</a>: the same factor structure (the same indicators loading on the same latent factors) holds in every group, but all parameters are freely estimated in each group. Also called <em>pattern</em> invariance. A prerequisite for testing stronger forms of invariance. See Tutorial 17.</p>
 </section>
 <section id="constraining" class="level3">
 <h3 class="anchored" data-anchor-id="constraining">constraining parameters</h3>
@@ -813,6 +830,10 @@ window.Quarto = {
 <h3 class="anchored" data-anchor-id="measurement-error">measurement error</h3>
 <p>The portion of an observed variable’s variance that is not due to the latent construct — a combination of random error and item-specific systematic variance. Denoted <span class="math inline">\(\theta\)</span> (theta). Modelled as the residual variance of each indicator in CFA.</p>
 </section>
+<section id="measurement-invariance" class="level3">
+<h3 class="anchored" data-anchor-id="measurement-invariance">measurement invariance</h3>
+<p>The property that the same measurement model — the same items measuring the same latent factors, with the same relationships between items and factors — holds in every group. Tested as a four-level hierarchy: <a href="#configural-invariance">configural</a>, <a href="#metric-invariance">metric</a> (equal loadings), <a href="#scalar-invariance">scalar</a> (equal loadings + intercepts), and <a href="#strict-invariance">strict</a> (equal loadings + intercepts + residuals). A prerequisite for comparing latent means or structural paths across groups. See Tutorial 17.</p>
+</section>
 <section id="measurement-model" class="level3">
 <h3 class="anchored" data-anchor-id="measurement-model">measurement model</h3>
 <p>The part of a SEM that specifies how latent variables are measured by observed indicators — that is, the CFA portion of the model. Contrast with the <a href="#structural-model">structural model</a>.</p>
@@ -820,6 +841,10 @@ window.Quarto = {
 <section id="mediation" class="level3">
 <h3 class="anchored" data-anchor-id="mediation">mediation</h3>
 <p>A relationship in which an independent variable <span class="math inline">\(X\)</span> influences an outcome <span class="math inline">\(Y\)</span> through an intermediate variable <span class="math inline">\(M\)</span> (the mediator). The total effect of <span class="math inline">\(X\)</span> on <span class="math inline">\(Y\)</span> is decomposed into a direct effect (<span class="math inline">\(c'\)</span>) and an indirect effect (<span class="math inline">\(ab\)</span>). See Tutorials 11 and 12.</p>
+</section>
+<section id="metric-invariance" class="level3">
+<h3 class="anchored" data-anchor-id="metric-invariance">metric invariance</h3>
+<p>The second level of <a href="#measurement-invariance">measurement invariance</a>: factor loadings are equal across groups, in addition to the same factor structure (<a href="#configural-invariance">configural invariance</a>). Also called <em>weak</em> invariance. Required before comparing structural paths or factor variances across groups. Tested in lavaan with <code>group.equal = "loadings"</code>. See Tutorial 17.</p>
 </section>
 <section id="missingness" class="level3">
 <h3 class="anchored" data-anchor-id="missingness">missingness</h3>
@@ -836,6 +861,10 @@ window.Quarto = {
 <section id="modification-indices" class="level3">
 <h3 class="anchored" data-anchor-id="modification-indices">modification indices</h3>
 <p>Statistics that estimate how much the model’s <span class="math inline">\(\chi^2\)</span> would improve if a currently-fixed parameter were freely estimated. A value above 3.84 suggests a parameter worth considering for freeing (<span class="math inline">\(\alpha = .05\)</span>). Should be used cautiously — they are data-driven and can lead to overfitting. In lavaan: <code>modindices(fit, minimum.value = 3.84, sort. = TRUE)</code>.</p>
+</section>
+<section id="multigroup-sem" class="level3">
+<h3 class="anchored" data-anchor-id="multigroup-sem">multigroup SEM</h3>
+<p>A structural equation model fitted simultaneously in two or more groups, with parameters progressively constrained equal across groups. Used both for testing <a href="#measurement-invariance">measurement invariance</a> (on the measurement model) and for testing moderation by a categorical variable (on the structural paths). Specified in lavaan with the <code>group</code> argument and <code>group.equal</code> / <code>group.partial</code>. See Tutorials 16 and 17.</p>
 </section>
 </section>
 <section id="o" class="level2">
@@ -858,6 +887,10 @@ window.Quarto = {
 <section id="parameter" class="level3">
 <h3 class="anchored" data-anchor-id="parameter">parameter</h3>
 <p>A quantity in a model that is either estimated from the data (<a href="#free-parameter">free</a>) or set by the researcher (<a href="#fixed-parameter">fixed</a>). In SEM, parameters include factor loadings, regression coefficients, variances, and covariances.</p>
+</section>
+<section id="partial-invariance" class="level3">
+<h3 class="anchored" data-anchor-id="partial-invariance">partial invariance</h3>
+<p>A relaxed form of <a href="#measurement-invariance">measurement invariance</a> in which most, but not all, parameters of a given type are equal across groups — for example, all but one or two factor loadings. As long as each factor retains at least two invariant indicators (the marker plus one other), the factor’s scale remains comparable across groups and subsequent comparisons are interpretable. In lavaan, requested with <code>group.partial</code>. See Tutorial 17.</p>
 </section>
 <section id="path-analysis" class="level3">
 <h3 class="anchored" data-anchor-id="path-analysis">path analysis</h3>
@@ -885,6 +918,10 @@ window.Quarto = {
 <h3 class="anchored" data-anchor-id="saturated">saturated model</h3>
 <p>See <a href="#just-identified">just-identified</a>.</p>
 </section>
+<section id="scalar-invariance" class="level3">
+<h3 class="anchored" data-anchor-id="scalar-invariance">scalar invariance</h3>
+<p>The third level of <a href="#measurement-invariance">measurement invariance</a>: item intercepts are equal across groups, in addition to equal loadings (<a href="#metric-invariance">metric invariance</a>). Also called <em>strong</em> invariance. Required before comparing <strong>latent means</strong> across groups, because equal intercepts fix the origin of each factor’s scale. Tested in lavaan with <code>group.equal = c("loadings", "intercepts")</code>. See Tutorial 17.</p>
+</section>
 <section id="second-order-factor" class="level3">
 <h3 class="anchored" data-anchor-id="second-order-factor">second-order factor</h3>
 <p>A latent variable whose indicators are themselves latent variables. For example, “burnout” might be a second-order factor measured by the first-order factors “emotional exhaustion” and “cynicism”. See Tutorial 08.</p>
@@ -908,6 +945,10 @@ window.Quarto = {
 <section id="standardised-solution" class="level3">
 <h3 class="anchored" data-anchor-id="standardised-solution">standardised solution</h3>
 <p>Parameter estimates expressed in standard deviation units, so that loadings and path coefficients are comparable across variables on different scales. In lavaan: <code>summary(fit, standardized = TRUE)</code> or <code>standardizedSolution(fit)</code>. The <code>std.all</code> column fully standardises both observed and latent variables.</p>
+</section>
+<section id="strict-invariance" class="level3">
+<h3 class="anchored" data-anchor-id="strict-invariance">strict invariance</h3>
+<p>The strongest level of <a href="#measurement-invariance">measurement invariance</a>: item residual (measurement-error) variances are equal across groups, in addition to equal loadings and intercepts (<a href="#scalar-invariance">scalar invariance</a>). Rarely required for substantive conclusions — scalar invariance is enough for comparing latent means — but tested for completeness. Tested in lavaan with <code>group.equal = c("loadings", "intercepts", "residuals")</code>. See Tutorial 17.</p>
 </section>
 <section id="structural-model" class="level3">
 <h3 class="anchored" data-anchor-id="structural-model">structural model</h3>

@@ -60,7 +60,27 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
@@ -519,6 +539,12 @@ window.Quarto = {
  <span class="menu-text">Moderation</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tutorials/17-measurement-invariance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Measurement invariance</span></a>
+  </div>
+</li>
       </ul>
   </li>
     </ul>
@@ -536,6 +562,7 @@ window.Quarto = {
   <li><a href="#entry-point-functions" id="toc-entry-point-functions" class="nav-link" data-scroll-target="#entry-point-functions">Entry-point functions</a></li>
   <li><a href="#reading-output" id="toc-reading-output" class="nav-link" data-scroll-target="#reading-output">Reading output</a></li>
   <li><a href="#diagnostics-and-respecification" id="toc-diagnostics-and-respecification" class="nav-link" data-scroll-target="#diagnostics-and-respecification">Diagnostics and respecification</a></li>
+  <li><a href="#multigroup-and-measurement-invariance" id="toc-multigroup-and-measurement-invariance" class="nav-link" data-scroll-target="#multigroup-and-measurement-invariance">Multigroup and measurement invariance</a></li>
   <li><a href="#tables-and-figures" id="toc-tables-and-figures" class="nav-link" data-scroll-target="#tables-and-figures">Tables and figures</a></li>
   <li><a href="#a-complete-worked-example" id="toc-a-complete-worked-example" class="nav-link" data-scroll-target="#a-complete-worked-example">A complete worked example</a></li>
   </ul>
@@ -929,6 +956,75 @@ window.Quarto = {
 </tbody>
 </table>
 </section>
+<section id="multigroup-and-measurement-invariance" class="level2">
+<h2 class="anchored" data-anchor-id="multigroup-and-measurement-invariance">Multigroup and measurement invariance</h2>
+<p>Fitting a model in several groups at once and testing whether parameters are equal across them. Used both for measurement invariance testing (Tutorial 17) and for moderation by a categorical variable (Tutorial 16).</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 55%">
+<col style="width: 21%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Argument / function</th>
+<th>Effect</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>group = "gender"</code></td>
+<td>Fit the model separately in each group, freely by default</td>
+<td><code>cfa(model, data = df, group = "gender")</code></td>
+</tr>
+<tr class="even">
+<td><code>group.equal = "loadings"</code></td>
+<td>Constrain factor loadings equal across groups (metric / weak invariance)</td>
+<td><code>cfa(model, data = df, group = "g", group.equal = "loadings")</code></td>
+</tr>
+<tr class="odd">
+<td><code>group.equal = c("loadings", "intercepts")</code></td>
+<td>Add equal item intercepts (scalar / strong invariance)</td>
+<td><code>cfa(model, data = df, group = "g", group.equal = c("loadings", "intercepts"))</code></td>
+</tr>
+<tr class="even">
+<td><code>group.equal = c("loadings", "intercepts", "residuals")</code></td>
+<td>Add equal residual variances (strict invariance)</td>
+<td><code>cfa(model, data = df, group = "g", group.equal = c("loadings", "intercepts", "residuals"))</code></td>
+</tr>
+<tr class="odd">
+<td><code>group.partial = c("PA =~ pa3")</code></td>
+<td>Release specific equality constraints (partial invariance)</td>
+<td><code>cfa(model, data = df, group = "g", group.equal = "loadings", group.partial = c("PA =~ pa3"))</code></td>
+</tr>
+<tr class="even">
+<td><code>meanstructure = TRUE</code></td>
+<td>Estimate intercepts and latent means (required for scalar invariance and latent-mean comparison)</td>
+<td><code>cfa(model, data = df, group = "g", group.equal = c("loadings","intercepts"), meanstructure = TRUE)</code></td>
+</tr>
+<tr class="odd">
+<td><code>lavTestLRT(fit1, fit2)</code></td>
+<td>Scaled <span class="math inline">\(\chi^2\)</span> difference test between nested multigroup models</td>
+<td><code>lavTestLRT(fit_config, fit_metric)</code></td>
+</tr>
+<tr class="even">
+<td><code>lavTestScore(fit)$uni</code></td>
+<td>Univariate score tests: which equality constraints to release for partial invariance</td>
+<td><code>lavTestScore(fit_metric)$uni</code></td>
+</tr>
+</tbody>
+</table>
+<p>The invariance hierarchy, tested in order:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>fit_config <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model, <span class="at">data =</span> df, <span class="at">group =</span> <span class="st">"g"</span>, <span class="at">estimator =</span> <span class="st">"MLR"</span>)              <span class="co"># 1. configural</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>fit_metric <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model, <span class="at">data =</span> df, <span class="at">group =</span> <span class="st">"g"</span>, <span class="at">group.equal =</span> <span class="st">"loadings"</span>,       <span class="co"># 2. metric (weak)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>fit_scalar <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model, <span class="at">data =</span> df, <span class="at">group =</span> <span class="st">"g"</span>,                                  <span class="co"># 3. scalar (strong)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>                  <span class="at">group.equal =</span> <span class="fu">c</span>(<span class="st">"loadings"</span>, <span class="st">"intercepts"</span>), <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">lavTestLRT</span>(fit_config, fit_metric)   <span class="co"># non-sig =&gt; metric invariance holds</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">lavTestLRT</span>(fit_metric, fit_scalar)   <span class="co"># non-sig =&gt; scalar invariance holds</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Supplement each LRT with fit-index change criteria (<span class="citation" data-cites="chen2007">Chen (<a href="#ref-chen2007" role="doc-biblioref">2007</a>)</span>): <span class="math inline">\(\Delta\)</span>CFI <span class="math inline">\(\leq .010\)</span> and <span class="math inline">\(\Delta\)</span>RMSEA <span class="math inline">\(\leq .015\)</span> indicate the constraint does not meaningfully worsen fit.</p>
+</section>
 <section id="tables-and-figures" class="level2">
 <h2 class="anchored" data-anchor-id="tables-and-figures">Tables and figures</h2>
 <table class="caption-top table">
@@ -982,28 +1078,33 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="a-complete-worked-example">A complete worked example</h2>
 <p>Putting it all together — the two-factor CFA we walk through in Tutorial 07:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lavaan)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="st">'</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="st">  NA =~ na1 + na2 + na3</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="st">  PA =~ pa1 + pa2 + pa3</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="st">  NA ~~ PA</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="st">'</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model, <span class="at">data =</span> ps, <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit, <span class="at">standardized =</span> <span class="cn">TRUE</span>, <span class="at">fit.measures =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">fitMeasures</span>(fit, <span class="fu">c</span>(<span class="st">"chisq"</span>, <span class="st">"df"</span>, <span class="st">"pvalue"</span>,</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"cfi"</span>, <span class="st">"tli"</span>,</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"rmsea"</span>, <span class="st">"rmsea.ci.lower"</span>, <span class="st">"rmsea.ci.upper"</span>,</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"srmr"</span>))</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">modindices</span>(fit, <span class="at">minimum.value =</span> <span class="fl">3.84</span>, <span class="at">sort. =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>tidySEM<span class="sc">::</span><span class="fu">graph_sem</span>(fit)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lavaan)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="st">'</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="st">  NA =~ na1 + na2 + na3</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="st">  PA =~ pa1 + pa2 + pa3</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="st">  NA ~~ PA</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="st">'</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model, <span class="at">data =</span> ps, <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit, <span class="at">standardized =</span> <span class="cn">TRUE</span>, <span class="at">fit.measures =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">fitMeasures</span>(fit, <span class="fu">c</span>(<span class="st">"chisq"</span>, <span class="st">"df"</span>, <span class="st">"pvalue"</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"cfi"</span>, <span class="st">"tli"</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"rmsea"</span>, <span class="st">"rmsea.ci.lower"</span>, <span class="st">"rmsea.ci.upper"</span>,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"srmr"</span>))</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="fu">modindices</span>(fit, <span class="at">minimum.value =</span> <span class="fl">3.84</span>, <span class="at">sort. =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>tidySEM<span class="sc">::</span><span class="fu">graph_sem</span>(fit)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+
 
 
 </section>
 
-</main> <!-- /main -->
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2" role="list">
+<div id="ref-chen2007" class="csl-entry" role="listitem">
+Chen, F. F. (2007). Sensitivity of goodness of fit indexes to lack of measurement invariance. <em>Structural Equation Modeling: A Multidisciplinary Journal</em>, <em>14</em>(3), 464–504. <a href="https://doi.org/10.1080/10705510701301834">https://doi.org/10.1080/10705510701301834</a>
+</div>
+</div></section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right

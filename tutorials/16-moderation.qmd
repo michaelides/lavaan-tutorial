@@ -1,6 +1,6 @@
 ---
 title: "Moderation"
-subtitle: "Moderated regression with lm; multigroup lavaan; latent interaction (advanced)"
+subtitle: "Moderated regression with lm; multigroup SEM moderation; latent interaction (advanced)"
 author: "George Michaelides"
 institute: "School of Psychology, University of East Anglia"
 date: "2026"
@@ -14,7 +14,7 @@ By the end of this tutorial you will be able to:
 - fit a moderated regression model with `lm()` and interpret an interaction term
 - centre predictors at their mean and compute [simple slopes](../glossary.qmd#simple-slopes)
 - plot an interaction with `ggplot2`
-- fit a multigroup SEM in lavaan to test moderation by a categorical variable
+- test moderation by a categorical variable with multigroup SEM, assuming measurement invariance (Tutorial 17)
 - recognise the syntax for latent variable interaction (advanced, beyond MSc scope)
 
 ## Setup
@@ -170,52 +170,13 @@ Check the `pa_c:genderFemale` coefficient in the summary. If it is significant, 
 
 ## Multigroup SEM in lavaan
 
-When the moderator is a **categorical variable** (like gender) and you have **latent variables** in your model, you can test moderation with **multigroup SEM**. Instead of adding an interaction term, you fit the model separately for each group and test whether the parameters are equal across groups.
+When the moderator is a **categorical variable** (like gender) and you have **latent variables** in your model, you can test moderation with **multigroup SEM**: you fit the model separately for each group and test whether the structural paths are equal across groups.
 
-### Specifying a multigroup model
-
-Pass the `group` argument to `cfa()` or `sem()`:
-
-```{r}
-model_cfa <- '
-  PA  =~ pa1 + pa2 + pa3
-  neg =~ na1 + na2 + na3
-  PA  ~~ neg
-'
-fit_config <- cfa(model_cfa, data = ps, group = "gender", estimator = "MLR")
-summary(fit_config, standardized = TRUE, fit.measures = TRUE)
-```
-
-By default, lavaan fits the **configural invariance** model — the same factor structure in both groups, but all parameters (loadings, variances, covariances) are freely estimated in each group. The output shows parameter estimates for each group separately.
-
-### Testing measurement invariance
-
-To test whether the factor structure is the same across groups, you progressively constrain parameters to be equal and compare the models:
-
-1. **Configural invariance** — same structure, all parameters free (fitted above)
-2. **Weak invariance** — factor loadings equal across groups
-3. **Strong invariance** — loadings and intercepts equal
-4. **Strict invariance** — loadings, intercepts, and residual variances equal
-
-```{r}
-# Weak invariance (equal loadings)
-fit_weak <- cfa(model_cfa, data = ps, group = "gender",
-                group.equal = "loadings", estimator = "MLR")
-
-lavTestLRT(fit_config, fit_weak)
-```
-
-A non-significant result means the loadings are equivalent across groups — weak invariance holds. If weak invariance holds, you can proceed to test strong and strict invariance. If it does not hold, the factor structure is not equivalent across groups, and comparing latent means across groups would be misleading.
-
-::: {.callout-note}
-### Measurement invariance is a prerequisite for group comparison
-
-Before you can compare latent means or structural paths across groups, you must establish that the measurement model is equivalent — that the same items measure the same factors in the same way in both groups. This is what measurement invariance testing does. Without it, observed group differences could be due to measurement artefacts rather than true group differences.
-:::
+A prerequisite is **measurement invariance** — establishing that the measurement model (the factor loadings and item intercepts) is equivalent across groups. Without it, any path differences you find could be artefacts of the items measuring the factors differently in the two groups rather than true structural differences. Measurement invariance testing is involved enough to warrant its own tutorial; we cover it in full in Tutorial 17. The rest of this section assumes (partial) metric invariance has been established, which is the level required to compare structural paths.
 
 ### Testing moderation of structural paths
 
-Once measurement invariance is established, you can test whether the **structural paths** differ across groups. In the context of our mediation model (Tutorial 12), you could test whether the indirect effect of `con` on `creat` through `pa` differs between males and females:
+Once (partial) metric invariance is established, you can test whether the **structural paths** differ across groups. In the context of our mediation model (Tutorial 12), you could test whether the indirect effect of `con` on `creat` through `pa` differs between males and females:
 
 ```{r}
 #| eval: false
@@ -292,21 +253,15 @@ When an interaction term is in the model, the main effects are **conditional** e
 ### Standardising the moderator before centring
 
 `scale(x, scale = TRUE)` both centres and standardises (divides by the SD). This changes the scale of the coefficient — it is now in SD units, not original units. Use `scale = FALSE` for centring only; use `scale = TRUE` only if you want standardised coefficients.
-
-### Multigroup SEM without measurement invariance
-
-If you compare structural paths across groups without first establishing measurement invariance, any differences you find could be due to the items measuring different things in the two groups, not to true group differences in the structural paths. Always test measurement invariance first.
 :::
 
 ## Exercises
 
 1. Fit a moderated regression of `creat` on `con` (centred) and `gender`. Is the interaction significant? Compute the simple slopes for each gender group. Plot the interaction with `ggplot2`.
 
-2. Fit a multigroup CFA on the two-factor PA/neg model with `gender` as the grouping variable. Test configural, weak, and strong invariance using `lavTestLRT()`. Does measurement invariance hold?
+2. Assuming (partial) metric invariance holds for the two-factor PA/neg model across gender — see Tutorial 17 — fit a multigroup SEM with the mediation model (Tutorial 12) and test whether the structural paths are equal across groups. Is the mediation moderated by gender?
 
-3. If measurement invariance holds in Exercise 2, fit a multigroup SEM with the mediation model (Tutorial 12) and test whether the structural paths are equal across groups. Is the mediation moderated by gender?
-
-4. A researcher wants to test whether **age** moderates the effect of job control on creativity. Age is categorical (5 levels) in the PS dataset. Describe two ways they could test this: (a) with `lm()` and (b) with multigroup lavaan. What are the trade-offs?
+3. A researcher wants to test whether **age** moderates the effect of job control on creativity. Age is categorical (5 levels) in the PS dataset. Describe two ways they could test this: (a) with `lm()` and (b) with multigroup lavaan. What are the trade-offs?
 
 ::: {.callout-caution collapse="true"}
 ## Solutions
@@ -334,21 +289,6 @@ The interaction is significant if the `con_c:genderFemale` p-value is below .05.
 **Exercise 2**
 
 ```{r}
-fit_config <- cfa(model_cfa, data = ps, group = "gender", estimator = "MLR")
-fit_weak   <- cfa(model_cfa, data = ps, group = "gender",
-                  group.equal = "loadings", estimator = "MLR")
-fit_strong <- cfa(model_cfa, data = ps, group = "gender",
-                  group.equal = c("loadings", "intercepts"), estimator = "MLR")
-
-lavTestLRT(fit_config, fit_weak)
-lavTestLRT(fit_weak, fit_strong)
-```
-
-Configural → weak: if non-significant, loadings are equal (weak invariance holds). Weak → strong: if non-significant, intercepts are also equal (strong invariance holds). If strong invariance holds, you can compare latent means across groups.
-
-**Exercise 3**
-
-```{r}
 #| eval: false
 ps$p1 <- (ps$con9 + ps$con10) / 2
 ps$p2 <- (ps$con1 + ps$con8)  / 2
@@ -374,7 +314,7 @@ lavTestLRT(fit_free, fit_eq)
 
 A significant result means the structural paths differ by gender — the mediation is moderated. A non-significant result means the paths are equivalent — no moderation.
 
-**Exercise 4**
+**Exercise 3**
 
 **(a) With `lm()`:** Recode `age` as a factor and fit `lm(creat ~ con * age, data = ps)`. The interaction terms `con:age2`, `con:age3`, etc. test whether the slope of `con` differs for each age band relative to the reference band. This is simple but does not separate measurement error from structural effects.
 
@@ -391,6 +331,7 @@ You have now completed the full tutorial series. You can:
 - Report results in APA format with `texreg` tables and `tidySEM` diagrams (Tutorial 13)
 - Extend to multilevel and growth curve models (Tutorials 14–15)
 - Test moderation with `lm()` and multigroup SEM (Tutorial 16)
+- Establish measurement invariance across groups (Tutorial 17)
 
 These are the core tools you need for a quantitative dissertation in organisational psychology. The [cheat sheet](../cheatsheet.qmd), [glossary](../glossary.qmd), and [notation key](../notation.qmd) are there for quick reference. When you encounter a technique we have not covered — latent profile analysis, EFA, categorical outcome SEM — the lavaan documentation and the further reading lists in each tutorial are your next stop.
 
