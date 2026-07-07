@@ -3,7 +3,7 @@ title: "Notation"
 subtitle: "Greek symbols used in SEM and their lavaan output homes"
 author: "George Michaelides"
 institute: "School of Psychology, University of East Anglia"
-date: "2026"
+date: "2026-07-07"
 ---
 
 This page lists every Greek symbol used across the tutorial series, its meaning, and where to find the corresponding number in lavaan's output. The notation follows the simplified lowercase Greek convention used by modern lavaan textbooks (e.g. @beaujean2014); we do not use the bold-symbol LISREL matrix form.

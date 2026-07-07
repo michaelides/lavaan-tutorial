@@ -3,7 +3,7 @@ title: "PS dataset — variable definitions"
 subtitle: "Variable definitions, response scales, source citations"
 author: "George Michaelides"
 institute: "School of Psychology, University of East Anglia"
-date: "2026"
+date: "2026-07-07"
 ---
 
 This page documents the variables in the `ps_data_reduced` teaching dataset, their response scales, and the original source citations for each scale. The dataset is a simulated teaching file used throughout this tutorial series; it is not real participant data.

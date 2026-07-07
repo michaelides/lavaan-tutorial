@@ -3,7 +3,7 @@ title: "CFA — concept"
 subtitle: "Latent vs observed, identification, marker variable, model fit"
 author: "George Michaelides"
 institute: "School of Psychology, University of East Anglia"
-date: "2026"
+date: "2026-07-07"
 ---
 
 ## Learning objectives

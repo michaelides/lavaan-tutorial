@@ -3,7 +3,7 @@ title: "SEM with latent variables"
 subtitle: "From parceled SEM to full latent-variable SEM; disattenuation"
 author: "George Michaelides"
 institute: "School of Psychology, University of East Anglia"
-date: "2026"
+date: "2026-07-07"
 ---
 
 ## Learning objectives

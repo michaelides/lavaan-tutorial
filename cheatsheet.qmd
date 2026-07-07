@@ -3,7 +3,7 @@ title: "lavaan syntax cheat sheet"
 subtitle: "Quick reference for =~, ~, ~~, := and friends"
 author: "George Michaelides"
 institute: "School of Psychology, University of East Anglia"
-date: "2026"
+date: "2026-07-07"
 ---
 
 A one-page reference for the lavaan syntax used across this series. Grouped by category. For definitions of the terms, see the [glossary](glossary.qmd); for the Greek symbols, see the [notation key](notation.qmd).

@@ -3,7 +3,7 @@ title: "Moderation"
 subtitle: "Moderated regression with lm; multigroup SEM moderation; latent interaction (advanced)"
 author: "George Michaelides"
 institute: "School of Psychology, University of East Anglia"
-date: "2026"
+date: "2026-07-07"
 ---
 
 ## Learning objectives

@@ -3,7 +3,7 @@ title: "Path analysis with observed variables"
 subtitle: "Multiple regression equations, just-identified models, R squared"
 author: "George Michaelides"
 institute: "School of Psychology, University of East Anglia"
-date: "2026"
+date: "2026-07-07"
 ---
 
 ## Learning objectives

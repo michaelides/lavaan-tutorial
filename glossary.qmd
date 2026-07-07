@@ -3,7 +3,7 @@ title: "Glossary"
 subtitle: "Key terms used across the tutorials"
 author: "George Michaelides"
 institute: "School of Psychology, University of East Anglia"
-date: "2026"
+date: "2026-07-07"
 ---
 
 This glossary collects the key terms used across the tutorial series. Terms are linked from individual tutorials on first use. Where a term has a Greek symbol, the symbol is shown in the [notation key](notation.qmd).
