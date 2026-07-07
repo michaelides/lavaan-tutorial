@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="George Michaelides">
-<meta name="dcterms.date" content="2026-01-01">
+<meta name="dcterms.date" content="2026-07-07">
 
 <title>Path analysis with observed variables – A Step-by-Step Introduction to Structural Equation Modeling with lavaan in R</title>
 <style>
@@ -624,7 +624,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">January 1, 2026</p>
+      <p class="date">July 7, 2026</p>
     </div>
   </div>
   
@@ -694,8 +694,8 @@ Setup code (you have seen this before)
 <p>The path diagram:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div class="grViz html-widget html-fill-item" id="htmlwidget-8ad159bb720315a01b18" style="width:75%;height:750px;"></div>
-<script type="application/json" data-for="htmlwidget-8ad159bb720315a01b18">{"x":{"diagram":"\ndigraph {\n  graph [layout = neato]\n  node  [shape = box, style = filled, fillcolor = \"#f9e79f\", fontname = Helvetica, fontsize = 12]\n\n  con   [label = \"con\\n(Job control)\",   pos = \"0,1!\"]\n  pa    [label = \"pa\\n(Positive affect)\", pos = \"2.5,1!\"]\n  creat [label = \"creat\\n(Creativity)\",   pos = \"5,1!\"]\n\n  con -> pa    [label = \"  a\"]\n  con -> creat [label = \"  c\"]\n  pa  -> creat [label = \"  b\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-1fb12c2eb43df10a7720" style="width:75%;height:750px;"></div>
+<script type="application/json" data-for="htmlwidget-1fb12c2eb43df10a7720">{"x":{"diagram":"\ndigraph {\n  graph [layout = neato]\n  node  [shape = box, style = filled, fillcolor = \"#f9e79f\", fontname = Helvetica, fontsize = 12]\n\n  con   [label = \"con\\n(Job control)\",   pos = \"0,1!\"]\n  pa    [label = \"pa\\n(Positive affect)\", pos = \"2.5,1!\"]\n  creat [label = \"creat\\n(Creativity)\",   pos = \"5,1!\"]\n\n  con -> pa    [label = \"  a\"]\n  con -> creat [label = \"  c\"]\n  pa  -> creat [label = \"  b\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 <p>The path model. Con predicts PA and creat; PA predicts creat. This is the structure of a simple mediation model.</p>
 </div>
 </div>
