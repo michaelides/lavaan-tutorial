@@ -71,3 +71,17 @@ mjx-container[display="true"] {
     display: block !important;
   }
 }
+
+/* ----------------------------------------------------------------- *
+ * DiagrammeR grViz widgets: fit SVG content instead of reserving a
+ * tall fixed-height container (default 750px) that leaves large
+ * empty bands above and below the diagram. The htmlwidget sets an
+ * inline height:NNNpx; this overrides it so the widget shrinks to
+ * the SVG's natural height.
+ * ----------------------------------------------------------------- */
+.grViz.html-widget {
+  height: auto !important;
+}
+.grViz.html-widget > div {
+  height: auto !important;
+}
