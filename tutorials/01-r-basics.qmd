@@ -1,0 +1,407 @@
+---
+title: "R basics"
+subtitle: "Objects, vectors, data frames, factors, missing values"
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+## Learning objectives
+
+By the end of this tutorial you will be able to:
+
+- assign values to named objects and inspect what is in your R environment
+- create vectors of different types (numeric, character, logical) and index them
+- build data frames from vectors and extract rows, columns, and cells
+- compute descriptive statistics (mean, median, standard deviation) and handle missing values with `na.rm = TRUE`
+- create factors for categorical variables and understand why they matter for Likert-scale items
+
+## Setup
+
+This tutorial uses only base R — no additional packages are needed. We set the output comment prefix to `##` so that the rendered output matches what you will see in your RStudio console.
+
+```{r}
+#| include: false
+knitr::opts_chunk$set(comment = "##")
+```
+
+## Assignment and objects
+
+In R, you store values in named objects using the assignment operator `<-`. Think of an object as a labelled box that holds a value you can refer to later.
+
+```{r}
+my_age <- 34
+my_age
+```
+
+The arrow points from the value on the right to the name on the left, so "34 goes into `my_age`". You can also use `=` for assignment, but `<-` is the convention we follow throughout these tutorials because it makes the direction of assignment explicit.
+
+Object names should be descriptive and use `snake_case` — lowercase letters with underscores separating words. Avoid dots in names; they are an older R convention and can be confused with method calls in other languages.
+
+```{r}
+mean_score <- 3.45
+participant_id <- "P001"
+both_assigned <- TRUE
+```
+
+To see everything in your current environment, use `ls()`. To remove an object, use `rm()`.
+
+```{r}
+ls()
+rm(both_assigned)
+```
+
+::: {.callout-note}
+R is case-sensitive. `My_Age` and `my_age` are two different objects. If you get an `object 'x' not found` error, check your capitalisation first.
+:::
+
+## Vectors
+
+A [vector](../glossary.qmd#vector) is the fundamental data structure in R — a sequence of values that all share the same type. You create vectors with `c()`, which stands for "combine" or "concatenate".
+
+```{r}
+scores <- c(3, 4, 2, 5, 4, 3, 5, 2, 4, 3)
+scores
+```
+
+Every value in a vector must be the same type. R has four main types you will meet:
+
+```{r}
+age_group      <- c(1, 2, 3, 4, 5)        # numeric (double)
+participant    <- c("P001", "P002", "P003") # character
+consent_given  <- c(TRUE, TRUE, FALSE, TRUE) # logical
+likert_integer <- c(1L, 2L, 3L, 4L, 5L)   # integer (the L suffix forces integer)
+```
+
+You can inspect the type and length of any object with `class()`, `typeof()`, and `length()`:
+
+```{r}
+class(scores)
+typeof(scores)
+length(scores)
+```
+
+For a compact overview of an object's structure, use `str()`:
+
+```{r}
+str(scores)
+```
+
+::: {.callout-tip}
+## Try it
+
+Create a character vector called `item_names` containing the names of three survey items (e.g. `"con1"`, `"con3"`, `"con6"`). Then check its class and length.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{r}
+item_names <- c("con1", "con3", "con6")
+class(item_names)
+length(item_names)
+```
+:::
+
+### Coercion
+
+If you mix types in a vector, R silently coerces everything to the most general type:
+
+```{r}
+mixed <- c(1, "two", 3)
+mixed
+class(mixed)
+```
+
+The number `1` and `3` have been converted to text. This is rarely what you want, so keep your vectors homogeneous.
+
+## Indexing vectors
+
+You pull out individual elements of a vector with square brackets. Position numbers start at **1** in R (not 0, as in Python or C).
+
+```{r}
+scores[1]         # first element
+scores[c(1, 3)]   # first and third
+scores[2:5]       # second through fifth
+```
+
+You can also use a **logical vector** to select elements that meet a condition:
+
+```{r}
+scores[scores > 3]
+```
+
+This is called logical indexing and you will use it constantly. The comparison `scores > 3` produces a logical vector of the same length as `scores`:
+
+```{r}
+scores > 3
+```
+
+R returns `TRUE` for each element that satisfies the condition, and the square brackets keep only those positions.
+
+::: {.callout-tip}
+## Try it
+
+Use logical indexing to extract only the scores equal to 5 from `scores`.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{r}
+scores[scores == 5]
+```
+:::
+
+## Data frames
+
+A data frame is R's version of a spreadsheet — a collection of columns (vectors) where each column can have a different type but every column has the same length. This is the structure you will work with most often when analysing survey data.
+
+You can build a data frame from vectors with `data.frame()`:
+
+```{r}
+df <- data.frame(
+  participant = c("P001", "P002", "P003", "P004"),
+  age_group   = c(2, 3, 4, 3),
+  pa_score    = c(4.2, 3.8, 2.1, 3.5)
+)
+df
+```
+
+Inspect its dimensions and column names:
+
+```{r}
+nrow(df)
+ncol(df)
+dim(df)
+names(df)
+```
+
+For a quick look at the first or last few rows, use `head()` and `tail()`:
+
+```{r}
+head(df, 2)
+tail(df, 1)
+```
+
+And for summary statistics of every column at once, `summary()`:
+
+```{r}
+summary(df)
+```
+
+::: {.callout-note}
+`summary()` is your fastest first look at any dataset. It shows the minimum, first quartile, median, mean, third quartile, and maximum for numeric columns, and counts for factors.
+:::
+
+### Indexing data frames
+
+Data frames use `row, column` indexing with square brackets:
+
+```{r}
+df[, "pa_score"]          # all rows, one column (returns a vector)
+df[, c("participant", "pa_score")]  # two columns (returns a data frame)
+df[1, ]                   # first row, all columns
+df[1:3, c("participant", "age_group")]  # rows 1-3, two columns
+```
+
+The `$` operator is a convenient shortcut for extracting a single column by name:
+
+```{r}
+df$pa_score
+df$age_group
+```
+
+::: {.callout-tip}
+## Try it
+
+Extract the `pa_score` values for participants whose `age_group` is 3 or higher, using logical indexing on `df$age_group`.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{r}
+df$pa_score[df$age_group >= 3]
+```
+:::
+
+## Functions for describing data
+
+R provides built-in functions for the descriptive statistics you will need throughout these tutorials:
+
+```{r}
+mean_scores <- c(3.2, 4.1, 2.8, 3.9, 4.5, 3.1, 2.9, 3.7)
+
+mean(mean_scores)
+median(mean_scores)
+sd(mean_scores)
+var(mean_scores)
+quantile(mean_scores, probs = c(0.25, 0.50, 0.75))
+range(mean_scores)
+```
+
+### Dealing with `NA`
+
+Real survey data almost always has missing values. In R, missing values are represented by `NA`. The problem is that many functions return `NA` if any `NA` is present:
+
+```{r}
+data_with_na <- c(3, 4, NA, 2, 5)
+mean(data_with_na)
+```
+
+Pass `na.rm = TRUE` to tell R to ignore missing values before computing:
+
+```{r}
+mean(data_with_na, na.rm = TRUE)
+sd(data_with_na, na.rm = TRUE)
+```
+
+::: {.callout-warning}
+Forgetting `na.rm = TRUE` is the single most common error in early R use. If you see `NA` as your result and did not expect it, add `na.rm = TRUE` and try again.
+:::
+
+## Factors
+
+A [factor](../glossary.qmd#factor) is R's structure for categorical variables — a vector of integer codes, each mapped to a text label. Factors matter because many statistical functions (ANOVA, regression with grouping variables) treat factors differently from numeric vectors.
+
+```{r}
+gender_raw <- c(0, 1, 1, 0, 1)
+gender <- factor(gender_raw, levels = c(0, 1), labels = c("Male", "Female"))
+gender
+class(gender)
+levels(gender)
+```
+
+For Likert-scale items (e.g. 1 = Never, 5 = Very often), you will usually keep them as numeric values because you want means and standard deviations. But for grouping variables like gender, age band, or experimental condition, convert them to factors so R knows to treat them as categories.
+
+```{r}
+table(gender)
+```
+
+::: {.callout-note}
+You will see in Tutorial 03 that when you import an SPSS `.sav` file with `haven::read_sav()`, categorical variables come in as `haven_labelled` objects. You convert them to factors with `haven::as_factor()`.
+:::
+
+## Missing values
+
+R distinguishes several kinds of "nothing":
+
+- `NA` — "Not Available". A missing value. The most common one in survey data.
+- `NaN` — "Not a Number". The result of an undefined mathematical operation, e.g. `0 / 0`.
+- `NULL` — "empty". The object itself does not exist (different from `NA`, which means the value is missing).
+
+You test for missing values with `is.na()`, which returns a logical vector:
+
+```{r}
+survey_item <- c(4, 3, NA, 5, 2, NA, 4)
+is.na(survey_item)
+sum(is.na(survey_item))   # count of missing values
+```
+
+To keep only the complete cases (rows with no `NA` anywhere), use `complete.cases()`:
+
+```{r}
+complete <- complete.cases(survey_item)
+survey_item[complete]
+```
+
+::: {.callout-tip}
+## Try it
+
+Create a vector `items <- c(3, NA, 4, 5, NA, 2, 4)`. Calculate (a) the number of missing values, (b) the mean of the non-missing values, and (c) a new vector with the `NA`s removed.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{r}
+items <- c(3, NA, 4, 5, NA, 2, 4)
+sum(is.na(items))                     # (a) count missing
+mean(items, na.rm = TRUE)             # (b) mean of non-missing
+items[complete.cases(items)]          # (c) remove NAs
+```
+:::
+
+::: {.callout-note}
+### Vectors vs lists
+
+A vector holds values of the **same** type. A list can hold values of **different** types — including other vectors, data frames, or even other lists. You index lists with double square brackets `[[ ]]` or the `$` operator. You will encounter lists when fitting lavaan models (a fitted model object is a list containing coefficients, residuals, and fit indices). For now, know the distinction: `c()` creates a vector; `list()` creates a list.
+:::
+
+## Common errors
+
+::: {.callout-warning}
+### Object not found
+
+`Error: object 'score' not found` — you have either not run the line that creates the object, or you have misspelled the name (remember R is case-sensitive).
+
+### Could not find function
+
+`Error in foo(): could not find function "foo"` — the function does not exist, or the package that provides it has not been loaded with `library()`. In Tutorial 02 we cover package management in detail.
+
+### Unexpected `NA` in results
+
+Your result is `NA` when you expected a number. Add `na.rm = TRUE` to the function call (see above).
+:::
+
+## Exercises
+
+1. Create a numeric vector `reaction_times <- c(245, 312, 198, 401, 287, 356)`. Calculate the mean, standard deviation, and median. Round the mean to two decimal places using `round()`.
+
+2. Using the same `reaction_times` vector, use logical indexing to extract only the reaction times below 300 ms. How many are there?
+
+3. Create a data frame `participants` with three columns: `id` (integers 1 to 5), `condition` (factor with levels "control" and "treatment"), and `score` (numeric values of your choice). Use `summary()` to inspect it.
+
+4. Add a missing value to your `score` column (set the third participant's score to `NA`). Recalculate the mean score using `na.rm = TRUE`. How many complete cases are there?
+
+::: {.callout-caution collapse="true"}
+## Solutions
+
+**Exercise 1**
+
+```{r}
+reaction_times <- c(245, 312, 198, 401, 287, 356)
+mean(reaction_times)
+sd(reaction_times)
+median(reaction_times)
+round(mean(reaction_times), 2)
+```
+
+**Exercise 2**
+
+```{r}
+fast <- reaction_times[reaction_times < 300]
+fast
+length(fast)
+```
+
+**Exercise 3**
+
+```{r}
+participants <- data.frame(
+  id        = 1:5,
+  condition = factor(c("control", "treatment", "control", "treatment", "control")),
+  score     = c(3.2, 4.1, 2.8, 3.9, 3.5)
+)
+summary(participants)
+```
+
+**Exercise 4**
+
+```{r}
+participants$score[3] <- NA
+mean(participants$score, na.rm = TRUE)
+sum(complete.cases(participants))
+```
+:::
+
+## Summary & next tutorial
+
+You now have the building blocks of R: objects, vectors, data frames, factors, and missing values. These are the raw materials you will use in every subsequent tutorial. In the next tutorial we set up RStudio — the environment where you will write and run all of your R code — and install the packages (`lavaan`, `haven`, `ggplot2`, and friends) that we will need from Tutorial 03 onward.
+
+## Further reading
+
+- @rcore2024 — the official R documentation, available at <https://www.r-project.org/>.
+- @wickham2019 — a deeper treatment of R's data structures and semantics, aimed at those who want to understand the language thoroughly.
+- @dalgaard2008 — an introductory statistics textbook that uses R throughout; particularly useful if you want to see R applied to the kinds of tests covered in Tutorial 04.

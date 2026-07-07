@@ -1,0 +1,118 @@
+---
+title: "lavaan syntax cheat sheet"
+subtitle: "Quick reference for =~, ~, ~~, := and friends"
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+A one-page reference for the lavaan syntax used across this series. Grouped by category. For definitions of the terms, see the [glossary](glossary.qmd); for the Greek symbols, see the [notation key](notation.qmd).
+
+## Model specification
+
+| Syntax | Name | Example | Notes |
+|--------|------|---------|-------|
+| `=~` | "is measured by" — defines a latent variable | `pa =~ pa1 + pa2 + pa3` | The first indicator's loading is fixed to 1 by default (marker-variable method) |
+| `~` | "is regressed on" — defines a regression path | `creat ~ pa + con` | Used for structural paths and for `lm()`-style regressions |
+| `~~` | "is correlated with" — covariance | `pa ~~ na` | Default between exogenous variables; can also free residual covariances |
+| `~ 1` | intercept / mean | `pa ~ 1` | Usually estimated automatically for observed variables; freed for latents with `meanstructure = TRUE` |
+| `1 *` | fix a parameter to 1 | `pa =~ 1 * pa1` | Explicit form of the marker-variable default |
+| `0 *` | fix a parameter to 0 | `pa ~~ 0 * na` | Explicitly constrain a covariance to zero |
+| `n *` | fix a parameter to a numeric value | `x ~ 0.5 * y` | Rarely needed; used for a priori constraints |
+| `start() *` | set a starting value | `pa =~ start(1.2) * pa1` | Helps with convergence problems |
+| `label *` | label a parameter (for constraints or `:=`) | `creat ~ b * pa + c * con` | Two parameters with the same label are constrained equal |
+| `c(a, b) *` | group-specific parameter | `pa ~ c(a1, a2) * con` | Used in multigroup SEM; `a1` for group 1, `a2` for group 2 |
+| `:=` | define a new (derived) parameter | `indirect := a * b` | Operates on labelled parameters; used for indirect effects |
+
+## Estimation options
+
+Pass these arguments to `cfa()`, `sem()`, or `lavaan()`:
+
+| Argument | Effect | Example |
+|----------|--------|---------|
+| `estimator = "MLR"` | Robust maximum likelihood (Satorra–Bentler). **Our default.** | `cfa(model, data = df, estimator = "MLR")` |
+| `estimator = "ML"` | Plain maximum likelihood. Required when bootstrapping. | `sem(model, data = df, estimator = "ML", se = "boot")` |
+| `se = "boot"` | Bootstrap standard errors | `sem(model, data = df, se = "boot", bootstrap = 1000)` |
+| `bootstrap = N` | Number of bootstrap replications | `bootstrap = 1000` |
+| `std.lv = TRUE` | Set latent variances to 1; freely estimate all loadings | `cfa(model, data = df, std.lv = TRUE)` |
+| `orthogonal = TRUE` | Force all latent covariances to zero | `cfa(model, data = df, orthogonal = TRUE)` |
+| `missing = "ml"` | Full-information maximum likelihood for missing data (default) | `sem(model, data = df, missing = "ml")` |
+| `missing = "listwise"` | Listwise deletion | `sem(model, data = df, missing = "listwise")` |
+| `meanstructure = TRUE` | Estimate intercepts and latent means | `cfa(model, data = df, meanstructure = TRUE)` |
+| `group = "gender"` | Multigroup analysis | `cfa(model, data = df, group = "gender")` |
+
+## Entry-point functions
+
+| Function | Use | Example |
+|----------|-----|---------|
+| `cfa()` | Confirmatory factor analysis (measurement model only) | `fit <- cfa(model, data = df)` |
+| `sem()` | Structural equation model (measurement + structural) | `fit <- sem(model, data = df)` |
+| `lavaan()` | The general function; `cfa()` and `sem()` are wrappers | `fit <- lavaan(model, data = df)` |
+| `growth()` | Latent growth curve model | `fit <- growth(model, data = df)` |
+
+## Reading output
+
+| Function | What it returns | Example |
+|----------|-----------------|---------|
+| `summary(fit)` | A compact summary of parameter estimates | `summary(fit)` |
+| `summary(fit, standardized = TRUE)` | Adds the `std.all`, `std.lv`, `std.nox` columns | `summary(fit, standardized = TRUE)` |
+| `summary(fit, fit.measures = TRUE)` | Adds the fit indices section at the top | `summary(fit, fit.measures = TRUE)` |
+| `summary(fit, rsquare = TRUE)` | Adds an $R^2$ row for each dependent variable | `summary(fit, rsquare = TRUE)` |
+| `parameterEstimates(fit)` | Parameter estimates as a data frame (one row per parameter) | `parameterEstimates(fit)` |
+| `parameterEstimates(fit, standardized = TRUE)` | Same, with standardised columns | `parameterEstimates(fit, standardized = TRUE)` |
+| `parameterEstimates(fit, boot.ci.type = "bca.simple")` | BCa bootstrap confidence intervals | Use after `se = "boot"` |
+| `standardizedSolution(fit)` | Tidy data frame of standardised parameters only | `standardizedSolution(fit)` |
+| `fitMeasures(fit)` | Named vector of ~40 fit indices | `fitMeasures(fit)` |
+| `fitMeasures(fit, c(...))` | Selected fit indices | `fitMeasures(fit, c("chisq","df","pvalue","cfi","tli","rmsea","srmr"))` |
+| `coef(fit)` | Just the parameter estimates as a named vector | `coef(fit)` |
+| `confint(fit)` | Confidence intervals for each parameter | `confint(fit, level = 0.95)` |
+| `fitted(fit)` | The model-implied covariance matrix $\hat{\Sigma}(\theta)$ | `fitted(fit)` |
+| `resid(fit)` | Residual covariance matrix $S - \hat{\Sigma}(\theta)$ | `resid(fit)` |
+| `lavInspect(fit, "rsquare")` | $R^2$ for each observed and latent dependent variable | `lavInspect(fit, "rsquare")` |
+| `lavInspect(fit, "sampstat")` | The sample covariance matrix $S$ | `lavInspect(fit, "sampstat")` |
+
+## Diagnostics and respecification
+
+| Function | What it returns | Example |
+|----------|-----------------|---------|
+| `modindices(fit)` | All modification indices | `modindices(fit)` |
+| `modindices(fit, minimum.value = 3.84)` | Only MIs above 3.84 ($\alpha = .05$) | `modindices(fit, minimum.value = 3.84)` |
+| `modindices(fit, sort. = TRUE)` | Sorted by MI, largest first | `modindices(fit, minimum.value = 3.84, sort. = TRUE)` |
+| `modindices(fit, op = "==~")` | Only MIs for factor loadings | `modindices(fit, op = "==~")` |
+| `anova(fit1, fit2)` | Likelihood-ratio test between nested models | `anova(fit1, fit2)` |
+| `lavTestScore(fit)` | Score test for freeing fixed parameters | `lavTestScore(fit)` |
+
+## Tables and figures
+
+| Function | What it does | Example |
+|----------|--------------|---------|
+| `texreg::screenreg(fit)` | Print a regression-style table to the screen | `texreg::screenreg(fit)` |
+| `texreg::htmlreg(fit, file = "table.html")` | Write a table to an HTML file | `texreg::htmlreg(fit, file = "tab.html")` |
+| `texreg::texreg(fit, file = "table.tex")` | Write a table to a LaTeX file | `texreg::texreg(fit, file = "tab.tex")` |
+| `semPlot::semPaths(fit)` | Legacy path-diagram plot | `semPlot::semPaths(fit, whatLabels = "std")` |
+| `tidySEM::graph_sem(fit)` | Modern path diagram from a fitted lavaan object | `tidySEM::graph_sem(fit)` |
+| `tidySEM::prepare_graph(fit)` | Customisable graph object (edit before rendering) | `tidySEM::prepare_graph(fit) \|> tidySEM::edit_graph(...)` |
+
+## A complete worked example
+
+Putting it all together — the two-factor CFA we walk through in Tutorial 07:
+
+```{r}
+#| eval: false
+library(lavaan)
+
+model <- '
+  NA =~ na1 + na2 + na3
+  PA =~ pa1 + pa2 + pa3
+  NA ~~ PA
+'
+
+fit <- cfa(model, data = ps, estimator = "MLR")
+summary(fit, standardized = TRUE, fit.measures = TRUE)
+fitMeasures(fit, c("chisq", "df", "pvalue",
+                   "cfi", "tli",
+                   "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+                   "srmr"))
+modindices(fit, minimum.value = 3.84, sort. = TRUE)
+tidySEM::graph_sem(fit)
+```

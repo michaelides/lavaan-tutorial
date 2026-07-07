@@ -1,0 +1,371 @@
+---
+title: "Path analysis with observed variables"
+subtitle: "Multiple regression equations, just-identified models, R squared"
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+## Learning objectives
+
+By the end of this tutorial you will be able to:
+
+- describe what a [path analysis](../glossary.qmd#path-analysis) is and how it extends simple regression
+- specify a path model with multiple regression equations in lavaan syntax
+- understand why a model with zero degrees of freedom fits perfectly
+- read the standardised path coefficients and $R^2$ values from lavaan output
+- extract parameter estimates with `parameterEstimates()` for clean coefficient extraction
+
+## Setup
+
+<details>
+<summary>Setup code (you have seen this before)</summary>
+
+```{r}
+#| include: false
+knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(comment = "##")
+```
+
+```{r}
+library(haven)
+library(lavaan)
+```
+
+```{r}
+#| include: false
+ps <- haven::read_sav("data/ps_data_reduced.sav")
+ps <- haven::zap_labels(ps)
+ps[ps == -99] <- NA
+```
+
+</details>
+
+## What is path analysis?
+
+[Path analysis](../glossary.qmd#path-analysis) is a [structural equation model](../glossary.qmd#sem) with **observed variables only** — no latent variables. It is a system of regression equations in which one variable can be both an outcome in one equation and a predictor in another.
+
+You already met the simplest path model in Tutorial 04: a single regression of `creat` on `pa`. Path analysis extends this to multiple linked equations. For example:
+
+- `pa` is regressed on `con` (job control predicts positive affect)
+- `creat` is regressed on `pa` and `con` (positive affect and job control predict creativity)
+
+Here, `pa` is both an outcome (predicted by `con`) and a predictor (of `creat`). This is the structure of a mediation model, which we develop fully in Tutorials 11 and 12.
+
+### Path analysis versus multiple regression
+
+A single regression equation — `creat ~ pa + con` — can be fitted with `lm()`, as you did in Tutorial 04. Path analysis becomes useful when you have **multiple linked equations** that you want to estimate simultaneously. In lavaan, you specify all the equations in one model syntax string, and lavaan estimates them together, accounting for the fact that the equations share variables.
+
+### Path analysis versus full SEM
+
+Path analysis uses only [observed variables](../glossary.qmd#observed-variable). Full SEM (Tutorial 10) adds [latent variables](../glossary.qmd#latent-variable) measured by multiple indicators. Path analysis is the simpler case — a stepping stone to full SEM. The syntax and the output format are the same; only the presence of `=~` statements (latent variable definitions) differs.
+
+## The model
+
+We will replicate the path model from the original teaching materials:
+
+- **Job control** (`con`) is the independent variable
+- **Positive affect** (`pa`) is the mediator — predicted by `con`, and in turn predicting `creat`
+- **Creativity** (`creat`) is the outcome — predicted by `pa` and `con`
+
+Each of these is a **manifest variable** — the mean of the items that make up the scale, computed with base R:
+
+```{r}
+ps$con   <- (ps$con1 + ps$con3 + ps$con6 + ps$con8 + ps$con9 + ps$con10) / 6
+ps$pa    <- (ps$pa1 + ps$pa2 + ps$pa3) / 3
+ps$creat <- (ps$creat1 + ps$creat2 + ps$creat3) / 3
+```
+
+The path diagram:
+
+```{r}
+#| echo: false
+#| fig-align: center
+#| out-width: "75%"
+#| fig-cap: "The path model. Con predicts PA and creat; PA predicts creat. This is the structure of a simple mediation model."
+DiagrammeR::grViz("
+digraph {
+  graph [layout = neato]
+  node  [shape = box, style = filled, fillcolor = '#f9e79f', fontname = Helvetica, fontsize = 12]
+
+  con   [label = 'con\\n(Job control)',   pos = '0,1!']
+  pa    [label = 'pa\\n(Positive affect)', pos = '2.5,1!']
+  creat [label = 'creat\\n(Creativity)',   pos = '5,1!']
+
+  con -> pa    [label = '  a']
+  con -> creat [label = '  c']
+  pa  -> creat [label = '  b']
+}
+")
+```
+
+We label the paths `a`, `b`, and `c` — the conventional notation for a mediation model, which we will use formally in Tutorial 11.
+
+## Specifying the model in lavaan
+
+The model syntax uses `~` for each regression equation:
+
+```{r}
+model_path <- '
+  creat ~ pa + con
+  pa    ~ con
+'
+```
+
+The first line says "creat is regressed on pa and con". The second line says "pa is regressed on con". Together, these two equations define the path model.
+
+We fit it with `sem()` rather than `cfa()` because the model contains regression paths (`~`) rather than just measurement paths (`=~`):
+
+```{r}
+fit_path <- sem(model_path, data = ps, estimator = "MLR")
+```
+
+## Reading the output
+
+```{r}
+summary(fit_path, standardized = TRUE, rsquare = TRUE)
+```
+
+### Regressions
+
+The **Regressions** section shows the path coefficients:
+
+- `creat ~ pa`: the effect of positive affect on creativity, holding job control constant
+- `creat ~ con`: the direct effect of job control on creativity, holding positive affect constant
+- `pa ~ con`: the effect of job control on positive affect
+
+Each row gives the unstandardised estimate, standard error, z-statistic, p-value, and the standardised coefficient (`std.all`). The standardised coefficient tells you the expected standard-deviation change in the outcome for a one-standard-deviation change in the predictor, holding other predictors constant.
+
+### Variances
+
+The **Variances** section shows:
+
+- The residual variance of `pa` — the variance in positive affect not explained by job control
+- The residual variance of `creat` — the variance in creativity not explained by pa and con
+- The variance of `con` — since `con` is [exogenous](../glossary.qmd#exogenous) (not predicted by anything in the model), its variance is a model parameter
+
+### R-squared
+
+Because we passed `rsquare = TRUE`, the output includes an **R-Square** section:
+
+- $R^2$ for `pa` — the proportion of variance in positive affect explained by job control
+- $R^2$ for `creat` — the proportion of variance in creativity explained by pa and con together
+
+These are the same $R^2$ values you would get from running `lm()` for each equation separately. The advantage of fitting them together in lavaan is that the model is estimated as a system, and you can extend it to include latent variables (Tutorial 10) or defined indirect effects (Tutorial 12).
+
+## Model fit
+
+```{r}
+fitMeasures(fit_path, c("chisq", "df", "pvalue",
+                        "cfi", "tli",
+                        "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+                        "srmr"))
+```
+
+Every fit index is zero or at its "perfect" value: $\chi^2 = 0$, df = 0, CFI = 1, TLI = 1, RMSEA = 0, SRMR = 0. The model fits perfectly — but this is **not** evidence that the model is good.
+
+### Why does the model fit perfectly?
+
+Let us count the degrees of freedom. With $q = 3$ observed variables, the covariance matrix has:
+
+$$
+\frac{q(q+1)}{2} = \frac{3 \times 4}{2} = 6
+$$
+
+non-redundant elements (3 variances + 3 covariances).
+
+The model estimates:
+
+- 2 regression paths in the `creat` equation (`pa`, `con`)
+- 1 regression path in the `pa` equation (`con`)
+- 2 residual variances (`pa`, `creat`)
+- 1 variance of the exogenous variable (`con`)
+
+That is $t = 6$ free parameters. So $\text{df} = 6 - 6 = 0$.
+
+A model with **zero degrees of freedom** is [just-identified](../glossary.qmd#just-identified) (saturated). It reproduces the observed covariance matrix exactly, by construction. There is no information left over to test the model against the data — the fit is perfect regardless of whether the model is theoretically correct.
+
+::: {.callout-important}
+### Just-identified models cannot be tested
+
+A path model with three observed variables and all possible paths among them is just-identified. It will always fit perfectly. You cannot use fit indices to evaluate it — every fit index will be at its "perfect" value. The model's value lies in the **parameter estimates** (the path coefficients and $R^2$), not in the fit indices.
+
+This is why path analysis is most useful when you have **more observed variables** or when you move to **SEM with latent variables** (Tutorial 10) — both add degrees of freedom and make the model testable.
+:::
+
+## Extracting clean parameter estimates
+
+For reporting, `parameterEstimates()` gives a clean data frame:
+
+```{r}
+pe_path <- parameterEstimates(fit_path, standardized = TRUE)
+pe_path[pe_path$op == "~", c("lhs", "op", "rhs", "est", "se", "z", "pvalue", "std.all")]
+```
+
+Each row is one path. The `std.all` column gives the standardised path coefficient — the number you would report in a path diagram or an APA table.
+
+## Interpreting the results
+
+The standardised path coefficients tell us:
+
+- The path from `con` to `pa` ($a$): how strongly job control predicts positive affect
+- The path from `pa` to `creat` ($b$): how strongly positive affect predicts creativity, holding job control constant
+- The path from `con` to `creat` ($c$, the direct effect): how strongly job control predicts creativity, holding positive affect constant
+
+The $R^2$ values tell us:
+
+- How much of the variance in positive affect is explained by job control (likely small — job control is a distal predictor)
+- How much of the variance in creativity is explained by pa and con together (also likely small — there are many other predictors of creativity we have not measured)
+
+::: {.callout-note}
+### From path analysis to mediation
+
+This model has the structure of a **mediation model**: `con` → `pa` → `creat`, with a direct path `con` → `creat` as well. In Tutorial 11 we develop the theory of mediation — what the indirect effect is, how it is decomposed, and why we bootstrap it. In Tutorial 12 we fit this same model with lavaan's `:=` operator to define and test the indirect effect.
+:::
+
+## A larger path model
+
+To demonstrate a path model with non-trivial degrees of freedom, let us add a fourth variable: negative affect (`neg`). We model:
+
+- `con` predicts `pa` and `neg`
+- `pa` predicts `creat`
+- `neg` predicts `creat`
+
+```{r}
+ps$neg <- (ps$na1 + ps$na2 + ps$na3) / 3
+
+model_path_4 <- '
+  creat ~ pa + neg
+  pa    ~ con
+  neg   ~ con
+'
+fit_path_4 <- sem(model_path_4, data = ps, estimator = "MLR")
+fitMeasures(fit_path_4, c("chisq", "df", "pvalue",
+                          "cfi", "tli",
+                          "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+                          "srmr"))
+```
+
+With $q = 4$ observed variables, the covariance matrix has $4 \times 5 / 2 = 10$ elements. Free parameters: 4 regression paths + 3 residual variances + 1 exogenous variance = 8. So $\text{df} = 10 - 8 = 2$. The model is now [overidentified](../glossary.qmd#overidentified) — we can test it against the data.
+
+```{r}
+summary(fit_path_4, standardized = TRUE, rsquare = TRUE)
+```
+
+Read the path coefficients and $R^2$ values as before. The fit indices now carry information — if they indicate good fit, the model's structure is consistent with the data.
+
+::: {.callout-tip}
+## Try it
+
+Add `con` as a direct predictor of `creat` in the four-variable model (i.e. `creat ~ pa + neg + con`). How does this change the degrees of freedom? Does the model still fit well?
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{r}
+model_path_4b <- '
+  creat ~ pa + neg + con
+  pa    ~ con
+  neg   ~ con
+'
+fit_path_4b <- sem(model_path_4b, data = ps, estimator = "MLR")
+fitMeasures(fit_path_4b, c("chisq", "df", "pvalue",
+                           "cfi", "tli",
+                           "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+                           "srmr"))
+```
+
+Adding the `con → creat` path adds one more free parameter, reducing df from 2 to 1. The model is still overidentified but with fewer degrees of freedom to test it. Check whether the fit indices remain acceptable.
+:::
+
+## Common errors
+
+::: {.callout-warning}
+### `lavaan WARNING: some observed variances are (at least) a factor 1000 times larger than others`
+
+Your variables are on very different scales. Standardise them with `scale()` before fitting, or check whether you have accidentally included an ID column or a raw total score alongside mean scores.
+
+### Non-convergence with many observed variables
+
+A path model with many observed variables and all possible paths among them can fail to converge because the model is very complex. Consider removing paths that are not theoretically justified — this also makes the model overidentified and testable.
+
+### Interpreting a just-identified model's "perfect fit"
+
+Do not report "excellent fit" for a just-identified model. The fit is guaranteed by the model's structure, not by its quality. Report the parameter estimates and $R^2$ values instead, and note that the model is just-identified.
+:::
+
+## Exercises
+
+1. Fit a path model where `con` predicts `pa`, `pa` predicts `creat`, and `con` also directly predicts `creat` (the three-variable mediation structure from the tutorial). Extract the standardised path coefficients with `parameterEstimates()`. Report each path coefficient in APA format.
+
+2. Compute the $R^2$ for `creat` in the model from Exercise 1. What proportion of variance in creativity is explained by positive affect and job control together?
+
+3. Fit a path model with four observed variables: `con`, `pa`, `neg`, and `creat`, where `con` predicts `pa` and `neg`, and both `pa` and `neg` predict `creat` (no direct path from `con` to `creat`). Is this model overidentified? What are the degrees of freedom? Does it fit well?
+
+4. Compare the model from Exercise 3 to a model that adds a direct path from `con` to `creat`. Use `anova()` to compare them (both are fitted with `MLR`, but for model comparison with `MLR` you should use `lavTestLRT()` — try both and compare the results). Which model fits better?
+
+::: {.callout-caution collapse="true"}
+## Solutions
+
+**Exercise 1**
+
+```{r}
+model_med <- '
+  creat ~ pa + con
+  pa    ~ con
+'
+fit_med <- sem(model_med, data = ps, estimator = "MLR")
+pe <- parameterEstimates(fit_med, standardized = TRUE)
+pe[pe$op == "~", c("lhs", "rhs", "est", "std.all", "pvalue")]
+```
+
+In APA format: "The standardised path from job control to positive affect was $\beta = .13$, $p = .022$; from positive affect to creativity was $\beta = .24$, $p < .001$; and the direct path from job control to creativity was $\beta = -.05$, $p = .427$." (Your exact values may differ slightly due to MLR scaling.)
+
+**Exercise 2**
+
+```{r}
+summary(fit_med, rsquare = TRUE)
+```
+
+The $R^2$ for `creat` is reported in the R-Square section. It tells you what proportion of the variance in creativity is explained by the model's predictors.
+
+**Exercise 3**
+
+```{r}
+model_4v <- '
+  creat ~ pa + neg
+  pa    ~ con
+  neg   ~ con
+'
+fit_4v <- sem(model_4v, data = ps, estimator = "MLR")
+fitMeasures(fit_4v, c("chisq", "df", "pvalue", "cfi", "tli",
+                      "rmsea", "rmsea.ci.lower", "rmsea.ci.upper", "srmr"))
+```
+
+With $q = 4$, the covariance matrix has 10 elements. Free parameters: 4 paths + 3 residual variances + 1 exogenous variance = 8. So $\text{df} = 10 - 8 = 2$. The model is overidentified. Judge the fit indices against the Hu and Bentler cutoffs.
+
+**Exercise 4**
+
+```{r}
+model_4v_direct <- '
+  creat ~ pa + neg + con
+  pa    ~ con
+  neg   ~ con
+'
+fit_4v_direct <- sem(model_4v_direct, data = ps, estimator = "MLR")
+lavTestLRT(fit_4v, fit_4v_direct)
+```
+
+`lavTestLRT()` performs the scaled likelihood-ratio test for `MLR` models. A non-significant result means the direct path from `con` to `creat` does not significantly improve fit — the simpler model (without the direct path) is preferred. A significant result means the direct path is needed.
+:::
+
+## Summary & next tutorial
+
+You have fitted a path analysis — a system of regression equations with observed variables — and understood why a model with zero degrees of freedom fits perfectly. You can read the path coefficients and $R^2$ values from lavaan output and extract them cleanly with `parameterEstimates()`. In the next tutorial we take the biggest step in the series: we add [latent variables](../glossary.qmd#latent-variable) to the path model, moving from path analysis to full structural equation modelling. We will parcel the job-control items, build a latent factor for job control, and compare the latent-variable estimates to the manifest-variable estimates from this tutorial.
+
+## Further reading
+
+- @kelloway2015 — chapters 4 and 5 cover path analysis and mediation in detail.
+- @beaujean2014 — a lavaan-based introduction to path analysis.
+- @hoyle2012 — the *Handbook of Structural Equation Modeling* includes chapters on path analysis and model identification.

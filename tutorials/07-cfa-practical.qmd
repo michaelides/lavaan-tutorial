@@ -1,0 +1,396 @@
+---
+title: "CFA — practical"
+subtitle: "Two-factor CFA on NA/PA; fit, parameter estimates, modification indices"
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+## Learning objectives
+
+By the end of this tutorial you will be able to:
+
+- specify and fit a two-factor CFA in lavaan using the PS dataset
+- read every section of the `summary(fit, standardized = TRUE, fit.measures = TRUE)` output
+- extract the canonical fit indices with `fitMeasures()` and judge them against the Hu and Bentler cutoffs
+- compute Cronbach's alpha for a scale with `psych::alpha()`
+- request and interpret modification indices with `modindices()`
+- report CFA results in APA format
+
+## Setup
+
+<details>
+<summary>Setup code (you have seen this before)</summary>
+
+```{r}
+#| include: false
+knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(comment = "##")
+```
+
+```{r}
+library(haven)
+library(lavaan)
+library(psych)
+library(tidySEM)
+```
+
+```{r}
+#| include: false
+ps <- haven::read_sav("data/ps_data_reduced.sav")
+ps <- haven::zap_labels(ps)
+ps[ps == -99] <- NA
+```
+
+</details>
+
+From Tutorial 06 onward, the setup block — loading packages, importing the PS dataset, and converting missing values — is collapsed behind a `<details>` tag. Click to expand it if you need to copy the code. The block is the same in every tutorial that uses the PS data.
+
+## The model
+
+We fit the two-factor CFA on positive and negative affect that we introduced in Tutorial 06:
+
+- **Positive affect (PA)** measured by `pa1`, `pa2`, `pa3`
+- **Negative affect (neg)** measured by `na1`, `na2`, `na3`
+- The two factors are allowed to correlate
+
+The lavaan syntax:
+
+```{r}
+model_pa_na <- '
+  PA  =~ pa1 + pa2 + pa3
+  neg =~ na1 + na2 + na3
+  PA  ~~ neg
+'
+```
+
+We use the [marker-variable method](../glossary.qmd#marker-variable) (lavaan's default) to set each factor's scale: the first loading of each factor is fixed to 1. We estimate with `MLR` — our default throughout the series.
+
+## Fitting the model
+
+```{r}
+fit_pa_na <- cfa(model_pa_na, data = ps, estimator = "MLR")
+```
+
+The model converges silently — no warnings, which means lavaan found a stable solution. If it had not converged, we would see a warning and would need to diagnose the problem (see the Common errors section at the end).
+
+## Reading the full output
+
+We call `summary()` with both `standardized = TRUE` and `fit.measures = TRUE` to get the complete picture: fit indices at the top, parameter estimates below, with both unstandardised and standardised values.
+
+```{r}
+summary(fit_pa_na, standardized = TRUE, fit.measures = TRUE)
+```
+
+### Estimator and optimisation
+
+The header tells us the estimator (`MLR`), the optimisation method (`NLMINB`), the number of iterations (typically 20–40 for a well-behaved model), and the number of observations used. lavaan uses [FIML](../glossary.qmd#fiml) by default, so all 343 participants are retained even if some have missing values on individual items.
+
+### Model fit indices
+
+The **Model Fit Information** section reports the canonical set:
+
+- **Chi-Square Test of Model Fit**: $\chi^2$ = 7.927, df = 8, *p* = .441. The $\chi^2$ is non-significant, meaning we cannot reject the null hypothesis that the model-implied covariance matrix equals the observed one. This is good news for our model. The `Scaling correction factor` is reported because we are using `MLR` — the $\chi^2$ has been corrected for non-normality.
+
+- **RMSEA**: 0.000, 90% CI [0.000, 0.068]. The point estimate is at the floor (zero), and the upper bound of the CI is below .08. This indicates close fit.
+
+- **CFI/TLI**: CFI = 1.000, TLI = 1.000. Both are at the maximum, well above the .95 threshold.
+
+- **SRMR**: 0.014. Well below the .08 threshold.
+
+All five indices agree: the model fits the data very well. We will report this in APA format at the end of the tutorial.
+
+::: {.callout-note}
+### Why is the $\chi^2$ starred?
+
+The asterisk next to the $\chi^2$ value in MLR output indicates that the standard $\chi^2$ difference test does not apply directly to robust estimators. If you need to compare nested models fitted with `MLR`, use `lavTestLRT()` (the scaled likelihood-ratio test) rather than `anova()`. We cover this in Tutorial 13.
+:::
+
+### Parameter estimates
+
+The **Parameter Estimates** section has several subsections. Let us walk through each.
+
+#### Latent variables (loadings)
+
+```
+Latent Variables:
+                   Estimate    Std.Err  z value  P(>|z|)   std.all
+  PA =~
+    pa1              1.000                                0.840
+    pa2              1.029       0.082   12.548    0.000    0.764
+    pa3              1.110       0.090   12.387    0.000    0.853
+  neg =~
+    na1              1.000                                0.825
+    na2              0.989       0.065   15.255    0.000    0.846
+    na3              0.992       0.062   16.096    0.000    0.825
+```
+
+The `Estimate` column gives the unstandardised [factor loading](../glossary.qmd#factor-loading) ($\lambda$). The first loading of each factor (`pa1` and `na1`) is fixed to 1.000 — the [marker-variable method](../glossary.qmd#marker-variable). These fixed loadings have no standard error or p-value, which is why their cells are blank.
+
+The `std.all` column gives the fully standardised loadings — the correlation between each indicator and its factor. All six loadings are high (0.76–0.85), indicating that each item is a strong indicator of its underlying factor. A loading below .40 would be concerning; below .30 suggests the item is not measuring the factor well.
+
+All freely-estimated loadings have *p* < .001, meaning each is significantly different from zero.
+
+#### Covariances
+
+```
+Covariances:
+                   Estimate    Std.Err  z value  P(>|z|)   std.all
+  PA ~~
+    neg             -0.419       0.077   -5.428    0.000   -0.471
+```
+
+The covariance between PA and neg is -0.419. The `std.all` value (-0.471) is the **correlation** between the two factors — positive and negative affect are moderately negatively related, which makes theoretical sense. The *p* < .001 tells us this correlation is significantly different from zero.
+
+#### Intercepts
+
+```
+Intercepts:
+                   Estimate    Std.Err  z value  P(>|z|)   std.all
+   .pa1              3.670       0.069   53.113    0.000    3.080
+   .pa2              3.421       0.075   45.695    0.000    2.544
+    ...
+```
+
+The intercepts are the estimated means of the observed variables. They are not usually of substantive interest in CFA — they tell you the average response on each item — but they are part of the model. The dot prefix (`.pa1`) indicates that this is an intercept for an observed variable that is dependent on a latent variable.
+
+#### Variances
+
+```
+Variances:
+                   Estimate    Std.Err  z value  P(>|z|)   std.all
+    PA               0.891       0.122    7.312    0.000    1.000
+    neg              0.885       0.098    9.011    0.000    1.000
+   .pa1              0.498       0.089    5.620    0.000    0.358
+   .pa2              0.673       0.076    8.819    0.000    0.416
+    ...
+```
+
+The first two rows are the **latent variances** ($\psi$) — the variance of each factor. The `std.all` is 1.000 because a variable's standardised variance is always 1.
+
+The remaining rows are the **residual variances** ($\theta$) — the portion of each indicator's variance not explained by the factor. The `std.all` for a residual variance is the proportion of the indicator's variance that is *not* explained by the factor. For `pa1`, that is 0.358, meaning $1 - 0.358 = 0.642$ (or 64.2%) of the variance in `pa1` is explained by the PA factor. This is the indicator's $R^2$.
+
+### R-squared
+
+To see the $R^2$ values explicitly, re-run `summary()` with `rsquare = TRUE`:
+
+```{r}
+summary(fit_pa_na, standardized = TRUE, rsquare = TRUE, fit.measures = FALSE)
+```
+
+The **R-Square** section at the bottom lists each indicator's $R^2$ — the proportion of its variance explained by its factor. Values above .50 (i.e. standardised loadings above .71) are considered good; all six of our indicators exceed this threshold.
+
+## Extracting fit indices cleanly
+
+For reporting, we extract just the canonical set with a named `fitMeasures()` call:
+
+```{r}
+fit_pa_na_indices <- fitMeasures(fit_pa_na,
+                                 c("chisq", "df", "pvalue",
+                                   "cfi", "tli",
+                                   "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+                                   "srmr"))
+fit_pa_na_indices
+```
+
+This gives a named numeric vector — easy to round and drop into a report. We will use this exact call in every tutorial that fits a model.
+
+## Extracting parameter estimates as a data frame
+
+For building tables or exporting to a report, `parameterEstimates()` returns the estimates as a data frame — one row per parameter:
+
+```{r}
+pe <- parameterEstimates(fit_pa_na, standardized = TRUE)
+head(pe[, c("lhs", "op", "rhs", "est", "se", "z", "pvalue", "std.all")], 10)
+```
+
+Each row is one parameter. The `lhs`, `op`, and `rhs` columns describe the relationship (e.g. `PA =~ pa1`), `est` is the unstandardised estimate, `se` the standard error, `z` the Wald statistic, `pvalue` the two-tailed p-value, and `std.all` the fully standardised estimate. We will use this data frame in Tutorial 13 when we export results to publication-quality tables.
+
+## Cronbach's alpha
+
+Before or alongside a CFA, it is good practice to report the [internal consistency](https://en.wikipedia.org/wiki/Internal_consistency) of each scale. Cronbach's alpha is the standard coefficient. The `psych::alpha()` function computes it:
+
+```{r}
+psych::alpha(ps[, c("pa1", "pa2", "pa3")])
+```
+
+The output reports `raw_alpha` (Cronbach's alpha based on covariances) and `std.alpha` (standardised alpha). Values above .70 are considered acceptable; above .80, good. The PA scale's alpha should be comfortably above .70 given the high loadings we observed.
+
+The `alpha()` output also includes:
+
+- `G6` — Guttman's lambda 6, an alternative lower bound on reliability
+- `average_r` — the average inter-item correlation
+- `Items` — a table showing what would happen to alpha if each item were dropped. If dropping an item *increases* alpha, that item may be weakening the scale.
+
+::: {.callout-tip}
+## Try it
+
+Compute Cronbach's alpha for the negative-affect scale (`na1`, `na2`, `na3`). Is the reliability similar to the PA scale? Would dropping any item improve alpha?
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{r}
+psych::alpha(ps[, c("na1", "na2", "na3")])
+```
+
+Compare the `raw_alpha` value to the PA scale's alpha. The "Item Dropped" column in the `Item Statistics` table shows what alpha would be if each item were removed. If none of the values exceeds the overall alpha, all three items are contributing positively to the scale's reliability.
+:::
+
+## Modification indices
+
+[Modification indices](../glossary.qmd#modification-indices) (MI) estimate how much the model $\chi^2$ would improve if a currently-fixed parameter were freely estimated. An MI above 3.84 corresponds to $\alpha = .05$; above 6.63, to $\alpha = .01$.
+
+```{r}
+modindices(fit_pa_na, minimum.value = 3.84, sort. = TRUE)
+```
+
+The output lists every fixed parameter whose MI exceeds 3.84, sorted from largest to smallest. The columns are:
+
+- `lhs`, `op`, `rhs` — the parameter that would be freed (e.g. `pa2 ~~ na1` means "free the residual covariance between `pa2` and `na1`")
+- `mi` — the modification index (estimated drop in $\chi^2$ if this parameter were freed)
+- `epc` — the expected parameter change (what the parameter's value would be if freed)
+- `sepc.lv`, `sepc.all`, `sepc.nox` — standardised versions of the EPC
+
+::: {.callout-warning}
+### Use modification indices cautiously
+
+Modification indices are **data-driven** suggestions. They tell you where the *sample* covariance matrix departs from the model, but they do not tell you *why*. Freeing a parameter because it has a high MI can improve fit in your sample while making the model worse in the population — this is overfitting. Always have a theoretical reason for freeing a parameter, and report any model changes you make transparently. We recommend using MIs as diagnostic information, not as an automatic model-building tool.
+:::
+
+In our two-factor CFA, the modification indices are all small (the largest is below 5), which is consistent with the model's already-excellent fit. There is no compelling reason to free any additional parameter.
+
+## Drawing the path diagram
+
+`tidySEM::graph_sem()` produces a path diagram directly from the fitted lavaan object:
+
+```{r}
+#| fig-align: center
+#| out-width: "85%"
+#| fig-cap: "Path diagram for the two-factor CFA of positive and negative affect, with standardised loadings."
+tidySEM::graph_sem(fit_pa_na, std = TRUE)
+```
+
+The diagram shows:
+
+- Two circles (latent variables: PA, neg)
+- Six squares (observed indicators)
+- Arrows from each factor to its indicators, labelled with the standardised loadings
+- A double-headed arrow between the two factors, labelled with their correlation (-0.47)
+
+This is the same diagrammatic convention we used in Tutorial 06's concept diagram, but now it is generated from the fitted model — the numbers on the arrows are the actual estimated loadings, not placeholders.
+
+::: {.callout-note}
+### `tidySEM` vs hand-authored diagrams
+
+Throughout this series we use two diagramming tools:
+
+- **`tidySEM::graph_sem(fit)`** — generates a diagram from a fitted lavaan object. The numbers are the actual estimates. Use this when you want to show the results of a fitted model.
+- **`DiagrammeR::grViz()`** — hand-authored diagrams for illustrating concepts before a model is fitted. Use this when you want to explain a model structure without tying it to specific estimates.
+
+We used `DiagrammeR` for the concept diagrams in Tutorials 05 and 06; from Tutorial 07 onward we use `tidySEM` whenever we want to visualise a fitted model.
+:::
+
+## Writing up the results
+
+An APA-style write-up of this CFA would look something like:
+
+> Confirmatory factor analysis was used to test the hypothesised two-factor structure of affect, with positive affect (PA) measured by three items (pa1, pa2, pa3) and negative affect (neg) measured by three items (na1, na2, na3). The model was estimated with robust maximum likelihood (MLR) to correct for non-normality. The model fit the data well, $\chi^2(8) = 7.93$, $p = .441$, CFI = 1.00, TLI = 1.00, RMSEA = 0.00, 90% CI [0.00, 0.07], SRMR = 0.01. All factor loadings were significant ($p < .001$) and substantial (standardised $\lambda$ range: .76–.85). The correlation between PA and neg was $r = -.47$, $p < .001$. Cronbach's alpha was .78 for PA and .82 for neg, indicating acceptable internal consistency for both scales.
+
+::: {.callout-note}
+### Reporting conventions
+
+In APA format:
+
+- Report $\chi^2$ with degrees of freedom and p-value: $\chi^2(8) = 7.93$, $p = .441$
+- Report fit indices to two decimal places: CFI = 1.00, RMSEA = 0.00
+- Report RMSEA with its 90% CI: RMSEA = 0.00, 90% CI [0.00, 0.07]
+- Report standardised loadings with the symbol $\lambda$ or just "standardised loading"
+- Report correlations with $r$: $r = -.47$
+- Suppress leading zeros for values that cannot exceed 1: $r = -.47$, not $r = -0.47$; $p = .001$, not $p = 0.001$
+:::
+
+## Common errors
+
+::: {.callout-warning}
+### `lavaan WARNING: model has not converged`
+
+The estimation algorithm could not find a stable solution. Possible causes: model misspecification, [underidentification](../glossary.qmd#underidentified), [empirical underidentification](../glossary.qmd#underidentified) (two items nearly identical), or a [Heywood case](../glossary.qmd#heywood-case). Check `summary(fit)` for negative variances or loadings above 1, check that every factor has at least three indicators, and check the correlation matrix of your indicators for near-perfect collinearity.
+
+### `lavaan WARNING: some estimated lv variances are negative`
+
+A [Heywood case](../glossary.qmd#heywood-case) — a negative variance, which is impossible. Usually indicates that the model is misspecified or the sample is too small. Try constraining the problematic variance to a small positive value, or respecify the model.
+
+### Very high modification indices on residual covariances
+
+If `modindices()` suggests large residual covariances among items with similar wording, you may have [common method variance](../glossary.qmd#common-method-variance). Consider freeing one or two theoretically-justified residual covariances, but report the change transparently.
+:::
+
+## Exercises
+
+1. Fit a **two-factor CFA** with job control (measured by `con1`, `con3`, `con6`, `con8`, `con9`, `con10`) and social support (measured by `sup2`, `sup4`, `sup5`, `sup7`) as the two factors. Use `MLR`. How many degrees of freedom does this model have? Does it fit well?
+
+2. For the job-control factor in Exercise 1, compute Cronbach's alpha. Would dropping any item improve alpha?
+
+3. Extract the standardised loadings from Exercise 1 as a data frame using `parameterEstimates(fit, standardized = TRUE)`. Filter the result to show only the factor loadings (rows where `op == "=~"`). Which item has the highest standardised loading on each factor?
+
+4. Run `modindices()` on the model from Exercise 1. Are there any modification indices above 3.84? If so, what parameter would they suggest freeing, and is there a theoretical justification for it?
+
+::: {.callout-caution collapse="true"}
+## Solutions
+
+**Exercise 1**
+
+```{r}
+model_con_sup <- '
+  con =~ con1 + con3 + con6 + con8 + con9 + con10
+  sup =~ sup2 + sup4 + sup5 + sup7
+  con ~~ sup
+'
+fit_con_sup <- cfa(model_con_sup, data = ps, estimator = "MLR")
+fitMeasures(fit_con_sup, c("chisq", "df", "pvalue",
+                           "cfi", "tli",
+                           "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+                           "srmr"))
+```
+
+With $q = 10$ observed variables, the covariance matrix has $10 \times 11 / 2 = 55$ elements. Free parameters: 5 loadings on `con` (first fixed to 1) + 3 loadings on `sup` (first fixed to 1) + 2 latent variances + 1 covariance + 10 residual variances = 21. So $\text{df} = 55 - 21 = 34$. Judge the fit indices against the Hu and Bentler cutoffs.
+
+**Exercise 2**
+
+```{r}
+psych::alpha(ps[, c("con1", "con3", "con6", "con8", "con9", "con10")])
+```
+
+Check `raw_alpha` for the overall reliability. In the `Item Statistics` table, look at the `Drop` column — if any value exceeds the overall alpha, dropping that item would improve reliability.
+
+**Exercise 3**
+
+```{r}
+pe_cs <- parameterEstimates(fit_con_sup, standardized = TRUE)
+loadings <- pe_cs[pe_cs$op == "=~", c("lhs", "rhs", "est", "std.all")]
+loadings
+```
+
+For each factor, the row with the largest `std.all` value is the strongest indicator.
+
+**Exercise 4**
+
+```{r}
+modindices(fit_con_sup, minimum.value = 3.84, sort. = TRUE)
+```
+
+If any rows appear, examine the `lhs`, `op`, and `rhs` columns to see which parameter would be freed. Theoretical justification depends on the substance of the items — for example, freeing a residual covariance between two items with similar wording could be justified by a common-method interpretation.
+:::
+
+## Summary & next tutorial
+
+You have now fitted a complete CFA, read every section of the output, extracted fit indices and parameter estimates, computed Cronbach's alpha, examined modification indices, drawn a path diagram, and written up the results in APA format. This is the workflow you will repeat for every CFA in your dissertation. In the next tutorial we extend the CFA toolkit: we build [parcels](../glossary.qmd#parcel) from individual items and fit a [second-order factor](../glossary.qmd#second-order-factor) model, both of which appear frequently in published organisational psychology research.
+
+## Further reading
+
+- @rosseel2012 — the lavaan reference paper, covering the full range of models the package can fit.
+- @beaujean2014 — a lavaan-based walkthrough of CFA, including parceling and second-order factors.
+- @kelloway2015 — the textbook on which the original Mplus teaching materials were based; useful for cross-referencing Mplus output with lavaan output.
+- @hul1999 — the source of the fit-index cutoff criteria used in the write-up.

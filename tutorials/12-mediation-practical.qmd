@@ -1,0 +1,357 @@
+---
+title: "Mediation — practical"
+subtitle: "Path mediation then latent SEM mediation with bootstrap BCAs"
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+## Learning objectives
+
+By the end of this tutorial you will be able to:
+
+- label regression paths in lavaan with `*` and define the [indirect effect](../glossary.qmd#indirect-effect) with `:=`
+- fit a path mediation model with [bootstrap](../glossary.qmd#bootstrap) standard errors and extract [BCa](../glossary.qmd#bca) confidence intervals
+- extend the mediation model to a full latent-variable SEM with three factors
+- report mediation results in APA format, including the indirect effect and its confidence interval
+
+## Setup
+
+<details>
+<summary>Setup code (you have seen this before)</summary>
+
+```{r}
+#| include: false
+knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(comment = "##")
+```
+
+```{r}
+library(haven)
+library(lavaan)
+library(tidySEM)
+```
+
+```{r}
+#| include: false
+ps <- haven::read_sav("data/ps_data_reduced.sav")
+ps <- haven::zap_labels(ps)
+ps[ps == -99] <- NA
+```
+
+</details>
+
+## The mediation model
+
+We test whether positive affect (PA) mediates the relationship between job control and creativity:
+
+- $X$ = job control (`con`)
+- $M$ = positive affect (`pa`)
+- $Y$ = creativity (`creat`)
+
+We fit this model in two forms:
+
+1. **Path mediation** — manifest variables (mean scores), as a direct extension of Tutorial 09
+2. **Latent SEM mediation** — latent variables with item-level indicators, as an extension of Tutorial 10
+
+Both use the same `:=` syntax to define the indirect effect.
+
+## Worked example 1: Path mediation with manifest variables
+
+### Computing the manifest variables
+
+```{r}
+ps$con   <- (ps$con1 + ps$con3 + ps$con6 + ps$con8 + ps$con9 + ps$con10) / 6
+ps$pa    <- (ps$pa1 + ps$pa2 + ps$pa3) / 3
+ps$creat <- (ps$creat1 + ps$creat2 + ps$creat3) / 3
+```
+
+### Specifying the model with labelled paths
+
+The key innovation is **labelling** the regression paths with `*` so we can refer to them in `:=` definitions:
+
+```{r}
+model_med_path <- '
+  creat ~ b * pa + c * con
+  pa    ~ a * con
+
+  indirect := a * b
+  direct   := c
+  total    := c + (a * b)
+'
+```
+
+Reading the syntax:
+
+- `creat ~ b * pa + c * con` — the path from `pa` to `creat` is labelled `b`; the path from `con` to `creat` is labelled `c`
+- `pa ~ a * con` — the path from `con` to `pa` is labelled `a`
+- `indirect := a * b` — defines the indirect effect as the product $ab$
+- `direct := c` — defines the direct effect as $c'$
+- `total := c + (a * b)` — defines the total effect as $c' + ab$
+
+### Fitting with bootstrap standard errors
+
+To test the indirect effect, we use bootstrap confidence intervals. This requires two changes:
+
+1. Switch the estimator from `MLR` to `ML` (MLR is incompatible with `se = "boot"`)
+2. Request bootstrap standard errors with `se = "boot"` and `bootstrap = 1000`
+
+```{r}
+set.seed(1234)
+fit_med_path <- sem(model_med_path, data = ps,
+                    estimator = "ML", se = "boot", bootstrap = 1000)
+```
+
+::: {.callout-important}
+### Estimator constraint with bootstrapping
+
+When you request `se = "boot"`, lavaan requires `estimator = "ML"` — the robust `MLR` estimator cannot be combined with bootstrapping. This is because the bootstrap builds its own empirical sampling distribution, making the Satorra–Bentler scaling correction unnecessary. The point estimates are the same under `ML` and `MLR`; only the standard errors differ, and for the indirect effect we use the bootstrap standard errors.
+:::
+
+### Reading the output
+
+```{r}
+summary(fit_med_path, standardized = TRUE, rsquare = TRUE)
+```
+
+The output now includes a **Defined Parameters** section at the bottom, showing the estimates for `indirect`, `direct`, and `total`. These are the derived parameters we defined with `:=`.
+
+### Extracting bootstrap confidence intervals
+
+For clean BCa confidence intervals, use `parameterEstimates()` with `boot.ci.type = "bca.simple"`:
+
+```{r}
+pe_med <- parameterEstimates(fit_med_path, standardized = TRUE,
+                             boot.ci.type = "bca.simple")
+pe_med[pe_med$lhs %in% c("indirect", "direct", "total"),
+       c("lhs", "est", "se", "z", "pvalue", "ci.lower", "ci.upper")]
+```
+
+The columns:
+
+- `est` — the estimate of the defined parameter
+- `se` — the bootstrap standard error
+- `z`, `pvalue` — the Wald statistic and p-value (based on the bootstrap SE)
+- `ci.lower`, `ci.upper` — the BCa 95% confidence interval
+
+The key row is `indirect`. If the BCa 95% CI for the indirect effect does **not** include zero, the indirect effect is significant at the .05 level — we have evidence of mediation.
+
+### Interpreting the results
+
+Read the three defined parameters:
+
+- **indirect** ($ab$): the mediated effect of `con` on `creat` through `pa`. If the CI excludes zero, mediation is present.
+- **direct** ($c'$): the direct effect of `con` on `creat`, controlling for `pa`. If this is not significant, mediation is *full*; if it is significant, mediation is *partial*.
+- **total** ($c' + ab$): the total effect of `con` on `creat`. This may or may not be significant — a non-significant total effect does not rule out mediation (see Tutorial 11).
+
+::: {.callout-note}
+### The total effect can be non-significant even when mediation is present
+
+If the indirect effect is positive and the direct effect is negative (or vice versa), they can cancel each other out, producing a non-significant total effect. This is called *inconsistent mediation* or a *suppressor effect*. Always examine the indirect effect directly, not just the total effect.
+:::
+
+## Worked example 2: Latent SEM mediation
+
+Now we extend the mediation model to use **latent variables** for all three constructs. This is the full SEM version, combining the measurement model from Tutorial 10 with the mediation structure from Tutorial 11.
+
+### The model
+
+```{r}
+#| label: med-latent-model
+# Build parcels for job control (6 items -> 3 parcels)
+ps$p1 <- (ps$con9 + ps$con10) / 2
+ps$p2 <- (ps$con1 + ps$con8)  / 2
+ps$p3 <- (ps$con3 + ps$con6)  / 2
+
+model_med_latent <- '
+  # Measurement model
+  con   =~ p1 + p2 + p3
+  pa    =~ pa1 + pa2 + pa3
+  creat =~ creat1 + creat2 + creat3
+
+  # Structural model with labelled paths
+  creat ~ b * pa + c * con
+  pa    ~ a * con
+
+  # Defined parameters
+  indirect := a * b
+  direct   := c
+  total    := c + (a * b)
+'
+```
+
+### Fitting with bootstrap
+
+```{r}
+set.seed(1234)
+fit_med_latent <- sem(model_med_latent, data = ps,
+                      estimator = "ML", se = "boot", bootstrap = 1000)
+```
+
+### Reading the output
+
+```{r}
+summary(fit_med_latent, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+```
+
+The output now has all the sections you met in Tutorial 10 (Latent variables, Regressions, Variances, R-Square) plus the **Defined Parameters** section at the bottom.
+
+### Bootstrap confidence intervals
+
+```{r}
+pe_med_latent <- parameterEstimates(fit_med_latent, standardized = TRUE,
+                                    boot.ci.type = "bca.simple")
+pe_med_latent[pe_med_latent$lhs %in% c("indirect", "direct", "total"),
+              c("lhs", "est", "se", "z", "pvalue", "ci.lower", "ci.upper",
+                "std.all")]
+```
+
+Compare the indirect effect from the latent SEM to the indirect effect from the path mediation. The latent SEM estimate should be **larger** in absolute value — disattenuation removes the measurement error from all three constructs, giving an unbiased estimate of the mediated effect.
+
+### Fit indices
+
+The latent SEM is overidentified (unlike the path mediation, which was just-identified), so we can examine fit:
+
+```{r}
+fitMeasures(fit_med_latent, c("chisq", "df", "pvalue",
+                              "cfi", "tli",
+                              "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+                              "srmr"))
+```
+
+If the fit indices meet the Hu and Bentler cutoffs, we have evidence that the model — both its measurement and structural parts — is consistent with the data.
+
+## Drawing the mediation model
+
+```{r}
+#| fig-align: center
+#| out-width: "90%"
+#| fig-cap: "Path diagram for the latent-variable mediation model. Job control (con) is a latent factor measured by three parcels; positive affect (pa) and creativity (creat) are latent factors measured by three items each. The indirect effect of con on creat through pa is a * b."
+tidySEM::graph_sem(fit_med_latent, std = TRUE)
+```
+
+## Writing up the results
+
+An APA-style write-up of the latent SEM mediation:
+
+> Structural equation modelling was used to test whether positive affect (PA) mediated the relationship between job control and creativity. Job control was modelled as a latent factor measured by three parcels (p1, p2, p3); PA and creativity were modelled as latent factors measured by their three respective items. The structural paths were estimated with maximum likelihood and 1,000 bootstrap replications; bias-corrected and accelerated (BCa) confidence intervals are reported for the indirect effect.
+>
+> The model fit the data well, $\chi^2(24) = ...$, CFI = ..., TLI = ..., RMSEA = ..., 90% CI [..., ...], SRMR = .... The indirect effect of job control on creativity through PA was $ab = ...$, 95% BCa CI [..., ...], indicating significant mediation. The direct effect of job control on creativity was $c' = ...$, $p = ...$, suggesting [full/partial] mediation. The total effect was $c = ...$, $p = ...$. Positive affect thus [fully/partially] mediated the relationship between job control and creativity.
+
+(Replace the `...` with the actual values from the output above.)
+
+::: {.callout-note}
+### Reporting bootstrap CIs
+
+When you report a bootstrap CI, state:
+
+- The number of bootstrap replications (e.g. 1,000)
+- The type of CI (BCa is preferred)
+- The estimate and its CI
+- Whether the CI includes zero
+
+Do not report a *p*-value for the indirect effect as your primary test — the bootstrap CI is the test. The *p*-value in the `parameterEstimates()` output is based on the bootstrap SE and is less accurate than the CI itself.
+:::
+
+## Common errors
+
+::: {.callout-warning}
+### `lavaan WARNING: bootstrap only supported with estimator = ML`
+
+You requested `se = "boot"` but left `estimator = "MLR"` (or did not specify). Change to `estimator = "ML"`. The point estimates are identical; only the standard errors change.
+
+### `set.seed()` not called
+
+Without `set.seed()`, the bootstrap results will differ every time you run the model. Always set a seed before fitting a bootstrap model so your results are reproducible. We use `set.seed(1234)` throughout this series.
+
+### Very wide bootstrap CIs
+
+If the bootstrap CI for the indirect effect is very wide, it may indicate a small sample, a weak indirect effect, or high variability in the bootstrap samples. Increasing the number of bootstrap replications (e.g. to 5,000) will narrow the CI slightly but will not fix a fundamentally weak effect.
+
+### Negative variance (Heywood case) in the latent SEM
+
+If the latent SEM produces a [Heywood case](../glossary.qmd#heywood-case) — a negative variance for one of the latent factors or indicators — check the measurement model's fit on its own (fit a CFA first). A poorly-fitting measurement model can distort the structural estimates.
+:::
+
+## Exercises
+
+1. Fit the **path mediation** model from the tutorial (manifest variables, `ML` with `se = "boot"`, `bootstrap = 1000`). Set `set.seed(1234)`. Extract the BCa confidence interval for the indirect effect. Is the indirect effect significant? Is the mediation full or partial?
+
+2. Fit the **latent SEM mediation** model from the tutorial. Compare the indirect effect estimate to the path mediation estimate from Exercise 1. Is the latent SEM estimate larger? Why?
+
+3. Add a **second mediator** to the path mediation model: negative affect (`neg`). The model becomes: `creat ~ pa + neg + con`, `pa ~ con`, `neg ~ con`. Define two specific indirect effects (`indirect_pa := a1 * b1` and `indirect_neg := a2 * b2`) and the total indirect effect. Fit with bootstrap. Which mediator shows a significant indirect effect?
+
+4. Using the latent SEM mediation model from Exercise 2, write a complete APA-style results paragraph. Report the model fit, the indirect effect with its BCa CI, the direct effect, and the total effect. State whether the mediation is full or partial.
+
+::: {.callout-caution collapse="true"}
+## Solutions
+
+**Exercise 1**
+
+```{r}
+set.seed(1234)
+fit_ex1 <- sem(model_med_path, data = ps,
+               estimator = "ML", se = "boot", bootstrap = 1000)
+pe1 <- parameterEstimates(fit_ex1, boot.ci.type = "bca.simple")
+pe1[pe1$lhs %in% c("indirect", "direct", "total"),
+    c("lhs", "est", "ci.lower", "ci.upper")]
+```
+
+Check whether the `ci.lower` and `ci.upper` for the `indirect` row exclude zero. If they do, the indirect effect is significant. Then check whether the `direct` row's CI includes zero — if it does, the mediation is full; if not, it is partial.
+
+**Exercise 2**
+
+```{r}
+set.seed(1234)
+fit_ex2 <- sem(model_med_latent, data = ps,
+               estimator = "ML", se = "boot", bootstrap = 1000)
+pe2 <- parameterEstimates(fit_ex2, boot.ci.type = "bca.simple")
+pe2[pe2$lhs %in% c("indirect", "direct", "total"),
+    c("lhs", "est", "ci.lower", "ci.upper")]
+```
+
+The latent SEM indirect effect should be larger in absolute value than the path mediation indirect effect. This is [disattenuation](https://en.wikipedia.org/wiki/Correction_for_attenuation) — the latent variables remove measurement error, producing an unbiased estimate of the mediated effect.
+
+**Exercise 3**
+
+```{r}
+ps$neg <- (ps$na1 + ps$na2 + ps$na3) / 3
+
+model_2med <- '
+  creat ~ b1 * pa + b2 * neg + c * con
+  pa    ~ a1 * con
+  neg   ~ a2 * con
+
+  indirect_pa  := a1 * b1
+  indirect_neg := a2 * b2
+  total_indirect := (a1 * b1) + (a2 * b2)
+  direct        := c
+  total         := c + (a1 * b1) + (a2 * b2)
+'
+
+set.seed(1234)
+fit_2med <- sem(model_2med, data = ps,
+                estimator = "ML", se = "boot", bootstrap = 1000)
+pe_2med <- parameterEstimates(fit_2med, boot.ci.type = "bca.simple")
+pe_2med[pe_2med$lhs %in% c("indirect_pa", "indirect_neg",
+                           "total_indirect", "direct", "total"),
+        c("lhs", "est", "ci.lower", "ci.upper")]
+```
+
+Check the CIs for `indirect_pa` and `indirect_neg`. The mediator whose CI excludes zero shows a significant specific indirect effect.
+
+**Exercise 4**
+
+Using the output from Exercise 2, write the paragraph following the template in the "Writing up the results" section above. Replace each `...` with the actual value from the `parameterEstimates()` and `fitMeasures()` output. State whether the indirect effect's BCa CI excludes zero (significant mediation) and whether the direct effect is significant (full vs. partial mediation).
+:::
+
+## Summary & next tutorial
+
+You can now fit mediation models in lavaan — both path mediation with manifest variables and full latent-variable SEM mediation — using labelled paths and the `:=` operator to define the indirect effect. You can extract BCa bootstrap confidence intervals and report the results in APA format. This completes the core lavaan toolkit: you can specify, estimate, and report CFA, path analysis, SEM, and mediation models. In the next tutorial we turn to the question of **reporting** — how to export lavaan results to publication-quality tables and figures, with a focus on the `texreg` package.
+
+## Further reading
+
+- @hayes2018 — the standard reference for mediation analysis, including bootstrap CIs.
+- @rosseel2012 — the lavaan reference paper, covering defined parameters and bootstrap.
+- @kelloway2015 — chapters 4 and 5 cover mediation in SEM.
+- @sobel1990 — the original Sobel test paper, for historical context on why we bootstrap instead.

@@ -1,0 +1,342 @@
+---
+title: "SEM with latent variables"
+subtitle: "From parceled SEM to full latent-variable SEM; disattenuation"
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+## Learning objectives
+
+By the end of this tutorial you will be able to:
+
+- explain why modelling latent variables is preferable to modelling manifest scores
+- build a SEM that combines a [measurement model](../glossary.qmd#measurement-model) (`=~`) with a [structural model](../glossary.qmd#structural-model) (`~`)
+- count degrees of freedom for a SEM by hand
+- compare path analysis estimates (manifest variables) with SEM estimates (latent variables) and understand [disattenuation](https://en.wikipedia.org/wiki/Correction_for_attenuation)
+- fit a full latent-variable SEM with three factors and a mediation structure
+
+## Setup
+
+<details>
+<summary>Setup code (you have seen this before)</summary>
+
+```{r}
+#| include: false
+knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(comment = "##")
+```
+
+```{r}
+library(haven)
+library(lavaan)
+library(tidySEM)
+```
+
+```{r}
+#| include: false
+ps <- haven::read_sav("data/ps_data_reduced.sav")
+ps <- haven::zap_labels(ps)
+ps[ps == -99] <- NA
+```
+
+</details>
+
+## Why latent variables?
+
+In Tutorial 09 we fitted a path model with **manifest variables** — mean scores computed from the items. For example, `pa` was the mean of `pa1`, `pa2`, `pa3`. This is simple, but it has a cost: the mean score contains [measurement error](../glossary.qmd#measurement-error).
+
+Measurement error has two consequences for regression:
+
+1. **Attenuation.** The regression coefficient of a variable measured with error is biased toward zero. If `pa` is an imperfect measure of the true positive-affect construct, the path from `pa` to `creat` will underestimate the true effect.
+
+2. **Bias in other paths.** When multiple predictors are measured with different amounts of error, the relative sizes of their coefficients are distorted — the more reliable predictor looks relatively stronger.
+
+Modelling the **latent variable** behind the items removes these biases. The latent variable is the error-free part of the construct; the residual variances of the individual items absorb the measurement error. This is the central advantage of SEM over path analysis with manifest variables.
+
+### The trade-off
+
+The cost of modelling latent variables is model complexity. A latent factor with three indicators adds parameters (loadings, residual variances) and the model must be identified. In return, you get:
+
+- Unbiased estimates of the structural paths
+- A testable [measurement model](../glossary.qmd#measurement-model) — you can check whether the items load well on their factors
+- More degrees of freedom, which makes the overall model testable
+
+## From path analysis to SEM: parceled SEM
+
+Our first SEM uses a **parceled** job-control factor (from Tutorial 08) alongside manifest `pa` and `creat`. This is a half-way house: one latent variable, two manifest variables. It is a common practical choice when you have many items for one construct but only three items for the others.
+
+### Building the parcels
+
+```{r}
+ps$p1 <- (ps$con9 + ps$con10) / 2
+ps$p2 <- (ps$con1 + ps$con8)  / 2
+ps$p3 <- (ps$con3 + ps$con6)  / 2
+ps$pa <- (ps$pa1 + ps$pa2 + ps$pa3) / 3
+ps$creat <- (ps$creat1 + ps$creat2 + ps$creat3) / 3
+```
+
+### The model
+
+```{r}
+model_sem_parcel <- '
+  # Measurement model for job control (latent)
+  con =~ p1 + p2 + p3
+
+  # Structural model
+  creat ~ pa + con
+  pa    ~ con
+'
+```
+
+The `#` lines are comments inside the model string — lavaan ignores them. We use comments to separate the measurement and structural parts of the model, which makes the syntax easier to read as models grow.
+
+We fit with `sem()`:
+
+```{r}
+fit_sem_parcel <- sem(model_sem_parcel, data = ps, estimator = "MLR")
+summary(fit_sem_parcel, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+```
+
+### Counting degrees of freedom
+
+With $q = 5$ observed variables (p1, p2, p3, pa, creat), the covariance matrix has $5 \times 6 / 2 = 15$ non-redundant elements.
+
+Free parameters:
+
+- 2 loadings on `con` (first fixed to 1 by marker-variable method)
+- 2 regression paths in the `creat` equation (`pa`, `con`)
+- 1 regression path in the `pa` equation (`con`)
+- 3 residual variances of the parcels
+- 1 residual variance of `pa`
+- 1 residual variance of `creat`
+- 1 latent variance of `con`
+
+That is $t = 11$. So $\text{df} = 15 - 11 = 4$.
+
+### Reading the output
+
+The output now has both a **Latent variables** section (the `con =~ p1 + p2 + p3` loadings) and a **Regressions** section (the structural paths). Compare the structural paths to those from the path analysis in Tutorial 09:
+
+- The path from `con` to `pa` should be slightly **larger** in the SEM than in the path analysis — disattenuation removes the bias from `con` being measured with error.
+- The path from `pa` to `creat` should be similar — `pa` is still a manifest variable in this model.
+- The path from `con` to `creat` (direct effect) may also change.
+
+::: {.callout-note}
+### Disattenuation
+
+When a predictor is measured with error, its regression coefficient is biased toward zero. Modelling the predictor as a latent variable (with the measurement error absorbed into the residual variances of its indicators) removes this bias. The latent-variable coefficient is typically larger in absolute value than the manifest-variable coefficient. This is called **disattenuation** — the coefficient has been "corrected for attenuation" due to measurement error.
+:::
+
+## Full latent-variable SEM
+
+Now we make the full jump: all three constructs are latent variables, each measured by its own indicators.
+
+### The model
+
+```{r}
+model_sem_full <- '
+  # Measurement model
+  con   =~ p1 + p2 + p3
+  pa    =~ pa1 + pa2 + pa3
+  creat =~ creat1 + creat2 + creat3
+
+  # Structural model
+  creat ~ pa + con
+  pa    ~ con
+'
+```
+
+We parcel only the job-control items (into p1, p2, p3) because there are six of them and we want a simpler measurement model. Positive affect and creativity are modelled at the item level with three indicators each.
+
+### Fitting the model
+
+```{r}
+fit_sem_full <- sem(model_sem_full, data = ps, estimator = "MLR")
+summary(fit_sem_full, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+```
+
+### Counting degrees of freedom
+
+With $q = 9$ observed variables (p1, p2, p3, pa1, pa2, pa3, creat1, creat2, creat3), the covariance matrix has $9 \times 10 / 2 = 45$ non-redundant elements.
+
+Free parameters:
+
+- 2 loadings on `con` + 2 loadings on `pa` + 2 loadings on `creat` = 6 loadings
+- 2 regression paths in `creat` equation + 1 in `pa` equation = 3 structural paths
+- 3 parcel residual variances + 3 pa residual variances + 3 creat residual variances = 9 indicator residual variances
+- 1 latent variance of `con` + 1 residual variance of `pa` + 1 residual variance of `creat` = 3 latent (residual) variances
+
+That is $t = 6 + 3 + 9 + 3 = 21$. So $\text{df} = 45 - 21 = 24$.
+
+### Fit indices
+
+```{r}
+fitMeasures(fit_sem_full, c("chisq", "df", "pvalue",
+                            "cfi", "tli",
+                            "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+                            "srmr"))
+```
+
+The model has 24 degrees of freedom — plenty of information to test it. If the fit indices meet the Hu and Bentler cutoffs, the model's structure is consistent with the data.
+
+## Comparing path analysis, parceled SEM, and full SEM
+
+Let us compare the key structural paths across the three models:
+
+```{r}
+# Path analysis (manifest variables) — from Tutorial 09
+ps$con_m <- (ps$con1 + ps$con3 + ps$con6 + ps$con8 + ps$con9 + ps$con10) / 6
+ps$pa_m  <- (ps$pa1 + ps$pa2 + ps$pa3) / 3
+ps$cr_m  <- (ps$creat1 + ps$creat2 + ps$creat3) / 3
+
+model_path_m <- '
+  cr_m ~ pa_m + con_m
+  pa_m ~ con_m
+'
+fit_path <- sem(model_path_m, data = ps, estimator = "MLR")
+
+# Extract standardised structural paths from each model
+get_paths <- function(fit) {
+  pe <- parameterEstimates(fit, standardized = TRUE)
+  pe[pe$op == "~", c("lhs", "rhs", "std.all")]
+}
+
+paths_path  <- get_paths(fit_path)
+paths_parcel <- get_paths(fit_sem_parcel)
+paths_full   <- get_paths(fit_sem_full)
+
+paths_path
+paths_parcel
+paths_full
+```
+
+The comparison shows:
+
+- The path from `con` to `pa` is larger in the SEM models than in the path analysis — disattenuation corrects for the measurement error in job control.
+- The path from `pa` to `creat` is larger in the full SEM than in the parceled SEM or path analysis — disattenuation corrects for the measurement error in positive affect.
+- The direct path from `con` to `creat` may change in either direction.
+
+This is the core argument for SEM over path analysis with manifest scores: the structural paths are unbiased estimates of the true relationships among the constructs, not the attenuated estimates you get from imperfectly-measured scores.
+
+## Drawing the full SEM
+
+```{r}
+#| fig-align: center
+#| out-width: "90%"
+#| fig-cap: "Path diagram for the full latent-variable SEM. Job control (con) is a latent factor measured by three parcels; positive affect (pa) and creativity (creat) are latent factors measured by three items each. Structural paths: con -> pa, con -> creat, pa -> creat."
+tidySEM::graph_sem(fit_sem_full, std = TRUE)
+```
+
+The diagram shows both layers of the model:
+
+- **Measurement layer:** arrows from each latent factor (circle) to its indicators (squares)
+- **Structural layer:** arrows among the latent factors — `con → pa`, `con → creat`, `pa → creat`
+
+## Mathematical foundation (optional)
+
+::: {.callout-note collapse="true"}
+### The matrix form of a full SEM
+
+A full SEM combines a measurement model with a structural model. In matrix form:
+
+**Measurement model:**
+
+$$
+\mathbf{y} = \mathbf{\Lambda} \mathbf{\eta} + \mathbf{\varepsilon}
+$$
+
+This is the same as the CFA matrix form from Tutorial 06 — observed variables ($\mathbf{y}$) are linear functions of latent variables ($\mathbf{\eta}$) plus measurement error ($\mathbf{\varepsilon}$).
+
+**Structural model:**
+
+$$
+\mathbf{\eta} = \mathbf{B} \mathbf{\eta} + \mathbf{\zeta}
+$$ {#eq-sem-structural}
+
+Here $\mathbf{B}$ is a matrix of structural coefficients (the regression paths among latent variables) and $\mathbf{\zeta}$ is a vector of disturbances — the residual variances of the endogenous latent variables.
+
+The model-implied covariance matrix combines both:
+
+$$
+\hat{\Sigma}(\theta) = \mathbf{\Lambda} (\mathbf{I} - \mathbf{B})^{-1} \mathbf{\Psi} (\mathbf{I} - \mathbf{B})^{-T} \mathbf{\Lambda}' + \mathbf{\Theta}
+$$ {#eq-sem-implied}
+
+You do not need to manipulate these matrices to use lavaan. They are included here so you recognise the notation when you encounter it in SEM papers. For the rest of this series we use the simplified lowercase Greek symbols ($\lambda$, $\beta$, $\psi$, $\theta$, $\zeta$).
+:::
+
+## Common errors
+
+::: {.callout-warning}
+### `lavaan WARNING: model has not converged` in full SEM
+
+A full SEM with many indicators and structural paths is more likely to have convergence problems than a simple CFA. Check for [Heywood cases](../glossary.qmd#heywood-case) (negative variances), check that every factor has at least three indicators, and consider [parceling](../glossary.qmd#parcel) some of the indicators to simplify the measurement model.
+
+### Very different estimates between path analysis and SEM
+
+If the SEM estimates are dramatically different from the path analysis estimates, check whether the measurement model fits well on its own (fit a CFA first). A poorly-fitting measurement model can distort the structural estimates.
+
+### Negative residual variance for a latent dependent variable
+
+If `pa` or `creat` has a negative disturbance variance ($\zeta$), the structural model may be misspecified. Consider whether the structural paths are theoretically justified, and whether there are omitted predictors that should be included.
+:::
+
+## Exercises
+
+1. Fit the parceled SEM from the tutorial (job control as a latent factor measured by p1, p2, p3; `pa` and `creat` as manifest mean scores). Compare the standardised path from `con` to `pa` to the same path from the path analysis in Tutorial 09. Is the SEM estimate larger? Why?
+
+2. Fit the full latent-variable SEM (all three constructs as latent factors). Write down the standardised structural paths and the $R^2$ for `creat`. How much of the variance in creativity is explained by the model?
+
+3. Count the degrees of freedom for the full SEM by hand (using the t-rule). Confirm that your count matches the df reported by `fitMeasures()`.
+
+4. Compare the parceled SEM and the full SEM using `lavTestLRT()`. Which model fits better? Is the more complex full SEM justified, or does the simpler parceled model fit as well?
+
+::: {.callout-caution collapse="true"}
+## Solutions
+
+**Exercise 1**
+
+```{r}
+fitMeasures(fit_sem_parcel, c("chisq", "df", "pvalue", "cfi", "tli",
+                              "rmsea", "srmr"))
+get_paths(fit_path)
+get_paths(fit_sem_parcel)
+```
+
+The `con → pa` path from the parceled SEM should be larger than the same path from the path analysis. This is disattenuation — the latent `con` factor is free of measurement error, so its coefficient is not biased toward zero.
+
+**Exercise 2**
+
+```{r}
+summary(fit_sem_full, standardized = TRUE, rsquare = TRUE)
+```
+
+The standardised structural paths appear in the Regressions section. The $R^2$ for `creat` appears in the R-Square section — it tells you what proportion of the variance in the creativity latent factor is explained by pa and con.
+
+**Exercise 3**
+
+With $q = 9$ observed variables, the covariance matrix has $9 \times 10 / 2 = 45$ elements. Free parameters: 6 loadings + 3 structural paths + 9 indicator residual variances + 3 latent (residual) variances = 21. So $\text{df} = 45 - 21 = 24$. Confirm with:
+
+```{r}
+fitMeasures(fit_sem_full, "df")
+```
+
+**Exercise 4**
+
+```{r}
+lavTestLRT(fit_sem_parcel, fit_sem_full)
+```
+
+A significant result means the full SEM fits significantly better than the parceled SEM — the additional latent variables (pa and creat) improve the model. A non-significant result means the simpler parceled model fits as well. Note that the two models are not strictly nested (the parceled model uses manifest `pa` and `creat`, while the full model uses latent `pa` and `creat`), so the likelihood-ratio test is approximate. Compare the AIC/BIC values as well for a non-nested comparison.
+:::
+
+## Summary & next tutorial
+
+You have moved from path analysis with manifest variables to full structural equation modelling with latent variables. You have seen how disattenuation changes the structural path estimates, how to count degrees of freedom for a SEM, and how to draw the full model with `tidySEM`. The model we fitted — `con → pa → creat` with a direct path `con → creat` — is the structure of a mediation model. In the next two tutorials we develop the theory of mediation (Tutorial 11) and then fit it in lavaan with bootstrap confidence intervals (Tutorial 12).
+
+## Further reading
+
+- @kelloway2015 — chapters 4 and 5 cover SEM with latent variables and the comparison to path analysis.
+- @beaujean2014 — a lavaan-based walkthrough of full SEM, including the matrix form.
+- @bollen1989 — the canonical reference for the mathematical foundations of SEM.
+- @hoyle2012 — the *Handbook of Structural Equation Modeling*, comprehensive reference for every aspect of SEM.

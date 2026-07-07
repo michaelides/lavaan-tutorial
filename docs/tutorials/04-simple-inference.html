@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="George Michaelides">
+<meta name="dcterms.date" content="2026-01-01">
+
+<title>Simple inference: t-test, ANOVA, lm – A Step-by-Step Introduction to Structural Equation Modeling with lavaan in R</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../tutorials/05-introducing-lavaan.html" rel="next">
+<link href="../tutorials/03-importing-data.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-5dad907783eb94222aa6c9b08b9eb4a6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-bc5b62d811c1c94b7e95d620c4441ad7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-5dad907783eb94222aa6c9b08b9eb4a6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "textbox",
+  "limit": 15,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../assets/styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">A Step-by-Step Introduction to Structural Equation Modeling with lavaan in R</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../glossary.html"> 
+<span class="menu-text">Glossary</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../notation.html"> 
+<span class="menu-text">Notation</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../cheatsheet.html"> 
+<span class="menu-text">Cheat sheet</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/michaelides/lavaan-tutorial"> <i class="bi bi-github" role="img" aria-label="GitHub repository">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../tutorials/01-r-basics.html">Foundations</a></li><li class="breadcrumb-item"><a href="../tutorials/04-simple-inference.html">Simple inference: t-test, ANOVA, lm</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Foundations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/01-r-basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">R basics</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/02-rstudio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">RStudio</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/03-importing-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Importing data</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/04-simple-inference.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Simple inference: t-test, ANOVA, lm</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Bridging</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/05-introducing-lavaan.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducing lavaan</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Core lavaan</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/06-cfa-concept.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CFA — concept</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/07-cfa-practical.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CFA — practical</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/08-parcels-second-order.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Parcels and second-order CFA</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/09-path-analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Path analysis with observed variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/10-sem-latent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SEM with latent variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/11-mediation-concept.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mediation — concept</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/12-mediation-practical.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mediation — practical</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Capstone</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/13-reporting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Reporting lavaan results</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Advanced</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/14-multilevel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multilevel models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/15-growth.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Growth curve models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/16-moderation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Moderation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives">Learning objectives</a></li>
+  <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup">Setup</a></li>
+  <li><a href="#t-tests" id="toc-t-tests" class="nav-link" data-scroll-target="#t-tests">t-tests</a>
+  <ul class="collapse">
+  <li><a href="#one-sample-t-test" id="toc-one-sample-t-test" class="nav-link" data-scroll-target="#one-sample-t-test">One-sample t-test</a></li>
+  <li><a href="#independent-samples-t-test" id="toc-independent-samples-t-test" class="nav-link" data-scroll-target="#independent-samples-t-test">Independent-samples t-test</a></li>
+  <li><a href="#paired-t-test" id="toc-paired-t-test" class="nav-link" data-scroll-target="#paired-t-test">Paired t-test</a></li>
+  </ul></li>
+  <li><a href="#one-way-anova" id="toc-one-way-anova" class="nav-link" data-scroll-target="#one-way-anova">One-way ANOVA</a>
+  <ul class="collapse">
+  <li><a href="#fitting-the-model" id="toc-fitting-the-model" class="nav-link" data-scroll-target="#fitting-the-model">Fitting the model</a></li>
+  <li><a href="#pairwise-comparisons" id="toc-pairwise-comparisons" class="nav-link" data-scroll-target="#pairwise-comparisons">Pairwise comparisons</a></li>
+  <li><a href="#two-way-anova" id="toc-two-way-anova" class="nav-link" data-scroll-target="#two-way-anova">Two-way ANOVA</a></li>
+  </ul></li>
+  <li><a href="#simple-linear-regression-with-lm" id="toc-simple-linear-regression-with-lm" class="nav-link" data-scroll-target="#simple-linear-regression-with-lm">Simple linear regression with <code>lm()</code></a>
+  <ul class="collapse">
+  <li><a href="#fitting-the-model-1" id="toc-fitting-the-model-1" class="nav-link" data-scroll-target="#fitting-the-model-1">Fitting the model</a></li>
+  <li><a href="#confidence-intervals-for-coefficients" id="toc-confidence-intervals-for-coefficients" class="nav-link" data-scroll-target="#confidence-intervals-for-coefficients">Confidence intervals for coefficients</a></li>
+  <li><a href="#plotting-the-regression-with-ggplot2" id="toc-plotting-the-regression-with-ggplot2" class="nav-link" data-scroll-target="#plotting-the-regression-with-ggplot2">Plotting the regression with <code>ggplot2</code></a></li>
+  <li><a href="#residual-diagnostics" id="toc-residual-diagnostics" class="nav-link" data-scroll-target="#residual-diagnostics">Residual diagnostics</a></li>
+  </ul></li>
+  <li><a href="#multiple-regression" id="toc-multiple-regression" class="nav-link" data-scroll-target="#multiple-regression">Multiple regression</a>
+  <ul class="collapse">
+  <li><a href="#confidence-intervals" id="toc-confidence-intervals" class="nav-link" data-scroll-target="#confidence-intervals">Confidence intervals</a></li>
+  <li><a href="#comparing-nested-models" id="toc-comparing-nested-models" class="nav-link" data-scroll-target="#comparing-nested-models">Comparing nested models</a></li>
+  </ul></li>
+  <li><a href="#from-regression-to-path-analysis" id="toc-from-regression-to-path-analysis" class="nav-link" data-scroll-target="#from-regression-to-path-analysis">From regression to path analysis</a></li>
+  <li><a href="#common-errors" id="toc-common-errors" class="nav-link" data-scroll-target="#common-errors">Common errors</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises">Exercises</a></li>
+  <li><a href="#summary-next-tutorial" id="toc-summary-next-tutorial" class="nav-link" data-scroll-target="#summary-next-tutorial">Summary &amp; next tutorial</a></li>
+  <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading">Further reading</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/michaelides/lavaan-tutorial/edit/main/tutorials/04-simple-inference.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/michaelides/lavaan-tutorial/blob/main/tutorials/04-simple-inference.qmd" class="toc-action"><i class="bi empty"></i>View source</a></li><li><a href="https://github.com/michaelides/lavaan-tutorial/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../tutorials/01-r-basics.html">Foundations</a></li><li class="breadcrumb-item"><a href="../tutorials/04-simple-inference.html">Simple inference: t-test, ANOVA, lm</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Simple inference: t-test, ANOVA, lm</h1>
+<p class="subtitle lead">t-test, one-way ANOVA, regression with lm; introducing ggplot2</p>
+</div>
+
+
+<div class="quarto-title-meta-author">
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author">George Michaelides </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            School of Psychology, University of East Anglia
+          </p>
+      </div>
+  </div>
+
+<div class="quarto-title-meta">
+
+      
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">January 1, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="learning-objectives" class="level2">
+<h2 class="anchored" data-anchor-id="learning-objectives">Learning objectives</h2>
+<p>By the end of this tutorial you will be able to:</p>
+<ul>
+<li>run one-sample, independent-samples, and paired t-tests in R and interpret the output</li>
+<li>run a one-way ANOVA with <code>aov()</code> and follow up with pairwise comparisons using <code>TukeyHSD()</code></li>
+<li>fit simple and multiple regression models with <code>lm()</code> and read the <code>summary()</code> output</li>
+<li>produce your first <code>ggplot2</code> scatter plot with a fitted regression line</li>
+<li>check regression assumptions with the base <code>plot(fit)</code> diagnostic panels</li>
+</ul>
+</section>
+<section id="setup" class="level2">
+<h2 class="anchored" data-anchor-id="setup">Setup</h2>
+<p>This tutorial uses the PS dataset we imported in Tutorial 03, plus <code>ggplot2</code> for the first time. We also load <code>psych</code> for descriptive statistics. The setup chunk sets the knit root directory to the project folder so the <code>data/</code> paths work.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(psych)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>We import the PS dataset from its SPSS file, strip the labels, convert <code>-99</code> to <code>NA</code>, and turn <code>gender</code> and <code>age</code> into factors — the same workflow you met in Tutorial 03. For the rest of this tutorial we use two derived scores as our running examples:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Mean positive affect score per participant</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>ps<span class="sc">$</span>pa <span class="ot">&lt;-</span> (ps<span class="sc">$</span>pa1 <span class="sc">+</span> ps<span class="sc">$</span>pa2 <span class="sc">+</span> ps<span class="sc">$</span>pa3) <span class="sc">/</span> <span class="dv">3</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Mean creativity score per participant</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>ps<span class="sc">$</span>creat <span class="ot">&lt;-</span> (ps<span class="sc">$</span>creat1 <span class="sc">+</span> ps<span class="sc">$</span>creat2 <span class="sc">+</span> ps<span class="sc">$</span>creat3) <span class="sc">/</span> <span class="dv">3</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Mean job control score per participant</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>ps<span class="sc">$</span>con <span class="ot">&lt;-</span> (ps<span class="sc">$</span>con1 <span class="sc">+</span> ps<span class="sc">$</span>con3 <span class="sc">+</span> ps<span class="sc">$</span>con6 <span class="sc">+</span> ps<span class="sc">$</span>con8 <span class="sc">+</span> ps<span class="sc">$</span>con9 <span class="sc">+</span> ps<span class="sc">$</span>con10) <span class="sc">/</span> <span class="dv">6</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Each is the average of the items that make up the scale, which gives us a single number per participant for that construct. We will use these throughout the tutorial.</p>
+</section>
+<section id="t-tests" class="level2">
+<h2 class="anchored" data-anchor-id="t-tests">t-tests</h2>
+<p>A t-test compares the means of two groups (or one group against a reference value) and asks whether the difference is statistically significant. R’s <code>t.test()</code> function handles all three flavours.</p>
+<section id="one-sample-t-test" class="level3">
+<h3 class="anchored" data-anchor-id="one-sample-t-test">One-sample t-test</h3>
+<p>The one-sample t-test compares the mean of a single sample against a hypothesised population mean. Is the mean positive affect score in our sample different from the scale midpoint of 3.5?</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(ps<span class="sc">$</span>pa, <span class="at">mu =</span> <span class="fl">3.5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>## 
+##  One Sample t-test
+## 
+## data:  ps$pa
+## t = -0.16857, df = 331, p-value = 0.8662
+## alternative hypothesis: true mean is not equal to 3.5
+## 95 percent confidence interval:
+##  3.372792 3.607127
+## sample estimates:
+## mean of x 
+##   3.48996</code></pre>
+</div>
+</div>
+<p>The output gives us the observed mean (<code>mean of x</code>), the t-statistic, degrees of freedom, p-value, the 95% confidence interval for the mean, and a reminder of the hypothesised <code>mu</code>. Read it as: <em>t</em>(<code>r</code>) = …, <em>p</em> = …, with the 95% CI for the mean.</p>
+</section>
+<section id="independent-samples-t-test" class="level3">
+<h3 class="anchored" data-anchor-id="independent-samples-t-test">Independent-samples t-test</h3>
+<p>The independent-samples t-test compares the means of two unrelated groups. Do male and female participants differ in their mean positive affect? We pass a <strong>formula</strong> — <code>pa ~ gender</code> — which R reads as “model <code>pa</code> as a function of <code>gender</code>”.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(pa <span class="sc">~</span> gender, <span class="at">data =</span> ps, <span class="at">var.equal =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  pa by gender
+## t = 2.6522, df = 310.12, p-value = 0.008408
+## alternative hypothesis: true difference in means between group Male and group Female is not equal to 0
+## 95 percent confidence interval:
+##  0.08165575 0.55105985
+## sample estimates:
+##   mean in group Male mean in group Female 
+##             3.636704             3.320346</code></pre>
+</div>
+</div>
+<p><code>var.equal = FALSE</code> requests <strong>Welch’s t-test</strong>, which does not assume equal variances in the two groups. This is the safer default and is what R uses unless you say otherwise. Setting <code>var.equal = TRUE</code> gives the classical Student’s t-test, which assumes equal variances — only use this if you have checked the assumption with <code>var.test()</code> or a Levene’s test.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The formula interface <code>y ~ group</code> is the same syntax you will use throughout R for regression, ANOVA, and (from Tutorial 05 onward) lavaan models. Get comfortable with the tilde <code>~</code> now — it means “is modelled by” or “depends on”.</p>
+</div>
+</div>
+</section>
+<section id="paired-t-test" class="level3">
+<h3 class="anchored" data-anchor-id="paired-t-test">Paired t-test</h3>
+<p>The paired t-test compares two measurements from the same participants — for example, pre- and post-intervention scores. The PS dataset is cross-sectional, so we do not have a natural paired example, but the syntax is:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(pre_scores, post_scores, <span class="at">paired =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The <code>paired = TRUE</code> argument tells R to compute the difference score for each participant and test whether the mean difference is zero.</p>
+</section>
+</section>
+<section id="one-way-anova" class="level2">
+<h2 class="anchored" data-anchor-id="one-way-anova">One-way ANOVA</h2>
+<p>Analysis of variance (ANOVA) generalises the t-test to three or more groups. We test whether mean positive affect differs across the five age bands in the PS dataset.</p>
+<section id="fitting-the-model" class="level3">
+<h3 class="anchored" data-anchor-id="fitting-the-model">Fitting the model</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>fit_aov <span class="ot">&lt;-</span> <span class="fu">aov</span>(pa <span class="sc">~</span> age, <span class="at">data =</span> ps)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit_aov)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>##              Df Sum Sq Mean Sq F value Pr(&gt;F)
+## age           4    8.1   2.017   1.735  0.142
+## Residuals   325  377.8   1.162               
+## 13 observations deleted due to missingness</code></pre>
+</div>
+</div>
+<p>The <code>summary()</code> output shows two rows: <code>age</code> (the between-groups effect) and <code>Residuals</code> (the within-groups variation). The F-statistic tests whether the group means are all equal. The p-value tells you whether to reject that null hypothesis.</p>
+</section>
+<section id="pairwise-comparisons" class="level3">
+<h3 class="anchored" data-anchor-id="pairwise-comparisons">Pairwise comparisons</h3>
+<p>A significant ANOVA tells you that <em>some</em> group differences exist, but not <em>which</em> groups differ. Follow up with <strong>Tukey’s Honest Significant Difference</strong> test, which performs all pairwise comparisons while controlling the family-wise error rate:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">TukeyHSD</span>(fit_aov)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>##   Tukey multiple comparisons of means
+##     95% family-wise confidence level
+## 
+## Fit: aov(formula = pa ~ age, data = ps)
+## 
+## $age
+##            diff        lwr        upr     p adj
+## 2-1 -0.45873016 -1.1945650 0.27710467 0.4291283
+## 3-1 -0.50836551 -1.2121410 0.19540999 0.2773531
+## 4-1 -0.62160778 -1.3361364 0.09292082 0.1216173
+## 5-1 -0.70158730 -1.5179228 0.11474815 0.1298360
+## 3-2 -0.04963535 -0.5010203 0.40174962 0.9981919
+## 4-2 -0.16287762 -0.6308515 0.30509626 0.8749829
+## 5-2 -0.24285714 -0.8551087 0.36939445 0.8126295
+## 4-3 -0.11324227 -0.5289905 0.30250598 0.9451098
+## 5-3 -0.19322179 -0.7665446 0.38010103 0.8873041
+## 5-4 -0.07997952 -0.6664522 0.50649318 0.9958196</code></pre>
+</div>
+</div>
+<p>The output lists every pairwise comparison, the difference in means, the lower and upper bounds of the 95% confidence interval, and the adjusted p-value (<code>p adj</code>). A comparison is significant at the .05 level if <code>p adj</code> is below .05.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>ANOVA requires a factor
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If your grouping variable is numeric (e.g.&nbsp;<code>age</code> coded 1, 2, 3, 4, 5), <code>aov()</code> will treat it as a continuous predictor and run a regression instead of an ANOVA. Always confirm that the grouping variable is a factor with <code>class(ps$age)</code> before fitting the model. We converted <code>age</code> to a factor in the setup chunk above for exactly this reason.</p>
+</div>
+</div>
+</section>
+<section id="two-way-anova" class="level3">
+<h3 class="anchored" data-anchor-id="two-way-anova">Two-way ANOVA</h3>
+<p>To test the effects of two grouping variables and their interaction, list both on the right-hand side of the formula separated by <code>*</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>fit_2way <span class="ot">&lt;-</span> <span class="fu">aov</span>(pa <span class="sc">~</span> gender <span class="sc">*</span> age, <span class="at">data =</span> ps)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit_2way)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The <code>*</code> expands to <code>gender + age + gender:age</code>, where the colon denotes the interaction term. We will not pursue two-way ANOVA further here; the principle is the same as one-way, with one extra row in the summary table per additional effect.</p>
+</section>
+</section>
+<section id="simple-linear-regression-with-lm" class="level2">
+<h2 class="anchored" data-anchor-id="simple-linear-regression-with-lm">Simple linear regression with <code>lm()</code></h2>
+<p>Regression models a continuous outcome as a linear function of one or more predictors. The workhorse function is <code>lm()</code> — “linear model”.</p>
+<section id="fitting-the-model-1" class="level3">
+<h3 class="anchored" data-anchor-id="fitting-the-model-1">Fitting the model</h3>
+<p>Does positive affect predict creativity? We fit the regression of <code>creat</code> on <code>pa</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>fit_lm <span class="ot">&lt;-</span> <span class="fu">lm</span>(creat <span class="sc">~</span> pa, <span class="at">data =</span> ps)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit_lm)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>## 
+## Call:
+## lm(formula = creat ~ pa, data = ps)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -2.01806 -0.60540  0.00231  0.57600  2.00231 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  2.46712    0.15462   15.96  &lt; 2e-16 ***
+## pa           0.17685    0.04231    4.18 3.74e-05 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.8355 on 330 degrees of freedom
+##   (11 observations deleted due to missingness)
+## Multiple R-squared:  0.05028,    Adjusted R-squared:  0.0474 
+## F-statistic: 17.47 on 1 and 330 DF,  p-value: 3.743e-05</code></pre>
+</div>
+</div>
+<p>The <code>summary()</code> output for an <code>lm</code> object has four sections worth understanding:</p>
+<ol type="1">
+<li><strong>Call</strong> — the model formula, repeated for reference.</li>
+<li><strong>Residuals</strong> — a five-number summary of the differences between observed and predicted values. Symmetric residuals (median near zero) are a good sign.</li>
+<li><strong>Coefficients</strong> — a table with one row per parameter. The <code>(Intercept)</code> row is the predicted <code>creat</code> when <code>pa</code> is zero; the <code>pa</code> row is the slope — the change in <code>creat</code> for a one-unit increase in <code>pa</code>. The columns are the estimate, its standard error, the t-statistic, and the two-tailed p-value.</li>
+<li><strong>Model fit</strong> — <code>Multiple R-squared</code> is the proportion of variance in <code>creat</code> explained by <code>pa</code>. <code>Adjusted R-squared</code> corrects for the number of predictors. The <code>F-statistic</code> tests the overall model — whether the slope is significantly different from zero.</li>
+</ol>
+</section>
+<section id="confidence-intervals-for-coefficients" class="level3">
+<h3 class="anchored" data-anchor-id="confidence-intervals-for-coefficients">Confidence intervals for coefficients</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">confint</span>(fit_lm)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>##                  2.5 %    97.5 %
+## (Intercept) 2.16294819 2.7712944
+## pa          0.09361827 0.2600913</code></pre>
+</div>
+</div>
+<p>This gives the 95% confidence interval for each coefficient. If the interval for the slope does not include zero, the effect is statistically significant at the .05 level — equivalent to the p-value in the <code>summary()</code> output being below .05.</p>
+</section>
+<section id="plotting-the-regression-with-ggplot2" class="level3">
+<h3 class="anchored" data-anchor-id="plotting-the-regression-with-ggplot2">Plotting the regression with <code>ggplot2</code></h3>
+<p>This is our first <code>ggplot2</code> plot. The grammar takes getting used to, but the payoff is publication-quality figures with consistent styling.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(ps, <span class="fu">aes</span>(<span class="at">x =</span> pa, <span class="at">y =</span> creat)) <span class="sc">+</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> <span class="cn">TRUE</span>, <span class="at">colour =</span> <span class="st">"blue"</span>) <span class="sc">+</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Positive affect (mean of 3 items)"</span>,</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Creativity (mean of 3 items)"</span>,</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Creativity as a function of positive affect"</span>) <span class="sc">+</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04-simple-inference_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="975"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Reading the code:</p>
+<ul>
+<li><code>ggplot(ps, aes(x = pa, y = creat))</code> — initialise the plot with the data frame and the <strong>aesthetic mapping</strong> (which variable goes on which axis).</li>
+<li><code>geom_point(alpha = 0.5)</code> — add a scatter of points; <code>alpha = 0.5</code> makes them semi-transparent so overlapping points are visible.</li>
+<li><code>geom_smooth(method = "lm", se = TRUE)</code> — add a fitted regression line; <code>se = TRUE</code> shades the 95% confidence band around the line.</li>
+<li><code>labs(...)</code> — label the axes and title.</li>
+<li><code>theme_minimal()</code> — a clean white background with subtle gridlines.</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>The <code>ggplot2</code> mental model
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A <code>ggplot2</code> figure is built up in <strong>layers</strong> connected by <code>+</code>. You always start with <code>ggplot(data, aes(...))</code>, then add geoms (point, line, smooth, bar, boxplot), then scales, labels, and a theme. Every <code>ggplot2</code> plot in this series follows this same layer-by-layer pattern. We will use <code>ggplot2</code> for all plots from this tutorial onward.</p>
+</div>
+</div>
+</section>
+<section id="residual-diagnostics" class="level3">
+<h3 class="anchored" data-anchor-id="residual-diagnostics">Residual diagnostics</h3>
+<p>The base <code>plot(fit_lm)</code> call produces four diagnostic plots. We display them in a 2 × 2 grid with <code>par(mfrow = c(2, 2))</code> — base R graphics, which we use here because these diagnostic plots come straight from <code>lm</code> itself.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>))</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(fit_lm)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04-simple-inference_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="1050"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The four panels are:</p>
+<ol type="1">
+<li><strong>Residuals vs Fitted</strong> — checks linearity. A roughly horizontal red line with no clear pattern is what you want. A curved line suggests a non-linear relationship.</li>
+<li><strong>Normal Q–Q</strong> — checks normality of residuals. Points should lie close to the diagonal dashed line. Systematic departure from the line at the tails indicates non-normal residuals.</li>
+<li><strong>Scale–Location</strong> — checks homoscedasticity (equal variance). A roughly horizontal line with evenly spread points is what you want. A funnel shape indicates heteroscedasticity.</li>
+<li><strong>Residuals vs Leverage</strong> — flags influential observations. Points with high leverage and large residuals (top-right corner) are worth inspecting; they may disproportionately influence the fitted line.</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Try it
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Fit a simple regression of <code>creat</code> on <code>con</code> (job control as predictor of creativity). Is the slope significant? What is the R²? Produce a <code>ggplot2</code> scatter with the fitted line.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-caution callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Caution</span>Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>fit_con <span class="ot">&lt;-</span> <span class="fu">lm</span>(creat <span class="sc">~</span> con, <span class="at">data =</span> ps)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit_con)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>## 
+## Call:
+## lm(formula = creat ~ con, data = ps)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -2.06211 -0.70988 -0.07051  0.61085  1.97988 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  3.26370    0.25919  12.592   &lt;2e-16 ***
+## con         -0.05040    0.06778  -0.744    0.458    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.8562 on 340 degrees of freedom
+##   (1 observation deleted due to missingness)
+## Multiple R-squared:  0.001623,   Adjusted R-squared:  -0.001313 
+## F-statistic: 0.5529 on 1 and 340 DF,  p-value: 0.4577</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(ps, <span class="fu">aes</span>(<span class="at">x =</span> con, <span class="at">y =</span> creat)) <span class="sc">+</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">colour =</span> <span class="st">"blue"</span>) <span class="sc">+</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Job control (mean of 6 items)"</span>,</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Creativity (mean of 3 items)"</span>) <span class="sc">+</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04-simple-inference_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="975"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The slope of <code>con</code> and its p-value appear in the coefficients table of the <code>summary()</code> output. The multiple R-squared is reported further down in the same summary.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="multiple-regression" class="level2">
+<h2 class="anchored" data-anchor-id="multiple-regression">Multiple regression</h2>
+<p>Multiple regression extends <code>lm()</code> to two or more predictors. The formula uses <code>+</code> to add predictors:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>fit_multi <span class="ot">&lt;-</span> <span class="fu">lm</span>(creat <span class="sc">~</span> pa <span class="sc">+</span> con, <span class="at">data =</span> ps)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit_multi)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>## 
+## Call:
+## lm(formula = creat ~ pa + con, data = ps)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -1.9628 -0.6282  0.0228  0.5525  1.8611 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  2.78140    0.27995   9.935  &lt; 2e-16 ***
+## pa           0.18514    0.04271   4.335 1.94e-05 ***
+## con         -0.09132    0.06785  -1.346    0.179    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.8344 on 329 degrees of freedom
+##   (11 observations deleted due to missingness)
+## Multiple R-squared:  0.05548,    Adjusted R-squared:  0.04974 
+## F-statistic: 9.662 on 2 and 329 DF,  p-value: 8.363e-05</code></pre>
+</div>
+</div>
+<p>Each coefficient is now interpreted as the effect of that predictor <strong>holding the other predictors constant</strong>. The slope for <code>pa</code> is the change in <code>creat</code> for a one-unit increase in <code>pa</code>, with <code>con</code> held constant — and vice versa.</p>
+<p>Compare the slope of <code>pa</code> in this multiple regression to its slope in the simple regression above. It will usually be different (often smaller) because some of the variance <code>pa</code> shared with <code>con</code> has been statistically controlled.</p>
+<section id="confidence-intervals" class="level3">
+<h3 class="anchored" data-anchor-id="confidence-intervals">Confidence intervals</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">confint</span>(fit_multi)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>##                  2.5 %    97.5 %
+## (Intercept)  2.2306774 3.3321313
+## pa           0.1011256 0.2691498
+## con         -0.2247964 0.0421528</code></pre>
+</div>
+</div>
+</section>
+<section id="comparing-nested-models" class="level3">
+<h3 class="anchored" data-anchor-id="comparing-nested-models">Comparing nested models</h3>
+<p>To test whether adding a predictor significantly improves the model fit, use <code>anova()</code> to compare the nested models:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(fit_lm, fit_multi)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>## Analysis of Variance Table
+## 
+## Model 1: creat ~ pa
+## Model 2: creat ~ pa + con
+##   Res.Df    RSS Df Sum of Sq      F Pr(&gt;F)
+## 1    330 230.33                           
+## 2    329 229.07  1    1.2613 1.8115 0.1792</code></pre>
+</div>
+</div>
+<p>The output tests the null hypothesis that the additional predictor’s coefficient is zero. A significant p-value means adding <code>con</code> to a model that already contains <code>pa</code> significantly improves the fit.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This <code>anova()</code> call is different from the <code>aov()</code> we used earlier. Here, <code>anova()</code> takes two (or more) fitted <code>lm</code> objects and performs a likelihood-ratio test between them. With <code>aov()</code>, you fit a single ANOVA model and <code>summary()</code> partitions the variance.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="from-regression-to-path-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="from-regression-to-path-analysis">From regression to path analysis</h2>
+<p>The multiple regression model <code>creat ~ pa + con</code> is, in fact, a tiny <strong>path model</strong> — a system of regression equations with multiple predictors of a single outcome. In Tutorial 09 we will extend this idea to a model with multiple outcomes and multiple equations, fitted with <code>lavaan::sem()</code> instead of <code>lm()</code>. The jump from <code>lm()</code> to <code>sem()</code> is smaller than it looks: the model syntax changes from a formula to a string, but the underlying idea — modelling an outcome as a linear function of predictors — is identical.</p>
+<p>Similarly, the regression of <code>creat</code> on <code>pa</code> is the simplest possible building block of the structural models we will fit in Tutorials 10 and 12. Keep the structure of <code>summary(fit_lm)</code> in mind: the coefficient table, the R², and the F-test all reappear in lavaan output, just in slightly different formatting.</p>
+</section>
+<section id="common-errors" class="level2">
+<h2 class="anchored" data-anchor-id="common-errors">Common errors</h2>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span><code>not all arguments have the same length</code>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>You passed vectors of different lengths to <code>t.test()</code> — usually because one vector has <code>NA</code>s that the other does not, or because you subsetted one but not the other. Use the <strong>formula interface</strong> (<code>y ~ group, data = df</code>) instead of passing separate vectors; R then handles missing data consistently.</p>
+<section id="contrasts-can-be-applied-only-to-factors-with-2-or-more-levels" class="level3">
+<h3 class="anchored" data-anchor-id="contrasts-can-be-applied-only-to-factors-with-2-or-more-levels"><code>contrasts can be applied only to factors with 2 or more levels</code></h3>
+<p>You tried to run an ANOVA with a grouping variable that has only one level — perhaps because you accidentally filtered the data down to a single group first. Check <code>table(ps$age)</code> before fitting the model.</p>
+</section>
+<section id="na-coefficients-in-lm-output" class="level3">
+<h3 class="anchored" data-anchor-id="na-coefficients-in-lm-output"><code>NA</code> coefficients in <code>lm()</code> output</h3>
+<p>A coefficient shows as <code>NA</code> in the <code>summary()</code> table when the predictor is a linear combination of other predictors (perfect multicollinearity). This happens most often when you include a categorical predictor as both a numeric variable and a factor in the same model.</p>
+</section>
+</div>
+</div>
+</section>
+<section id="exercises" class="level2">
+<h2 class="anchored" data-anchor-id="exercises">Exercises</h2>
+<ol type="1">
+<li><p>Run an independent-samples t-test comparing male and female participants on mean creativity (<code>creat</code>). Report the t-statistic, degrees of freedom, p-value, and 95% CI in APA format. Use <code>var.equal = FALSE</code> (Welch’s test).</p></li>
+<li><p>Run a one-way ANOVA testing whether mean job control (<code>con</code>) differs across the five age bands. Is the overall F-test significant? If so, run <code>TukeyHSD()</code> and report which pairwise comparisons are significant at the .05 level.</p></li>
+<li><p>Fit a multiple regression model predicting <code>creat</code> from <code>pa</code>, <code>con</code>, and <code>age</code> (as a factor). Interpret each coefficient. Use <code>confint()</code> to get the 95% CIs. Which predictors are statistically significant?</p></li>
+<li><p>Use <code>ggplot2</code> to produce a scatter plot of <code>con</code> (x-axis) against <code>creat</code> (y-axis), with points coloured by <code>gender</code>. Add a separate fitted regression line for each gender using <code>geom_smooth(method = "lm", aes(colour = gender))</code>.</p></li>
+</ol>
+<div class="callout callout-style-default callout-caution callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Caution</span>Solutions
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Exercise 1</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(creat <span class="sc">~</span> gender, <span class="at">data =</span> ps, <span class="at">var.equal =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  creat by gender
+## t = 0.29736, df = 320.07, p-value = 0.7664
+## alternative hypothesis: true difference in means between group Male and group Female is not equal to 0
+## 95 percent confidence interval:
+##  -0.1578933  0.2141217
+## sample estimates:
+##   mean in group Male mean in group Female 
+##             3.097378             3.069264</code></pre>
+</div>
+</div>
+<p>Read the t-statistic, df, p-value, and 95% CI from the output. In APA format: <em>t</em>(<code>df</code>) = <code>value</code>, <em>p</em> = <code>value</code>, 95% CI [<code>lower</code>, <code>upper</code>].</p>
+<p><strong>Exercise 2</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>fit_age <span class="ot">&lt;-</span> <span class="fu">aov</span>(con <span class="sc">~</span> age, <span class="at">data =</span> ps)</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit_age)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>##              Df Sum Sq Mean Sq F value Pr(&gt;F)
+## age           4   2.67  0.6679   1.443  0.219
+## Residuals   325 150.39  0.4628               
+## 13 observations deleted due to missingness</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">TukeyHSD</span>(fit_age)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>##   Tukey multiple comparisons of means
+##     95% family-wise confidence level
+## 
+## Fit: aov(formula = con ~ age, data = ps)
+## 
+## $age
+##           diff        lwr       upr     p adj
+## 2-1 0.06190476 -0.4023827 0.5261922 0.9961691
+## 3-1 0.12998713 -0.3140720 0.5740462 0.9295799
+## 4-1 0.24526370 -0.2055802 0.6961076 0.5682286
+## 5-1 0.30000000 -0.2150807 0.8150807 0.4999212
+## 3-2 0.06808237 -0.2167266 0.3528914 0.9654838
+## 4-2 0.18335893 -0.1119171 0.4786350 0.4332485
+## 5-2 0.23809524 -0.1482153 0.6244058 0.4411274
+## 4-3 0.11527657 -0.1470468 0.3776000 0.7482399
+## 5-3 0.17001287 -0.1917349 0.5317606 0.6980693
+## 5-4 0.05473630 -0.3153086 0.4247812 0.9942803</code></pre>
+</div>
+</div>
+<p>The <code>summary()</code> output gives the F-test for the overall effect of age on job control. If <code>Pr(&gt;F)</code> is below .05, the omnibus test is significant. <code>TukeyHSD()</code> then lists all pairwise comparisons; significant differences are those with <code>p adj</code> below .05.</p>
+<p><strong>Exercise 3</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>fit_full <span class="ot">&lt;-</span> <span class="fu">lm</span>(creat <span class="sc">~</span> pa <span class="sc">+</span> con <span class="sc">+</span> age, <span class="at">data =</span> ps)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit_full)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>## 
+## Call:
+## lm(formula = creat ~ pa + con + age, data = ps)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -2.0302 -0.5468  0.0386  0.5961  1.7806 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  3.00638    0.32060   9.377  &lt; 2e-16 ***
+## pa           0.17090    0.04207   4.062 6.12e-05 ***
+## con         -0.06463    0.06668  -0.969 0.333175    
+## age2        -0.20649    0.20139  -1.025 0.305974    
+## age3        -0.10678    0.19318  -0.553 0.580806    
+## age4        -0.42067    0.19736  -2.132 0.033802 *  
+## age5        -0.79722    0.22557  -3.534 0.000469 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.8053 on 323 degrees of freedom
+##   (13 observations deleted due to missingness)
+## Multiple R-squared:  0.1296, Adjusted R-squared:  0.1134 
+## F-statistic: 8.012 on 6 and 323 DF,  p-value: 4.49e-08</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">confint</span>(fit_full)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>##                   2.5 %      97.5 %
+## (Intercept)  2.37565348  3.63710502
+## pa           0.08811995  0.25367033
+## con         -0.19581637  0.06655931
+## age2        -0.60269825  0.18971160
+## age3        -0.48682286  0.27326059
+## age4        -0.80894708 -0.03240084
+## age5        -1.24099429 -0.35344875</code></pre>
+</div>
+</div>
+<p>Each coefficient’s significance is judged by its p-value in the <code>summary()</code> output (or, equivalently, whether its 95% CI in <code>confint()</code> excludes zero). The <code>pa</code> and <code>con</code> slopes are interpreted as the change in <code>creat</code> for a one-unit increase in that predictor, holding the others constant. The <code>age</code> coefficients are differences relative to the reference level (the first level of the factor, here age band 1).</p>
+<p><strong>Exercise 4</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(ps, <span class="fu">aes</span>(<span class="at">x =</span> con, <span class="at">y =</span> creat, <span class="at">colour =</span> gender)) <span class="sc">+</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Job control (mean of 6 items)"</span>,</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Creativity (mean of 3 items)"</span>,</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">colour =</span> <span class="st">"Gender"</span>) <span class="sc">+</span></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="04-simple-inference_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid figure-img" width="975"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The <code>colour = gender</code> aesthetic inside <code>ggplot()</code> maps gender to point colour; passing the same aesthetic to <code>geom_smooth()</code> makes it fit a separate line for each gender.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="summary-next-tutorial" class="level2">
+<h2 class="anchored" data-anchor-id="summary-next-tutorial">Summary &amp; next tutorial</h2>
+<p>You can now run t-tests, one-way ANOVA, and regression with <code>lm()</code>, read the <code>summary()</code> output, and produce your first <code>ggplot2</code> figures. The regression framework you have met here — a formula <code>y ~ x</code>, a fitted object, a <code>summary()</code> call — is the direct ancestor of the lavaan models we will fit from Tutorial 05 onward. In the next tutorial we make the jump: we introduce <code>lavaan</code>’s model syntax (<code>=~</code>, <code>~</code>, <code>~~</code>, <code>:=</code>) and the three functions (<code>cfa()</code>, <code>sem()</code>, <code>lavaan()</code>) that you will use for the rest of this series.</p>
+</section>
+<section id="further-reading" class="level2">
+<h2 class="anchored" data-anchor-id="further-reading">Further reading</h2>
+<ul>
+<li><span class="citation" data-cites="dalgaard2008">Dalgaard (<a href="#ref-dalgaard2008" role="doc-biblioref">2008</a>)</span> — Chapters 4 and 6 cover t-tests, ANOVA, and regression with worked R examples.</li>
+<li><span class="citation" data-cites="rcore2024">R Core Team (<a href="#ref-rcore2024" role="doc-biblioref">2024</a>)</span> — the official R manuals, including <em>An Introduction to R</em>, which has concise chapters on each test covered here.</li>
+<li><span class="citation" data-cites="wickham2019">Wickham (<a href="#ref-wickham2019" role="doc-biblioref">2019</a>)</span> — for the deeper theory of R’s formula interface, which underpins <code>lm()</code>, <code>aov()</code>, and (from Tutorial 05) <code>lavaan</code>.</li>
+</ul>
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2" role="list">
+<div id="ref-dalgaard2008" class="csl-entry" role="listitem">
+Dalgaard, P. (2008). <em>Introductory statistics with <span>R</span></em> (2nd ed.). Springer.
+</div>
+<div id="ref-rcore2024" class="csl-entry" role="listitem">
+R Core Team. (2024). <em>R: A language and environment for statistical computing</em>. <a href="https://www.R-project.org/">https://www.R-project.org/</a>
+</div>
+<div id="ref-wickham2019" class="csl-entry" role="listitem">
+Wickham, H. (2019). <em>Advanced <span>R</span></em> (2nd ed.). CRC Press.
+</div>
+</div></section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/michaelides\.github\.io\/lavaan-tutorial\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../tutorials/03-importing-data.html" class="pagination-link" aria-label="Importing data">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Importing data</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../tutorials/05-introducing-lavaan.html" class="pagination-link" aria-label="Introducing lavaan">
+        <span class="nav-page-text">Introducing lavaan</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 George Michaelides, University of East Anglia · MSc Organisational Psychology · Statistical Skills</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/michaelides/lavaan-tutorial/edit/main/tutorials/04-simple-inference.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/michaelides/lavaan-tutorial/blob/main/tutorials/04-simple-inference.qmd" class="toc-action"><i class="bi empty"></i>View source</a></li><li><a href="https://github.com/michaelides/lavaan-tutorial/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/michaelides/lavaan-tutorial">
+      <i class="bi bi-github" role="img" aria-label="GitHub repository">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

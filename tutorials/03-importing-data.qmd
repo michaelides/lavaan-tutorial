@@ -1,0 +1,383 @@
+---
+title: "Importing data"
+subtitle: "SPSS, CSV, and Excel files; missing-value codes"
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+## Learning objectives
+
+By the end of this tutorial you will be able to:
+
+- read an SPSS `.sav` file into R with `haven::read_sav()` and convert labelled columns to factors
+- read a comma-separated `.csv` file with `read.csv()` and an Excel `.xlsx` file with `readxl::read_excel()`
+- inspect an imported dataset to confirm it has loaded correctly
+- handle missing-value codes (`-99`, `999`, blank cells) so they become R's `NA`
+- write a data frame back to CSV with `write.csv()`
+
+## Setup
+
+This tutorial loads the `haven` and `readxl` packages. We also load `psych` for `psych::describe()`, which gives richer descriptive statistics than base `summary()`.
+
+```{r}
+#| include: false
+knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(comment = "##")
+```
+
+```{r}
+library(haven)
+library(readxl)
+library(psych)
+```
+
+## The teaching dataset
+
+Throughout this tutorial series we use a simulated dataset based on a weekly diary study of job demands and employee well-being. The data file is shipped with this site and is also the dataset used in the original Mplus teaching materials this series is based on.
+
+The dataset contains 343 rows (one per participant) and 25 columns covering:
+
+- **Job control** — 6 items (`con1`, `con3`, `con6`, `con8`, `con9`, `con10`)
+- **Workplace social support** — 4 items (`sup2`, `sup4`, `sup5`, `sup7`)
+- **Problem-solving demands** — 4 items (`prob1`–`prob4`)
+- **Creativity** — 3 items (`creat1`–`creat3`)
+- **Negative affect** — 3 items (`na1`, `na2`, `na3`)
+- **Positive affect** — 3 items (`pa1`, `pa2`, `pa3`)
+- **Gender** (`0` = Male, `1` = Female)
+- **Age** band (1 = 25 or under, through 5 = 56 or over)
+
+Full variable definitions, response scales, and source citations are in the [data note](../data/data-note.qmd).
+
+We ship the dataset in two formats so you can practise both import paths:
+
+- `data/ps_data_reduced.sav` — the SPSS file
+- `data/ps_data_reduced.csv` — a CSV mirror
+
+If you downloaded this site's repository, both files are in the `data/` folder. The code chunks below assume your working directory is the project root, so `data/ps_data_reduced.sav` is the correct relative path.
+
+## Reading SPSS files with `haven`
+
+The `haven` package reads SPSS, Stata, and SAS files into R without needing SPSS itself installed. The main function is `read_sav()`:
+
+```{r}
+ps_sav <- haven::read_sav("data/ps_data_reduced.sav")
+```
+
+Inspect what you have:
+
+```{r}
+class(ps_sav)
+dim(ps_sav)
+names(ps_sav)
+```
+
+`read_sav()` returns a `tibble`, which is a modern data frame with slightly nicer printing. It behaves like a regular data frame for everything we will do in this series, so you can use `$` and `[ , ]` indexing exactly as in Tutorial 01.
+
+```{r}
+head(ps_sav[, 1:6], 3)
+```
+
+Look closely at the first few columns — they print as `<dbl+lbl>`. The `+lbl` indicates that these are **labelled** vectors: SPSS stores both the numeric value and a text label for each value (for example, `4 [4]` or `5 [Very often]`). You can see the labels with `attr()`:
+
+```{r}
+attr(ps_sav$con1, "labels")
+```
+
+### Converting labelled columns to factors
+
+Labelled vectors are useful for inspection but cause problems for downstream functions — including `lavaan`, which we will meet in Tutorial 05. The cleanest fix is to convert labelled columns to **factors** using `haven::as_factor()`:
+
+```{r}
+ps_sav_factor <- haven::as_factor(ps_sav)
+class(ps_sav_factor$con1)
+head(ps_sav_factor$con1, 5)
+```
+
+For the Likert items (`con1`–`pa3`) you usually want to **keep them numeric** because you will compute means, standard deviations, and factor loadings — all of which require numbers. The right approach is to strip the labels but keep the underlying numbers. The simplest way is `zap_labels()`:
+
+```{r}
+ps_sav_num <- haven::zap_labels(ps_sav)
+class(ps_sav_num$con1)
+head(ps_sav_num$con1, 5)
+```
+
+Now the Likert items are plain numeric vectors. The demographic variables (`gender`, `age`) we will convert to factors when we need them, on a case-by-case basis.
+
+::: {.callout-note}
+For the rest of this tutorial series we work with the numeric version of the PS dataset. The factor conversion is shown here so you know what to do when you have genuinely categorical variables in your own dissertation data.
+:::
+
+## Reading CSV files with `read.csv()`
+
+CSV (comma-separated values) is the lingua franca of data files — every statistics package can read and write CSV. Base R provides `read.csv()`:
+
+```{r}
+ps_csv <- read.csv("data/ps_data_reduced.csv")
+```
+
+Inspect the result:
+
+```{r}
+class(ps_csv)
+dim(ps_csv)
+names(ps_csv)[1:10]
+head(ps_csv[, 1:5], 3)
+```
+
+The CSV reader has produced a plain `data.frame` (not a tibble) with no labels — just numbers. For our purposes this is exactly what we want.
+
+### Comparing the two imports
+
+To confirm both import paths produced the same underlying data, compare the dimensions and the first few values of a column:
+
+```{r}
+identical(dim(ps_sav_num), dim(ps_csv))
+identical(as.numeric(ps_sav_num$con1), ps_csv$con1)
+```
+
+Both should be `TRUE`. If they are not, something has gone wrong in one of the imports — usually a missing-value code mismatch (see below).
+
+## Reading Excel files with `readxl`
+
+Excel `.xlsx` files are common in dissertation work. The `readxl` package reads them cleanly. The main function is `read_excel()`:
+
+```{r}
+#| eval: false
+library(readxl)
+df_xlsx <- read_excel("data/my_survey.xlsx")
+```
+
+`read_excel()` automatically detects whether the file is `.xls` or `.xlsx` and reads the first sheet by default. To read a specific sheet, pass its name or position:
+
+```{r}
+#| eval: false
+df_sheet2 <- read_excel("data/my_survey.xlsx", sheet = "wave2")
+df_sheet3 <- read_excel("data/my_survey.xlsx", sheet = 3)
+```
+
+You can also restrict the rows and columns read with the `range` argument, which takes Excel-style cell references:
+
+```{r}
+#| eval: false
+df_subset <- read_excel("data/my_survey.xlsx", range = "A1:K343")
+```
+
+::: {.callout-warning}
+### Excel columns with mixed types
+
+Excel is happy to mix numbers, dates, and text in the same column. R is not. If a column has a header row but then has text in some cells and numbers in others, `read_excel()` will silently coerce the whole column to character. Inspect every imported Excel file with `str()` before doing any analysis.
+:::
+
+## Inspecting the imported data
+
+Whatever format you started from, after importing you should always run these four checks before doing anything else:
+
+### 1. Dimensions
+
+```{r}
+nrow(ps_csv)
+ncol(ps_csv)
+dim(ps_csv)
+```
+
+Do these match what you expect? The PS dataset should have 343 rows and 25 columns. If you see 344 rows, you have accidentally imported the header row as data. If you see 26 columns, you have an extra blank column at the end.
+
+### 2. Column names
+
+```{r}
+names(ps_csv)
+```
+
+Check that every variable name is present and spelled correctly. If a column name comes through as `X` or `X1`, you have a missing or duplicated header in the source file.
+
+### 3. Structure
+
+`str()` shows the type of every column in a compact form:
+
+```{r}
+str(ps_csv)
+```
+
+All the Likert columns should be `num` (numeric). The `gender` and `age` columns will also be `num` here because the CSV file does not carry SPSS labels — you would convert them to factors yourself with `factor()` when you need to treat them as categorical.
+
+### 4. Descriptive statistics
+
+`summary()` gives a quick look at every column:
+
+```{r}
+summary(ps_csv[, c("con1", "pa1", "gender", "age")])
+```
+
+For richer descriptives — skew, kurtosis, standard error of the mean — use `psych::describe()`:
+
+```{r}
+psych::describe(ps_csv[, c("con1", "pa1", "pa2", "pa3")])
+```
+
+The `describe()` output includes `n`, `mean`, `sd`, `median`, `trimmed` (10% trimmed mean), `mad` (median absolute deviation), `min`, `max`, `skew`, `kurtosis`, and `se`. The `skew` and `kurtosis` columns are particularly useful when you are deciding whether to use the `MLR` robust estimator in lavaan (Tutorial 05 onwards).
+
+::: {.callout-tip}
+## Try it
+
+Use `psych::describe()` on the six job control items (`con1`, `con3`, `con6`, `con8`, `con9`, `con10`). Which item has the largest absolute skew?
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{r}
+psych::describe(ps_csv[, c("con1", "con3", "con6", "con8", "con9", "con10")])
+```
+
+Look at the `skew` column. The item with the largest absolute value of `skew` is the most skewed. In this dataset, all six items are reasonably symmetric (skew near zero), which is typical of 5-point Likert scales with a central tendency.
+:::
+
+## Handling missing values
+
+Real survey data has missing values. The PS dataset uses `-99` as its missing-value code (you can see this in the original Mplus syntax: `MISSING ARE ALL (-99)`).
+
+### When `haven` reads SPSS
+
+SPSS stores missing-value codes in the file metadata, so `haven::read_sav()` automatically converts them to R's `NA` — no extra step needed:
+
+```{r}
+sum(is.na(ps_sav_num$con1))
+```
+
+### When you read CSV
+
+A CSV file is just text, so R has no way to know that `-99` means "missing" — it will import `-99` as the number negative ninety-nine, which is a perfectly valid Likert response if you forget to flag it. You handle this in one of two ways.
+
+**Option A: at import time, with the `na` argument.**
+
+```{r}
+ps_csv_na <- read.csv("data/ps_data_reduced.csv",
+                      na = c("-99", "999", ""))
+```
+
+The `na` argument tells R which values to treat as `NA`. List every missing-value code your dataset uses. The empty string `""` handles genuinely blank cells.
+
+**Option B: after import, with subsetting.**
+
+If you already imported the data without specifying `na`, you can convert the missing-value code to `NA` after the fact:
+
+```{r}
+ps_csv[ps_csv == -99] <- NA
+```
+
+This works for every column at once. Be careful: it will convert any `-99` in any column, including a column where `-99` might genuinely be a valid value (rare in survey data, but worth a moment's thought).
+
+::: {.callout-warning}
+### Check before you convert
+
+Before replacing `-99` with `NA`, run `table(ps_csv$con1, useNA = "ifany")` to see the frequency of each value, including `NA`. If `-99` is the most common value in some column, you have probably misunderstood the missing-value code — check the data note for that variable.
+:::
+
+### Verifying the missing-value conversion
+
+After applying the missing-value code, count the `NA`s in each column:
+
+```{r}
+col_missing <- sapply(ps_csv, function(x) sum(is.na(x)))
+col_missing[col_missing > 0]
+```
+
+This shows only the columns that have at least one missing value, alongside the count. If a column you expected to have missing values shows zero, the missing-value code has not been correctly applied.
+
+## Writing data back to CSV
+
+Once you have imported, cleaned, and converted your data, you often want to save the cleaned version so you do not have to repeat the cleaning steps. Use `write.csv()`:
+
+```{r}
+#| eval: false
+write.csv(ps_csv, "data/ps_clean.csv", row.names = FALSE)
+```
+
+The `row.names = FALSE` argument is important — without it, R prepends an extra column of row numbers (1, 2, 3, ...) to the file, which is rarely useful and breaks SPSS's CSV importer.
+
+::: {.callout-note}
+For dissertation work, keeping a clear separation between raw data (never edit it), cleaned data (a CSV you write from a script), and analysis output (a Quarto document) is a habit that pays off. Your raw data file stays pristine; your cleaning steps are documented in code; your analysis is reproducible from a single Render button click.
+:::
+
+## Common errors
+
+::: {.callout-warning}
+### `cannot open file 'data/ps_data_reduced.sav': No such file or directory`
+
+Your working directory is not the project root. Run `getwd()` in the Console. If it does not end in your project folder name, you are in the wrong place — use **Session → Set Working Directory → To Project Directory** in RStudio, or restart RStudio in the project.
+
+### `Error: zip file 'data/file.xlsx' cannot be opened`
+
+The path is wrong, or the file is not actually an Excel `.xlsx` — it might be a `.xls` or a `.csv` with the wrong extension. Open it in Excel to verify, then re-import with the correct function.
+
+### All columns come through as character
+
+Your CSV or Excel file has at least one text value in a numeric column — maybe a `"NA"` written as text, or a stray comment. Open the file in a spreadsheet, find the text value, and either fix it or list it in the `na` argument of `read.csv()`.
+
+### Missing-value counts do not match what you expected
+
+You imported the CSV without specifying `na = c("-99", ...)`. Re-import with the `na` argument, or post-process with `df[df == -99] <- NA` as shown above.
+:::
+
+## Exercises
+
+1. Import the PS dataset from the SPSS file (`data/ps_data_reduced.sav`) using `haven::read_sav()`. Use `haven::zap_labels()` to get plain numeric columns. Confirm that the result has 343 rows and 25 columns.
+
+2. Import the same dataset from the CSV file (`data/ps_data_reduced.csv`) using `read.csv()` with `na = c("-99", "999", "")`. Compare the number of `NA` values in `con1` between the SPSS import and the CSV import — they should be identical.
+
+3. Use `psych::describe()` on the three creativity items (`creat1`, `creat2`, `creat3`). Report the mean and standard deviation of each item, rounded to two decimal places.
+
+4. The PS dataset has 11 missing-value codes of `-99` across its columns (you can find them with `sum(is.na(ps_csv))`). Write a one-line command that returns the names of every column containing at least one `NA`.
+
+::: {.callout-caution collapse="true"}
+## Solutions
+
+**Exercise 1**
+
+```{r}
+ps_sav <- haven::read_sav("data/ps_data_reduced.sav")
+ps_sav_num <- haven::zap_labels(ps_sav)
+dim(ps_sav_num)
+```
+
+`dim()` returns `343  25` — 343 rows and 25 columns, as expected.
+
+**Exercise 2**
+
+```{r}
+ps_sav_con1_na <- sum(is.na(ps_sav_num$con1))
+ps_csv_na <- read.csv("data/ps_data_reduced.csv", na = c("-99", "999", ""))
+ps_csv_con1_na <- sum(is.na(ps_csv_na$con1))
+ps_sav_con1_na
+ps_csv_con1_na
+identical(ps_sav_con1_na, ps_csv_con1_na)
+```
+
+Both should report the same count of missing values for `con1`, and `identical()` returns `TRUE`.
+
+**Exercise 3**
+
+```{r}
+creat_desc <- psych::describe(ps_csv[, c("creat1", "creat2", "creat3")])
+round(creat_desc[, c("mean", "sd")], 2)
+```
+
+**Exercise 4**
+
+```{r}
+names(ps_csv)[sapply(ps_csv, function(x) any(is.na(x)))]
+```
+
+This returns a character vector of column names where at least one value is `NA`. The `sapply()` applies the test `any(is.na(x))` to each column, returning a logical vector the same length as `names(ps_csv)`; the outer subscript keeps only the `TRUE` positions.
+:::
+
+## Summary & next tutorial
+
+You can now bring data into R from SPSS, CSV, and Excel files; check that the import worked; handle missing-value codes; and save a cleaned data frame back to CSV. In the next tutorial we put this data to work, running simple inferential tests — t-tests, ANOVA, and regression with `lm()` — and we meet `ggplot2` for the first time as a way to visualise the results.
+
+## Further reading
+
+- @rcore2024 — see the manual *R Data Import/Export*, available from <https://cran.r-project.org/manuals.html>.
+- @wickham2019 — covers data structures and the role of coercion, relevant for understanding labelled vectors.
+- @dalgaard2008 — Chapter 1 covers data entry and import with worked examples.

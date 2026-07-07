@@ -1,0 +1,280 @@
+---
+title: "Mediation — concept"
+subtitle: "Indirect, direct, total effects; multiple mediators; why we bootstrap"
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+## Learning objectives
+
+By the end of this tutorial you will be able to:
+
+- define what [mediation](../glossary.qmd#mediation) is and distinguish it from moderation
+- write the two regression equations that define a simple mediation model
+- decompose the [total effect](../glossary.qmd#total-effect) of $X$ on $Y$ into a [direct effect](../glossary.qmd#direct-effect) ($c'$) and an [indirect effect](../glossary.qmd#indirect-effect) ($ab$)
+- describe the [Sobel test](../glossary.qmd#sobel-test) and explain why bootstrap confidence intervals are preferred
+- extend the mediation framework to multiple [mediators](../glossary.qmd#mediation)
+
+## Setup
+
+This is a concept tutorial — we will not fit any models yet. The practical implementation in lavaan follows in Tutorial 12.
+
+```{r}
+#| include: false
+knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(comment = "##")
+```
+
+## What is mediation?
+
+[Mediation](../glossary.qmd#mediation) addresses the question "**how** does $X$ affect $Y$?" — it posits an intermediate variable $M$ (the mediator) through which the effect of $X$ on $Y$ operates. Instead of a single arrow from $X$ to $Y$, the relationship runs:
+
+$$
+X \rightarrow M \rightarrow Y
+$$
+
+A classic example from organisational psychology: job control ($X$) influences creativity ($Y$) partly through its effect on positive affect ($M$). Employees with more control over their work tend to experience more positive affect, and positive affect in turn promotes creativity. The effect of job control on creativity is *mediated* by positive affect.
+
+### Mediation versus moderation
+
+Do not confuse mediation with moderation:
+
+- **Mediation** asks *how* or *why* $X$ affects $Y$ — the mechanism. The mediator $M$ is in the causal chain.
+- **Moderation** asks *when* or *for whom* the effect of $X$ on $Y$ is stronger or weaker. The moderator $W$ changes the size of the $X \rightarrow Y$ effect but is not in the causal chain.
+
+We cover moderation in Tutorial 16.
+
+## The simple mediation model
+
+A simple mediation model has three variables:
+
+- $X$ — the independent variable
+- $M$ — the mediator
+- $Y$ — the outcome
+
+The model is defined by **two regression equations**:
+
+### Equation 1: The mediator model
+
+$$
+M = i_3 + a X + e_3
+$$ {#eq-mediator}
+
+The mediator $M$ is regressed on $X$. The coefficient $a$ is the effect of $X$ on $M$.
+
+### Equation 2: The outcome model
+
+$$
+Y = i_2 + c' X + b M + e_2
+$$ {#eq-outcome}
+
+The outcome $Y$ is regressed on both $X$ and $M$. The coefficient $c'$ is the **direct effect** of $X$ on $Y$, holding $M$ constant. The coefficient $b$ is the effect of $M$ on $Y$, holding $X$ constant.
+
+### The path diagram
+
+```{r}
+#| echo: false
+#| fig-align: center
+#| out-width: "70%"
+#| fig-cap: "The simple mediation model. X affects Y through two pathways: directly (c') and indirectly through M (a then b)."
+DiagrammeR::grViz("
+digraph {
+  graph [layout = neato]
+  node  [shape = box, style = filled, fillcolor = '#f9e79f', fontname = Helvetica, fontsize = 12]
+
+  X [label = 'X',   pos = '0,1!']
+  M [label = 'M',   pos = '2.5,2!']
+  Y [label = 'Y',   pos = '5,1!']
+
+  X -> M [label = '  a']
+  M -> Y [label = '  b']
+  X -> Y [label = '  c\\'', constraint = false]
+}
+")
+```
+
+The diagram shows two pathways from $X$ to $Y$:
+
+1. **The direct path** $X \rightarrow Y$ (coefficient $c'$) — the effect of $X$ on $Y$ that does not go through $M$.
+2. **The indirect path** $X \rightarrow M \rightarrow Y$ (coefficients $a$ then $b$) — the effect of $X$ on $Y$ that operates through $M$.
+
+## Decomposing the total effect
+
+The **total effect** of $X$ on $Y$ — the effect you would estimate if you simply regressed $Y$ on $X$ without including $M$ — can be decomposed:
+
+$$
+c = c' + ab
+$$ {#eq-total-decomposition}
+
+where:
+
+- $c$ is the [total effect](../glossary.qmd#total-effect) — the regression of $Y$ on $X$ alone
+- $c'$ is the [direct effect](../glossary.qmd#direct-effect) — the regression of $Y$ on $X$ controlling for $M$
+- $ab$ is the [indirect effect](../glossary.qmd#indirect-effect) — the product of the two paths through $M$
+
+The indirect effect $ab$ is the amount of mediation. It tells you how much of the total effect of $X$ on $Y$ operates through $M$.
+
+### Interpreting the indirect effect
+
+The indirect effect $ab$ is interpreted as: *the amount by which two cases that differ by one unit on $X$ are expected to differ on $Y$ through $X$'s effect on $M$, which in turn affects $Y$*.
+
+If $ab$ is significantly different from zero, we have evidence of mediation. The sign of $ab$ tells us the direction: a positive $ab$ means $X$ increases $Y$ through $M$; a negative $ab$ means $X$ decreases $Y$ through $M$.
+
+### Full versus partial mediation
+
+- **Full mediation**: the direct effect $c'$ is not significantly different from zero, so *all* of the effect of $X$ on $Y$ operates through $M$.
+- **Partial mediation**: both the direct effect $c'$ and the indirect effect $ab$ are significant — some of the effect goes through $M$, and some goes directly.
+
+## Testing the indirect effect: why we bootstrap
+
+The challenge in mediation analysis is testing whether the [indirect effect](../glossary.qmd#indirect-effect) $ab$ is significantly different from zero. This is harder than it sounds.
+
+### The Sobel test (and why it is wrong)
+
+The classic approach is the [Sobel test](../glossary.qmd#sobel-test), which computes $z = ab / SE_{ab}$ and compares it to a standard normal distribution. The problem is that the test assumes $ab$ is normally distributed — but the product of two normally distributed coefficients is **not** itself normally distributed. It is skewed, especially with small samples or when $a$ or $b$ is near zero.
+
+The Sobel test is therefore biased: it underestimates the indirect effect's significance, leading to false negatives. We do not use it in this series.
+
+### Bootstrap confidence intervals
+
+The modern approach is to use **[bootstrap](../glossary.qmd#bootstrap) confidence intervals**. The bootstrap:
+
+1. Resamples the data with replacement (typically 1,000 or 5,000 times)
+2. Re-estimates the model on each bootstrap sample
+3. Computes $ab$ for each sample, building up a sampling distribution
+4. Takes the 2.5th and 97.5th percentiles of this distribution as the 95% confidence interval
+
+If the 95% CI does not include zero, the indirect effect is significant at the .05 level.
+
+The [BCa](../glossary.qmd#bca) (bias-corrected and accelerated) bootstrap interval corrects for both bias and skewness in the bootstrap distribution, making it the preferred choice. In lavaan, requested with `parameterEstimates(fit, boot.ci.type = "bca.simple")`.
+
+::: {.callout-note}
+### Why bootstrap works
+
+The bootstrap makes no distributional assumption about the shape of $ab$'s sampling distribution. It builds the distribution empirically by resampling. This makes it robust to the skewness that breaks the Sobel test. The cost is computational — you need to re-estimate the model 1,000+ times — but for the moderate-sized models in this series, this takes seconds.
+:::
+
+## Multiple mediators
+
+Many real-world mediation hypotheses involve more than one mediator. For example, job control might affect creativity through *both* positive affect and problem-solving demands. The model becomes:
+
+$$
+Y = i_2 + c' X + b_1 M_1 + b_2 M_2 + e_2
+$$ {#eq-outcome-2mediator}
+
+$$
+M_1 = i_3 + a_1 X + e_3
+$$ {#eq-mediator-1}
+
+$$
+M_2 = i_4 + a_2 X + e_4
+$$ {#eq-mediator-2}
+
+```{r}
+#| echo: false
+#| fig-align: center
+#| out-width: "80%"
+#| fig-cap: "A multiple-mediator model. X affects Y through two mediators (M1 and M2) simultaneously, plus a direct path."
+DiagrammeR::grViz("
+digraph {
+  graph [layout = neato]
+  node  [shape = box, style = filled, fillcolor = '#f9e79f', fontname = Helvetica, fontsize = 12]
+
+  X  [label = 'X',  pos = '0,1.5!']
+  M1 [label = 'M1', pos = '2.5,3!']
+  M2 [label = 'M2', pos = '2.5,0!']
+  Y  [label = 'Y',  pos = '5,1.5!']
+
+  X -> M1 [label = '  a1']
+  X -> M2 [label = '  a2']
+  M1 -> Y [label = '  b1']
+  M2 -> Y [label = '  b2']
+  X -> Y  [label = '  c\\'', constraint = false]
+}
+")
+```
+
+With multiple mediators, we distinguish:
+
+- **Specific indirect effects**: the effect through each mediator individually — $a_1 b_1$ for $M_1$, $a_2 b_2$ for $M_2$.
+- **Total indirect effect**: the sum of all specific indirect effects — $a_1 b_1 + a_2 b_2$.
+
+The advantage of testing multiple mediators *simultaneously* (rather than in separate single-mediator models) is that you learn whether each mediator's effect is independent of the others. If $a_1 b_1$ is significant but $a_2 b_2$ is not, you know that $M_1$ mediates the $X \rightarrow Y$ relationship *over and above* the effect through $M_2$.
+
+## Mediation in lavaan: a preview
+
+In Tutorial 12 we will fit the job-control → positive-affect → creativity mediation model in lavaan. The key syntax innovation is the `:=` operator, which defines a new parameter as a function of labelled model parameters:
+
+```{r}
+#| eval: false
+model <- '
+  creat ~ b * pa + c * con
+  pa    ~ a * con
+
+  indirect := a * b
+  direct   := c
+  total    := c + (a * b)
+'
+```
+
+The `a *`, `b *`, and `c *` labels attach names to the regression paths. The `:=` lines then define the indirect, direct, and total effects as derived parameters. lavaan estimates these along with their standard errors and confidence intervals.
+
+When we use `se = "boot"` to request bootstrap standard errors, lavaan will bootstrap the indirect effect and produce BCa confidence intervals — the approach we recommended above.
+
+## Common errors
+
+::: {.callout-warning}
+### Causal language
+
+Mediation is inherently causal — it posits a causal chain $X \rightarrow M \rightarrow Y$. But observational data cannot prove causality. A significant indirect effect is *consistent with* a mediation hypothesis, but it does not *prove* that $X$ causes $M$ causes $Y$. There may be confounders, reciprocal causation, or other explanations. Use cautious language: "the data are consistent with a mediation model in which..."
+
+### Temporal precedence
+
+True mediation requires that $X$ precedes $M$ in time, and $M$ precedes $Y$. Cross-sectional data — like the PS dataset — cannot establish this. The mediation models we fit in this series are *statistical* mediation models; they estimate the indirect effect but cannot confirm the causal ordering. Longitudinal data (Tutorial 15) provides stronger evidence for causal mediation.
+
+### Interpreting a non-significant total effect
+
+A common mistake is to conclude "there is no mediation" because the total effect $c$ is not significant. This is wrong. The indirect effect $ab$ can be significant even when the total effect is not — for example, when there are two opposing indirect paths that cancel each other out, or when the direct effect is opposite in sign to the indirect effect. Always test the indirect effect $ab$ directly, not the total effect.
+:::
+
+## Exercises
+
+1. Draw the path diagram for a mediation model where job control ($X$) affects creativity ($Y$) through problem-solving demands ($M$). Label the paths $a$, $b$, and $c'$.
+
+2. A researcher finds: $a = 0.30$ (significant), $b = 0.40$ (significant), $c' = 0.10$ (not significant). What is the indirect effect? Is the mediation full or partial? Write a one-sentence interpretation.
+
+3. A researcher fits a mediation model and finds $ab = 0.12$, 95% bootstrap CI [0.02, 0.25]. The total effect $c = 0.05$, $p = .35$. How would you interpret these results? Is there evidence of mediation?
+
+4. A researcher tests a two-mediator model and finds: $a_1 b_1 = 0.08$, 95% CI [0.01, 0.16]; $a_2 b_2 = 0.03$, 95% CI [-0.05, 0.11]. What can you conclude about the roles of $M_1$ and $M_2$ in mediating the $X \rightarrow Y$ relationship?
+
+::: {.callout-caution collapse="true"}
+## Solutions
+
+**Exercise 1**
+
+The diagram has three boxes: `con` ($X$) on the left, `prob` ($M$) in the middle, `creat` ($Y$) on the right. An arrow from `con` to `prob` labelled $a$; an arrow from `prob` to `creat` labelled $b$; and a direct arrow from `con` to `creat` labelled $c'$.
+
+**Exercise 2**
+
+The indirect effect is $ab = 0.30 \times 0.40 = 0.12$. Because $c'$ is not significant but $a$ and $b$ are, this is **full mediation** — all of the effect of $X$ on $Y$ operates through $M$. Interpretation: "The effect of $X$ on $Y$ is fully mediated by $M$; $X$ affects $M$ ($a = 0.30$), which in turn affects $Y$ ($b = 0.40$), and there is no significant direct effect of $X$ on $Y$."
+
+**Exercise 3**
+
+The indirect effect $ab = 0.12$ is significant (the 95% bootstrap CI [0.02, 0.25] does not include zero). Despite the total effect being non-significant ($c = 0.05$, $p = .35$), there is evidence of mediation. The non-significant total effect may be due to a suppressor effect or to the direct and indirect effects being opposite in sign. The correct conclusion is: "There is a significant indirect effect of $X$ on $Y$ through $M$, $ab = 0.12$, 95% CI [0.02, 0.25], even though the total effect was not significant."
+
+**Exercise 4**
+
+$M_1$ significantly mediates the $X \rightarrow Y$ relationship ($a_1 b_1 = 0.08$, 95% CI [0.01, 0.16], excluding zero). $M_2$ does not ($a_2 b_2 = 0.03$, 95% CI [-0.05, 0.11], including zero). Conclusion: "Of the two mediators tested simultaneously, only $M_1$ significantly mediated the $X \rightarrow Y$ relationship, suggesting that $M_1$'s mediating role is independent of $M_2$."
+:::
+
+## Summary & next tutorial
+
+You now understand the theory of mediation: the decomposition of the total effect into direct and indirect components, the equations defining the model, and why we use bootstrap confidence intervals rather than the Sobel test to test the indirect effect. In the next tutorial we put this into practice — we fit the job-control → positive-affect → creativity mediation model in lavaan, first with the manifest variables from Tutorial 09, then with the full latent-variable SEM from Tutorial 10, and we extract bootstrap confidence intervals for the indirect effect.
+
+## Further reading
+
+- @hayes2018 — the standard reference for mediation, moderation, and conditional process analysis.
+- @kelloway2015 — chapters 4 and 5 cover mediation in the context of SEM.
+- @sobel1990 — the original Sobel test paper, included for historical context.
+- @hoyle2012 — the *Handbook of Structural Equation Modeling* includes chapters on mediation.

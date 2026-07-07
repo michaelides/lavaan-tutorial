@@ -1,0 +1,403 @@
+---
+title: "Moderation"
+subtitle: "Moderated regression with lm; multigroup lavaan; latent interaction (advanced)"
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+## Learning objectives
+
+By the end of this tutorial you will be able to:
+
+- describe what [moderation](https://en.wikipedia.org/wiki/Moderation_(statistics)) is and how it differs from mediation
+- fit a moderated regression model with `lm()` and interpret an interaction term
+- centre predictors at their mean and compute [simple slopes](../glossary.qmd#simple-slopes)
+- plot an interaction with `ggplot2`
+- fit a multigroup SEM in lavaan to test moderation by a categorical variable
+- recognise the syntax for latent variable interaction (advanced, beyond MSc scope)
+
+## Setup
+
+<details>
+<summary>Setup code (you have seen this before)</summary>
+
+```{r}
+#| include: false
+knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(comment = "##")
+```
+
+```{r}
+library(haven)
+library(lavaan)
+library(ggplot2)
+```
+
+```{r}
+#| include: false
+ps <- haven::read_sav("data/ps_data_reduced.sav")
+ps <- haven::zap_labels(ps)
+ps[ps == -99] <- NA
+ps$gender <- factor(ps$gender, levels = c(0, 1), labels = c("Male", "Female"))
+ps$con   <- (ps$con1 + ps$con3 + ps$con6 + ps$con8 + ps$con9 + ps$con10) / 6
+ps$pa    <- (ps$pa1 + ps$pa2 + ps$pa3) / 3
+ps$creat <- (ps$creat1 + ps$creat2 + ps$creat3) / 3
+```
+
+</details>
+
+## What is moderation?
+
+[Moderation](https://en.wikipedia.org/wiki/Moderation_(statistics)) addresses the question "**when** or **for whom** does $X$ affect $Y$?" A moderator $W$ changes the **size** or **direction** of the $X \rightarrow Y$ relationship. Unlike a mediator, the moderator is not in the causal chain from $X$ to $Y$ — it modifies the relationship itself.
+
+### Examples
+
+- The effect of job control on well-being may be **stronger** for employees with high self-efficacy than for those with low self-efficacy. Self-efficacy moderates the job control → well-being relationship.
+- The effect of training on performance may depend on **gender**: the training may be more effective for one gender than the other. Gender moderates the training → performance relationship.
+
+### Moderation versus mediation
+
+| | Mediation | Moderation |
+|--|-----------|------------|
+| Question | *How* does $X$ affect $Y$? | *When* does $X$ affect $Y$? |
+| Third variable | In the causal chain ($X \rightarrow M \rightarrow Y$) | Not in the causal chain; modifies the $X \rightarrow Y$ path |
+| Statistical model | Indirect effect $ab$ | Interaction $X \times W$ |
+| Tutorial | 11, 12 | 16 |
+
+## Moderated regression with `lm()`
+
+The simplest moderation analysis is a **moderated regression**: you predict $Y$ from $X$, $W$, and their interaction $X \times W$. In R, the interaction is specified with the `*` operator, which expands to both main effects plus the product:
+
+```{r}
+fit_mod <- lm(creat ~ con * gender, data = ps)
+summary(fit_mod)
+```
+
+The `con * gender` term expands to `con + gender + con:gender`, where `con:gender` is the interaction. The model has three coefficients beyond the intercept:
+
+- `con` — the effect of job control on creativity **for the reference group** of gender (Male, since it is the first level of the factor)
+- `genderFemale` — the difference in creativity between females and males **when job control is zero** (which is not meaningful if job control is on a 1–5 scale — see centring below)
+- `con:genderFemale` — the **moderation effect**: how much the slope of job control on creativity differs for females relative to males
+
+If the interaction term is significant, gender moderates the relationship — the slope differs between males and females.
+
+### Centring predictors
+
+The `con` coefficient and the `genderFemale` coefficient are interpreted at `con = 0`, which is not meaningful for a 1–5 Likert scale. To make the main effects interpretable, **centre** the continuous predictor at its mean:
+
+```{r}
+ps$con_c <- scale(ps$con, scale = FALSE)   # mean-centre (subtract the mean)
+attr(ps$con_c, "scaled:center")            # show the mean that was subtracted
+
+fit_mod_c <- lm(creat ~ con_c * gender, data = ps)
+summary(fit_mod_c)
+```
+
+After centring:
+
+- `con_c` — the effect of job control on creativity for males, **at the mean of job control** (i.e. at `con_c = 0`)
+- `genderFemale` — the difference in creativity between females and males **at the mean of job control**
+- `con_c:genderFemale` — the moderation effect (unchanged by centring — only the main effects change interpretation)
+
+::: {.callout-note}
+### Why centring matters
+
+Centring does not change the interaction term or the model's overall fit. It changes only the interpretation of the **main effects**. Without centring, the main effects are evaluated at `con = 0` (meaningless). With centring, they are evaluated at the sample mean of `con` (meaningful). Always centre continuous predictors before interpreting main effects in a moderation model.
+:::
+
+### Simple slopes
+
+A significant interaction means the slope of `con` on `creat` differs by gender. To understand **how** it differs, compute the [simple slopes](../glossary.qmd#simple-slopes) — the slope of `con` on `creat` separately for each gender group.
+
+For a two-level moderator, the simplest approach is to fit separate regressions for each group:
+
+```{r}
+# Slope of con on creat for males
+fit_male <- lm(creat ~ con_c, data = subset(ps, gender == "Male"))
+summary(fit_male)$coefficients
+
+# Slope of con on creat for females
+fit_female <- lm(creat ~ con_c, data = subset(ps, gender == "Female"))
+summary(fit_female)$coefficients
+```
+
+Compare the `con_c` coefficients: if they differ substantially (and the interaction was significant), the moderation is practically meaningful. The `con_c` coefficient for males is the slope at the reference level; for females it is the slope at the other level.
+
+### Plotting the interaction
+
+```{r}
+#| fig-align: center
+#| out-width: "85%"
+#| fig-cap: "Interaction plot: the relationship between job control (centred) and creativity, separately for males and females. Each line is the simple slope for one gender group."
+ggplot(ps, aes(x = con_c, y = creat, colour = gender)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(x = "Job control (centred at mean)",
+       y = "Creativity (mean of 3 items)",
+       colour = "Gender",
+       title = "Job control and creativity by gender") +
+  theme_minimal()
+```
+
+The plot shows two fitted lines — one for each gender group. If the lines are **parallel**, there is no moderation (the slopes are the same). If the lines **diverge** or **cross**, moderation is present (the slopes differ).
+
+::: {.callout-tip}
+## Try it
+
+Fit a moderated regression of `creat` on `pa` (centred) and `gender`. Is the interaction significant? Plot the interaction with `ggplot2`. Do males and females differ in how strongly positive affect predicts creativity?
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{r}
+ps$pa_c <- scale(ps$pa, scale = FALSE)
+fit_pa_mod <- lm(creat ~ pa_c * gender, data = ps)
+summary(fit_pa_mod)
+
+ggplot(ps, aes(x = pa_c, y = creat, colour = gender)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(x = "Positive affect (centred at mean)",
+       y = "Creativity",
+       colour = "Gender") +
+  theme_minimal()
+```
+
+Check the `pa_c:genderFemale` coefficient in the summary. If it is significant, gender moderates the PA → creativity relationship. The plot shows whether the two gender groups' slopes diverge.
+:::
+
+## Multigroup SEM in lavaan
+
+When the moderator is a **categorical variable** (like gender) and you have **latent variables** in your model, you can test moderation with **multigroup SEM**. Instead of adding an interaction term, you fit the model separately for each group and test whether the parameters are equal across groups.
+
+### Specifying a multigroup model
+
+Pass the `group` argument to `cfa()` or `sem()`:
+
+```{r}
+model_cfa <- '
+  PA  =~ pa1 + pa2 + pa3
+  neg =~ na1 + na2 + na3
+  PA  ~~ neg
+'
+fit_config <- cfa(model_cfa, data = ps, group = "gender", estimator = "MLR")
+summary(fit_config, standardized = TRUE, fit.measures = TRUE)
+```
+
+By default, lavaan fits the **configural invariance** model — the same factor structure in both groups, but all parameters (loadings, variances, covariances) are freely estimated in each group. The output shows parameter estimates for each group separately.
+
+### Testing measurement invariance
+
+To test whether the factor structure is the same across groups, you progressively constrain parameters to be equal and compare the models:
+
+1. **Configural invariance** — same structure, all parameters free (fitted above)
+2. **Weak invariance** — factor loadings equal across groups
+3. **Strong invariance** — loadings and intercepts equal
+4. **Strict invariance** — loadings, intercepts, and residual variances equal
+
+```{r}
+# Weak invariance (equal loadings)
+fit_weak <- cfa(model_cfa, data = ps, group = "gender",
+                group.equal = "loadings", estimator = "MLR")
+
+lavTestLRT(fit_config, fit_weak)
+```
+
+A non-significant result means the loadings are equivalent across groups — weak invariance holds. If weak invariance holds, you can proceed to test strong and strict invariance. If it does not hold, the factor structure is not equivalent across groups, and comparing latent means across groups would be misleading.
+
+::: {.callout-note}
+### Measurement invariance is a prerequisite for group comparison
+
+Before you can compare latent means or structural paths across groups, you must establish that the measurement model is equivalent — that the same items measure the same factors in the same way in both groups. This is what measurement invariance testing does. Without it, observed group differences could be due to measurement artefacts rather than true group differences.
+:::
+
+### Testing moderation of structural paths
+
+Once measurement invariance is established, you can test whether the **structural paths** differ across groups. In the context of our mediation model (Tutorial 12), you could test whether the indirect effect of `con` on `creat` through `pa` differs between males and females:
+
+```{r}
+#| eval: false
+model_med <- '
+  con   =~ p1 + p2 + p3
+  pa    =~ pa1 + pa2 + pa3
+  creat =~ creat1 + creat2 + creat3
+
+  creat ~ b * pa + c * con
+  pa    ~ a * con
+
+  indirect := a * b
+  direct   := c
+  total    := c + (a * b)
+'
+
+# Fit with equal measurement model across groups
+# but free structural paths
+fit_med_group <- sem(model_med, data = ps, group = "gender",
+                     group.equal = "loadings", estimator = "MLR")
+
+# Now constrain structural paths to be equal
+fit_med_group_eq <- sem(model_med, data = ps, group = "gender",
+                        group.equal = c("loadings", "regressions"),
+                        estimator = "MLR")
+
+lavTestLRT(fit_med_group, fit_med_group_eq)
+```
+
+A significant result means the structural paths differ across groups — gender moderates the mediation. A non-significant result means the paths are equivalent — no moderation.
+
+::: {.callout-warning}
+### Multigroup SEM requires sufficient sample size per group
+
+Each group should have enough participants to estimate the model reliably. A rough rule of thumb is 100+ per group. The PS dataset has 178 males and 154 females — adequate but not generous. With smaller groups, the model may not converge or may produce unstable estimates.
+:::
+
+## Latent variable interaction (advanced)
+
+When both the predictor and the moderator are **latent variables** (factors measured by multiple indicators), testing moderation requires modelling the **interaction between two latent variables**. This is more complex than a product term between observed variables.
+
+lavaan supports latent interactions via the `~*~` operator (the product-indicator approach), but this is a PhD-level technique and beyond the scope of an MSc dissertation. We mention it here so you are aware it exists:
+
+```{r}
+#| eval: false
+model_int <- '
+  pa   =~ pa1 + pa2 + pa3
+  con  =~ p1 + p2 + p3
+  pa ~*~ con   # latent interaction between pa and con
+
+  creat ~ pa + con + pa.con    # pa.con is the latent interaction term
+'
+```
+
+::: {.callout-important}
+### Latent interaction is beyond MSc scope
+
+Modelling interactions between latent variables requires the product-indicator approach (Klein & Moosbrugger, 2000) or the latent moderated structural equations (LMS) method. These are computationally demanding and theoretically advanced. For MSc work, we recommend:
+
+1. If both predictor and moderator are latent: compute factor scores from a CFA, then use the product of the factor scores as an observed interaction term in `lm()` — a simpler but approximate approach.
+2. If one variable is categorical: use multigroup SEM (as demonstrated above).
+3. If both are observed: use `lm()` with a product term (as demonstrated above).
+
+Latent interaction is a topic for PhD-level work.
+:::
+
+## Common errors
+
+::: {.callout-warning}
+### Interpreting main effects in the presence of an interaction
+
+When an interaction term is in the model, the main effects are **conditional** effects — they apply only at the reference level of the moderator (for a categorical moderator) or at zero (for a continuous moderator). Do not interpret main effects as "overall" effects when an interaction is present. Centre continuous moderators to make the main effects interpretable at the mean.
+
+### Standardising the moderator before centring
+
+`scale(x, scale = TRUE)` both centres and standardises (divides by the SD). This changes the scale of the coefficient — it is now in SD units, not original units. Use `scale = FALSE` for centring only; use `scale = TRUE` only if you want standardised coefficients.
+
+### Multigroup SEM without measurement invariance
+
+If you compare structural paths across groups without first establishing measurement invariance, any differences you find could be due to the items measuring different things in the two groups, not to true group differences in the structural paths. Always test measurement invariance first.
+:::
+
+## Exercises
+
+1. Fit a moderated regression of `creat` on `con` (centred) and `gender`. Is the interaction significant? Compute the simple slopes for each gender group. Plot the interaction with `ggplot2`.
+
+2. Fit a multigroup CFA on the two-factor PA/neg model with `gender` as the grouping variable. Test configural, weak, and strong invariance using `lavTestLRT()`. Does measurement invariance hold?
+
+3. If measurement invariance holds in Exercise 2, fit a multigroup SEM with the mediation model (Tutorial 12) and test whether the structural paths are equal across groups. Is the mediation moderated by gender?
+
+4. A researcher wants to test whether **age** moderates the effect of job control on creativity. Age is categorical (5 levels) in the PS dataset. Describe two ways they could test this: (a) with `lm()` and (b) with multigroup lavaan. What are the trade-offs?
+
+::: {.callout-caution collapse="true"}
+## Solutions
+
+**Exercise 1**
+
+```{r}
+fit_ex1 <- lm(creat ~ con_c * gender, data = ps)
+summary(fit_ex1)
+
+coef_male   <- coef(lm(creat ~ con_c, data = subset(ps, gender == "Male")))["con_c"]
+coef_female <- coef(lm(creat ~ con_c, data = subset(ps, gender == "Female")))["con_c"]
+coef_male
+coef_female
+
+ggplot(ps, aes(x = con_c, y = creat, colour = gender)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(x = "Job control (centred)", y = "Creativity", colour = "Gender") +
+  theme_minimal()
+```
+
+The interaction is significant if the `con_c:genderFemale` p-value is below .05. The simple slopes (`coef_male`, `coef_female`) show how the effect of job control differs by gender.
+
+**Exercise 2**
+
+```{r}
+fit_config <- cfa(model_cfa, data = ps, group = "gender", estimator = "MLR")
+fit_weak   <- cfa(model_cfa, data = ps, group = "gender",
+                  group.equal = "loadings", estimator = "MLR")
+fit_strong <- cfa(model_cfa, data = ps, group = "gender",
+                  group.equal = c("loadings", "intercepts"), estimator = "MLR")
+
+lavTestLRT(fit_config, fit_weak)
+lavTestLRT(fit_weak, fit_strong)
+```
+
+Configural → weak: if non-significant, loadings are equal (weak invariance holds). Weak → strong: if non-significant, intercepts are also equal (strong invariance holds). If strong invariance holds, you can compare latent means across groups.
+
+**Exercise 3**
+
+```{r}
+#| eval: false
+ps$p1 <- (ps$con9 + ps$con10) / 2
+ps$p2 <- (ps$con1 + ps$con8)  / 2
+ps$p3 <- (ps$con3 + ps$con6)  / 2
+
+model_med <- '
+  con   =~ p1 + p2 + p3
+  pa    =~ pa1 + pa2 + pa3
+  creat =~ creat1 + creat2 + creat3
+  creat ~ b * pa + c * con
+  pa    ~ a * con
+  indirect := a * b
+  direct   := c
+  total    := c + (a * b)
+'
+
+fit_free <- sem(model_med, data = ps, group = "gender",
+                group.equal = "loadings", estimator = "MLR")
+fit_eq   <- sem(model_med, data = ps, group = "gender",
+                group.equal = c("loadings", "regressions"), estimator = "MLR")
+lavTestLRT(fit_free, fit_eq)
+```
+
+A significant result means the structural paths differ by gender — the mediation is moderated. A non-significant result means the paths are equivalent — no moderation.
+
+**Exercise 4**
+
+**(a) With `lm()`:** Recode `age` as a factor and fit `lm(creat ~ con * age, data = ps)`. The interaction terms `con:age2`, `con:age3`, etc. test whether the slope of `con` differs for each age band relative to the reference band. This is simple but does not separate measurement error from structural effects.
+
+**(b) With multigroup lavaan:** Fit the latent SEM mediation model with `group = "age"`. This tests whether the structural paths among the latent factors differ across age groups. This is more appropriate if you want to remove measurement error, but it requires sufficient sample size per age band (the PS dataset has only 21 participants in age band 1, which is too few for a stable multigroup SEM).
+
+**Trade-offs:** `lm()` is simpler, faster, and works with small per-group samples, but uses manifest scores (with measurement error). Multigroup lavaan removes measurement error but requires larger per-group samples and is more complex to specify and interpret.
+:::
+
+## Summary
+
+You have now completed the full tutorial series. You can:
+
+- Fit CFA, path analysis, SEM, and mediation models in lavaan (Tutorials 05–12)
+- Report results in APA format with `texreg` tables and `tidySEM` diagrams (Tutorial 13)
+- Extend to multilevel and growth curve models (Tutorials 14–15)
+- Test moderation with `lm()` and multigroup SEM (Tutorial 16)
+
+These are the core tools you need for a quantitative dissertation in organisational psychology. The [cheat sheet](../cheatsheet.qmd), [glossary](../glossary.qmd), and [notation key](../notation.qmd) are there for quick reference. When you encounter a technique we have not covered — latent profile analysis, EFA, categorical outcome SEM — the lavaan documentation and the further reading lists in each tutorial are your next stop.
+
+Good luck with your dissertation.
+
+## Further reading
+
+- @hayes2018 — the standard reference for moderation, mediation, and conditional process analysis.
+- @hoyle2012 — the *Handbook of Structural Equation Modeling* includes chapters on multigroup SEM and latent interactions.
+- @kelloway2015 — the textbook basis for the original teaching materials; covers moderation in an SEM framework.

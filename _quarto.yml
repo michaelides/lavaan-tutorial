@@ -1,0 +1,144 @@
+# ---------------------------------------------------------------------------
+# lavaan-tutorial — Quarto website configuration
+#
+# Tutorial site for the Statistical Skills module
+# MSc Organisational Psychology, University of East Anglia
+#
+# Author: George Michaelides  <g.michaelides@uea.ac.uk>
+# Original Mplus teaching materials: Kevin Daniels (UEA)
+# ---------------------------------------------------------------------------
+
+project:
+  type: website
+  output-dir: docs
+  preview:
+    port: 5555
+    browser: false
+    watch-inputs: true
+  render:
+    - "index.qmd"
+    - "glossary.qmd"
+    - "notation.qmd"
+    - "cheatsheet.qmd"
+    - "data/data-note.qmd"
+    - "tutorials/*.qmd"
+
+website:
+  title: "A Step-by-Step Introduction to Structural Equation Modeling with lavaan in R"
+  site-url: "https://michaelides.github.io/lavaan-tutorial/"
+  repo-url: "https://github.com/michaelides/lavaan-tutorial"
+  repo-actions: [edit, source, issue]
+  search:
+    location: navbar
+    type: textbox
+    limit: 15
+  page-navigation: true
+
+  # --- Top navbar: cross-cutting pages + GitHub -----------------------------
+  navbar:
+    background: primary
+    left:
+      - text: "Home"
+        file: index.qmd
+      - text: "Glossary"
+        file: glossary.qmd
+      - text: "Notation"
+        file: notation.qmd
+      - text: "Cheat sheet"
+        file: cheatsheet.qmd
+    right:
+      - icon: github
+        href: https://github.com/michaelides/lavaan-tutorial
+        aria-label: GitHub repository
+
+  # --- Persistent left sidebar: 17 tutorials in 5 groups --------------------
+  sidebar:
+    style: "docked"
+    collapse-level: 2
+    contents:
+      - section: "Foundations"
+        contents:
+          - tutorials/01-r-basics.qmd
+          - tutorials/02-rstudio.qmd
+          - tutorials/03-importing-data.qmd
+          - tutorials/04-simple-inference.qmd
+      - section: "Bridging"
+        contents:
+          - tutorials/05-introducing-lavaan.qmd
+      - section: "Core lavaan"
+        contents:
+          - tutorials/06-cfa-concept.qmd
+          - tutorials/07-cfa-practical.qmd
+          - tutorials/08-parcels-second-order.qmd
+          - tutorials/09-path-analysis.qmd
+          - tutorials/10-sem-latent.qmd
+          - tutorials/11-mediation-concept.qmd
+          - tutorials/12-mediation-practical.qmd
+      - section: "Capstone"
+        contents:
+          - tutorials/13-reporting.qmd
+      - section: "Advanced"
+        contents:
+          - tutorials/14-multilevel.qmd
+          - tutorials/15-growth.qmd
+          - tutorials/16-moderation.qmd
+
+  # --- Footer: author + institution + repository --------------------------
+  page-footer:
+    left: |
+      &copy; 2026 George Michaelides, University of East Anglia &middot;
+      MSc Organisational Psychology &middot; Statistical Skills
+    right:
+      - icon: github
+        href: https://github.com/michaelides/lavaan-tutorial
+        aria-label: GitHub repository
+
+# ---------------------------------------------------------------------------
+# Theme — flatly (light) + darkly (dark) toggle
+# ---------------------------------------------------------------------------
+format:
+  html:
+    theme:
+      light: flatly
+      dark:  darkly
+    css: assets/styles.css
+    toc: true
+    toc-location: right
+    toc-depth: 3
+    mainfont: "Source Sans Pro, Helvetica, Arial, sans-serif"
+    monofont: "JetBrains Mono, Fira Code, Consolas, monospace"
+    code-link: true
+    html-math-method:
+      method: mathjax
+      url: "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+    fig-align: center
+
+# ---------------------------------------------------------------------------
+# Default chunk options — every tutorial inherits these.
+# Per Q18a-i: code always shown, package-load noise suppressed.
+# Per Q18c-i: visible `comment = "##"` set in each tutorial's first chunk.
+# ---------------------------------------------------------------------------
+execute:
+  echo: true
+  eval: true
+  warning: false
+  message: false
+  fig-align: center
+  fig-width: 6.5
+  fig-dpi: 150
+  out-width: "85%"
+
+# ---------------------------------------------------------------------------
+# Bibliography + APA 7th citation style
+# ---------------------------------------------------------------------------
+bibliography: references.bib
+csl: apa-7th-edition.csl
+link-citations: true
+
+# ---------------------------------------------------------------------------
+# Cross-references
+# ---------------------------------------------------------------------------
+crossref:
+  fig-prefix: "Figure"
+  tbl-prefix: "Table"
+  eq-prefix: "Equation"

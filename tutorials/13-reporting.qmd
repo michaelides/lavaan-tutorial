@@ -1,0 +1,412 @@
+---
+title: "Reporting lavaan results"
+subtitle: "APA write-ups, exporting tables with texreg, exporting path diagrams"
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+## Learning objectives
+
+By the end of this tutorial you will be able to:
+
+- write an APA-style results paragraph for a CFA, path analysis, SEM, or mediation model
+- export lavaan parameter estimates and fit indices to publication-quality tables with `texreg`
+- export path diagrams with `tidySEM` as PNG or PDF files
+- compare nested models with `lavTestLRT()` and report the comparison
+- assemble a complete results section for a dissertation
+
+## Setup
+
+<details>
+<summary>Setup code (you have seen this before)</summary>
+
+```{r}
+#| include: false
+knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(comment = "##")
+```
+
+```{r}
+library(haven)
+library(lavaan)
+library(psych)
+library(texreg)
+library(tidySEM)
+```
+
+```{r}
+#| include: false
+ps <- haven::read_sav("data/ps_data_reduced.sav")
+ps <- haven::zap_labels(ps)
+ps[ps == -99] <- NA
+ps$p1 <- (ps$con9 + ps$con10) / 2
+ps$p2 <- (ps$con1 + ps$con8)  / 2
+ps$p3 <- (ps$con3 + ps$con6)  / 2
+```
+
+</details>
+
+## The canonical workflow
+
+By now you have fitted CFA, path, SEM, and mediation models across Tutorials 06–12. This tutorial pulls together the **reporting** side: how to go from a fitted lavaan object to a polished results section for a dissertation or paper.
+
+The canonical workflow is:
+
+1. Fit the model and check convergence
+2. Extract fit indices with `fitMeasures()`
+3. Extract parameter estimates with `summary()` or `parameterEstimates()`
+4. Export a publication-quality table with `texreg`
+5. Export a path diagram with `tidySEM`
+6. Write the APA results paragraph
+
+We will demonstrate each step using the two-factor CFA from Tutorial 07 and the latent SEM mediation from Tutorial 12.
+
+## Refitting the models
+
+First, we refit the two models we will use as running examples:
+
+```{r}
+# Two-factor CFA (Tutorial 07)
+model_cfa <- '
+  PA  =~ pa1 + pa2 + pa3
+  neg =~ na1 + na2 + na3
+  PA  ~~ neg
+'
+fit_cfa <- cfa(model_cfa, data = ps, estimator = "MLR")
+
+# Latent SEM mediation (Tutorial 12)
+model_sem <- '
+  con   =~ p1 + p2 + p3
+  pa    =~ pa1 + pa2 + pa3
+  creat =~ creat1 + creat2 + creat3
+
+  creat ~ b * pa + c * con
+  pa    ~ a * con
+
+  indirect := a * b
+  direct   := c
+  total    := c + (a * b)
+'
+set.seed(1234)
+fit_sem <- sem(model_sem, data = ps,
+               estimator = "ML", se = "boot", bootstrap = 1000)
+```
+
+## APA-style write-up templates
+
+### CFA results template
+
+> Confirmatory factor analysis was used to test the hypothesised factor structure of [construct], with [factor 1] measured by [items] and [factor 2] measured by [items]. The model was estimated with robust maximum likelihood (MLR). The model fit the data well, $\chi^2(df) = value$, $p = value$, CFI = value, TLI = value, RMSEA = value, 90% CI [lower, upper], SRMR = value. All factor loadings were significant ($p < .001$) and substantial (standardised $\lambda$ range: [low] to [high]). The correlation between [factor 1] and [factor 2] was $r = value$, $p < .001$. Cronbach's alpha was [alpha1] for [factor 1] and [alpha2] for [factor 2], indicating acceptable internal consistency.
+
+### SEM mediation results template
+
+> Structural equation modelling was used to test whether [mediator] mediated the relationship between [IV] and [DV]. [IV], [mediator], and [DV] were modelled as latent factors measured by [indicators]. The structural paths were estimated with maximum likelihood and [N] bootstrap replications; bias-corrected and accelerated (BCa) confidence intervals are reported for the indirect effect. The model fit the data well, $\chi^2(df) = value$, CFI = value, TLI = value, RMSEA = value, 90% CI [lower, upper], SRMR = value. The indirect effect of [IV] on [DV] through [mediator] was $ab = value$, 95% BCa CI [lower, upper], indicating [significant/non-significant] mediation. The direct effect was $c' = value$, $p = value$, suggesting [full/partial] mediation. The total effect was $c = value$, $p = value$.
+
+### Filling in the values
+
+Let us extract the values for the CFA template:
+
+```{r}
+fitMeasures(fit_cfa, c("chisq", "df", "pvalue",
+                       "cfi", "tli",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+                       "srmr"))
+
+pe_cfa <- parameterEstimates(fit_cfa, standardized = TRUE)
+# Standardised loadings
+pe_cfa[pe_cfa$op == "=~", c("rhs", "std.all")]
+# Factor correlation
+pe_cfa[pe_cfa$op == "~~" & pe_cfa$lhs == "PA" & pe_cfa$rhs == "neg",
+       c("lhs", "rhs", "std.all", "pvalue")]
+
+# Cronbach's alpha
+psych::alpha(ps[, c("pa1", "pa2", "pa3")])$total$raw_alpha
+psych::alpha(ps[, c("na1", "na2", "na3")])$total$raw_alpha
+```
+
+And for the SEM mediation template:
+
+```{r}
+fitMeasures(fit_sem, c("chisq", "df", "pvalue",
+                       "cfi", "tli",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+                       "srmr"))
+
+pe_sem <- parameterEstimates(fit_sem, boot.ci.type = "bca.simple")
+pe_sem[pe_sem$lhs %in% c("indirect", "direct", "total"),
+       c("lhs", "est", "ci.lower", "ci.upper", "pvalue")]
+```
+
+## Exporting tables with `texreg`
+
+The `texreg` package exports lavaan results to clean, publication-quality tables in three formats: screen (for checking), HTML (for Word documents), and LaTeX (for PDF documents).
+
+### Screen output
+
+For a quick check, use `screenreg()`:
+
+```{r}
+texreg::screenreg(fit_cfa,
+                  summaries = c("N", "AIC", "BIC"),
+                  labels = list(),
+                  single.row = TRUE)
+```
+
+This prints a compact table to the R console with each parameter as a row, its estimate, standard error, and significance stars. The `summaries` argument controls which fit statistics appear at the bottom.
+
+### HTML output (for Word documents)
+
+To insert a lavaan table into a Word document, export it as HTML and copy-paste, or insert the HTML file into Word:
+
+```{r}
+#| eval: false
+texreg::htmlreg(fit_cfa, file = "tables/table_cfa.html",
+                summaries = c("N", "AIC", "BIC"),
+                caption = "Confirmatory Factor Analysis of Positive and Negative Affect",
+                caption.above = TRUE)
+```
+
+Open the HTML file in a web browser, select all, copy, and paste into Word — the table formatting is preserved.
+
+### LaTeX output (for PDF documents)
+
+For documents typeset in LaTeX (e.g. via Quarto with a PDF output):
+
+```{r}
+#| eval: false
+texreg::texreg(fit_cfa, file = "tables/table_cfa.tex",
+               summaries = c("N", "AIC", "BIC"),
+               caption = "Confirmatory Factor Analysis of Positive and Negative Affect",
+               caption.above = TRUE,
+               label = "tab:cfa")
+```
+
+Include the table in a LaTeX or Quarto document with `\input{tables/table_cfa.tex}` or via Quarto's `$include$` mechanism.
+
+### Comparing multiple models
+
+`texreg` can display several models side by side, which is useful for comparing nested models (e.g. a first-order CFA vs. a second-order CFA, or a path model vs. a full SEM):
+
+```{r}
+#| eval: false
+texreg::screenreg(list(fit_cfa, fit_cfa),
+                  custom.model.names = c("First-order", "Second-order"),
+                  summaries = c("N", "AIC", "BIC"))
+```
+
+::: {.callout-note}
+### `texreg` and lavaan
+
+`texreg` works with lavaan objects out of the box — it knows how to extract parameter estimates, fit indices, and sample size. For mediation models with `:=` defined parameters, the defined parameters (indirect, direct, total) appear in the table alongside the regression coefficients.
+
+For more complex table layouts, consider `semTable` (from the `semTable` package) as an alternative — it is specifically designed for SEM and produces slightly different formatting. We recommend `texreg` as the default because it handles both `lm` and `lavaan` objects, making it useful across your entire dissertation.
+:::
+
+## Exporting path diagrams
+
+### With `tidySEM`
+
+To save a path diagram as a PNG or PDF, use `tidySEM`'s graph functions with a graphics device:
+
+```{r}
+#| eval: false
+# Save as PNG
+png("figures/sem_mediation.png", width = 1200, height = 800, res = 150)
+tidySEM::graph_sem(fit_sem, std = TRUE)
+dev.off()
+
+# Save as PDF (vector graphics, publication quality)
+pdf("figures/sem_mediation.pdf", width = 8, height = 6)
+tidySEM::graph_sem(fit_sem, std = TRUE)
+dev.off()
+```
+
+::: {.callout-tip}
+## Try it
+
+Fit the two-factor CFA from Tutorial 07 and export its path diagram as a PNG using the code above. Open the PNG file and check that the loadings and factor correlation are visible on the arrows.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{r}
+#| eval: false
+fit_cfa <- cfa(model_cfa, data = ps, estimator = "MLR")
+png("figures/cfa_pa_na.png", width = 1200, height = 800, res = 150)
+tidySEM::graph_sem(fit_cfa, std = TRUE)
+dev.off()
+```
+
+The PNG file in `figures/cfa_pa_na.png` should show the two latent factors (PA, neg) with their indicators and the standardised loadings on the arrows, plus the factor correlation on the double-headed arrow between them.
+:::
+
+## Comparing nested models
+
+### `lavTestLRT()` for MLR models
+
+When comparing nested models fitted with `MLR`, use `lavTestLRT()` rather than `anova()` — the Satorra–Bentler scaled chi-square difference test is the correct test for robust estimators:
+
+```{r}
+# First-order CFA (Tutorial 07)
+fit_1st <- cfa(model_cfa, data = ps, estimator = "MLR")
+
+# Second-order CFA (Tutorial 08)
+model_2nd <- '
+  PA     =~ pa1 + pa2 + pa3
+  neg    =~ na1 + na2 + na3
+  affect =~ PA + neg
+'
+fit_2nd <- cfa(model_2nd, data = ps, estimator = "MLR")
+
+lavTestLRT(fit_1st, fit_2nd)
+```
+
+The output reports the scaled chi-square difference, its degrees of freedom, and the p-value. A non-significant result means the more restrictive model (here, the second-order) fits as well as the less restrictive model — the restriction is justified.
+
+### `anova()` for ML models
+
+For models fitted with plain `ML` (e.g. bootstrap models), `anova()` is appropriate:
+
+```{r}
+#| eval: false
+anova(fit_1, fit_2)  # both fitted with estimator = "ML"
+```
+
+::: {.callout-warning}
+### Use the right test
+
+- `MLR` models → `lavTestLRT()` (scaled difference test)
+- `ML` models → `anova()` (standard likelihood-ratio test)
+- Bootstrap models → no standard difference test; compare bootstrap CIs instead
+
+Using the wrong test gives incorrect p-values. When in doubt, `lavTestLRT()` is the safer choice because it works for both `ML` and `MLR`.
+:::
+
+## A complete results section
+
+Putting it all together — here is a complete results section for the latent SEM mediation model from Tutorial 12, using the values extracted above:
+
+### Model description
+
+Structural equation modelling was used to test whether positive affect (PA) mediated the relationship between job control and creativity. Job control was modelled as a latent factor measured by three parcels (p1, p2, p3) constructed from the six job-control items. PA and creativity were modelled as latent factors measured by their three respective items. The structural paths were estimated with maximum likelihood and 1,000 bootstrap replications; bias-corrected and accelerated (BCa) confidence intervals are reported for the indirect effect.
+
+### Model fit
+
+The model fit the data well (see Table 1), $\chi^2(24) = ...$, CFI = ..., TLI = ..., RMSEA = ..., 90% CI [..., ...], SRMR = .... All factor loadings were significant ($p < .001$) and substantial, confirming that the measurement model was adequate.
+
+### Mediation results
+
+The indirect effect of job control on creativity through PA was $ab = ...$, 95% BCa CI [..., ...]. Because the confidence interval did not include zero, the indirect effect was significant, indicating that PA mediated the relationship between job control and creativity. The direct effect of job control on creativity was $c' = ...$, $p = ...$, suggesting [full/partial] mediation. The total effect was $c = ...$, $p = ...$.
+
+### Path diagram
+
+[Insert path diagram here — exported with `tidySEM::graph_sem()` as shown above]
+
+### Table
+
+[Insert table here — exported with `texreg::htmlreg()` as shown above]
+
+## Common errors
+
+::: {.callout-warning}
+### Reporting a just-identified model's fit
+
+Do not report "excellent fit" for a just-identified model (df = 0). The fit is guaranteed by the model's structure. Report the parameter estimates and $R^2$ values, and note that the model is just-identified.
+
+### Using `anova()` with MLR models
+
+`anova()` does not apply the Satorra–Bentler scaling correction. Use `lavTestLRT()` for models fitted with `MLR`. The two functions give different p-values; only `lavTestLRT()` is correct for robust estimators.
+
+### Forgetting to set the bootstrap seed
+
+If you re-run a bootstrap model without `set.seed()`, the CIs will differ. Always set the seed, and report the seed in your methods section for full reproducibility.
+:::
+
+## Exercises
+
+1. Fit the two-factor CFA from Tutorial 07. Extract the fit indices and the standardised loadings with `parameterEstimates()`. Write a complete APA-style results paragraph using the CFA template above, filling in every value.
+
+2. Fit the latent SEM mediation model from Tutorial 12. Export the parameter estimates to an HTML table with `texreg::htmlreg()`. Save the path diagram as a PNG with `tidySEM::graph_sem()`.
+
+3. Fit a first-order two-factor CFA and a second-order CFA (both on PA and neg, as in Tutorial 08). Compare them with `lavTestLRT()`. Write a one-paragraph summary of the comparison, reporting the scaled chi-square difference, its degrees of freedom, and its p-value.
+
+4. Fit the path mediation model from Tutorial 12 (manifest variables, `ML` with `se = "boot"`). Extract the BCa CI for the indirect effect. Write an APA-style results paragraph for this model, following the SEM mediation template.
+
+::: {.callout-caution collapse="true"}
+## Solutions
+
+**Exercise 1**
+
+```{r}
+fit_cfa <- cfa(model_cfa, data = ps, estimator = "MLR")
+fitMeasures(fit_cfa, c("chisq", "df", "pvalue",
+                       "cfi", "tli",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper", "srmr"))
+pe <- parameterEstimates(fit_cfa, standardized = TRUE)
+pe[pe$op == "=~", c("rhs", "std.all")]
+psych::alpha(ps[, c("pa1", "pa2", "pa3")])$total$raw_alpha
+psych::alpha(ps[, c("na1", "na2", "na3")])$total$raw_alpha
+```
+
+Fill in each value in the CFA template. Example: "$\chi^2(8) = 7.93$, $p = .441$, CFI = 1.00, TLI = 1.00, RMSEA = 0.00, 90% CI [0.00, 0.07], SRMR = 0.01."
+
+**Exercise 2**
+
+```{r}
+#| eval: false
+texreg::htmlreg(fit_sem, file = "tables/table_sem.html",
+                caption = "Latent SEM Mediation Model",
+                caption.above = TRUE)
+
+png("figures/sem_mediation.png", width = 1200, height = 800, res = 150)
+tidySEM::graph_sem(fit_sem, std = TRUE)
+dev.off()
+```
+
+**Exercise 3**
+
+```{r}
+fit_1st <- cfa(model_cfa, data = ps, estimator = "MLR")
+fit_2nd <- cfa(model_2nd, data = ps, estimator = "MLR")
+lavTestLRT(fit_1st, fit_2nd)
+```
+
+Write: "The second-order model was compared to the first-order model using the Satorra–Bentler scaled chi-square difference test. The second-order restriction did not significantly worsen fit, $\Delta\chi^2(...) = ...$, $p = ...$, indicating that the more parsimonious second-order structure was supported."
+
+**Exercise 4**
+
+```{r}
+set.seed(1234)
+ps$con   <- (ps$con1 + ps$con3 + ps$con6 + ps$con8 + ps$con9 + ps$con10) / 6
+ps$pa    <- (ps$pa1 + ps$pa2 + ps$pa3) / 3
+ps$creat <- (ps$creat1 + ps$creat2 + ps$creat3) / 3
+
+model_path <- '
+  creat ~ b * pa + c * con
+  pa    ~ a * con
+  indirect := a * b
+  direct   := c
+  total    := c + (a * b)
+'
+fit_path <- sem(model_path, data = ps,
+                estimator = "ML", se = "boot", bootstrap = 1000)
+pe_path <- parameterEstimates(fit_path, boot.ci.type = "bca.simple")
+pe_path[pe_path$lhs %in% c("indirect", "direct", "total"),
+        c("lhs", "est", "ci.lower", "ci.upper", "pvalue")]
+```
+
+Fill in the SEM mediation template with the extracted values.
+:::
+
+## Summary & next tutorial
+
+You can now write APA-style results paragraphs for CFA, path analysis, SEM, and mediation models; export parameter estimates and fit indices to publication-quality tables with `texreg`; export path diagrams with `tidySEM`; and compare nested models with the correct statistical test. This completes the core SEM workflow — you have everything you need for a dissertation using lavaan. In the remaining tutorials we cover **advanced topics**: multilevel models, growth curve models, and moderation, which extend the lavaan toolkit to nested, longitudinal, and interaction-based analyses.
+
+## Further reading
+
+- @rosseel2012 — the lavaan reference paper.
+- @beaujean2014 — a lavaan-based walkthrough including reporting.
+- @kelloway2015 — the textbook basis for the original teaching materials; includes chapters on reporting SEM results.
+- @hul1999 — the source of the fit-index cutoff criteria used in APA write-ups.

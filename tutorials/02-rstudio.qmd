@@ -1,0 +1,376 @@
+---
+title: "RStudio"
+subtitle: "Projects, panes, scripts vs Quarto, packages, help"
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+## Learning objectives
+
+By the end of this tutorial you will be able to:
+
+- navigate the four panes of the RStudio IDE and know what each is for
+- create an RStudio Project (`.Rproj`) and understand why projects matter for reproducibility
+- write and run code from a script file versus a Quarto (`.qmd`) document
+- install and load the packages you will need for the rest of this tutorial series
+- use the built-in help system to look up function documentation
+- configure RStudio's most important Global Options for a clean, reproducible workflow
+
+## Setup
+
+This tutorial uses only base R — no additional packages are needed for the examples here. We do, however, install the canonical package set you will use from Tutorial 03 onward.
+
+```{r}
+#| include: false
+knitr::opts_chunk$set(comment = "##")
+```
+
+## What is RStudio?
+
+RStudio is an **Integrated Development Environment (IDE)** for R — a graphical front-end that wraps the R engine in a user-friendly interface. You write code in the editor, send it to R for evaluation, and see the results without ever touching a command-line prompt. For the rest of this tutorial series we assume you are using RStudio Desktop, which is free and available for Windows, macOS, and Linux from <https://posit.co/download/rstudio-desktop/>.
+
+R itself and RStudio are separate pieces of software:
+
+- **R** is the statistical engine. It does the computation.
+- **RStudio** is the cockpit. It sends your commands to R and displays the results.
+
+You must install R before RStudio will be of any use. If you have not yet installed R, do so first from <https://cran.r-project.org/>.
+
+## The four panes
+
+When you open RStudio you see four rectangular regions arranged in a 2 × 2 grid. Each pane has a job:
+
+```{r}
+#| echo: false
+#| fig-align: center
+#| out-width: "95%"
+#| fig-cap: "The four panes of RStudio. Top-left: Source. Top-right: Environment and History. Bottom-left: Console. Bottom-right: Files, Plots, Packages, Help, Viewer."
+DiagrammeR::grViz("
+digraph {
+  graph [rankdir = TB, splines = ortho, nodesep = 0.3, ranksep = 0.3]
+  node  [shape = box, style = filled, fontname = Helvetica, fontsize = 10]
+
+  subgraph cluster_top {
+    label = ''
+    style = invis
+    src  [label = 'Source\\n(your scripts and .qmd files)', fillcolor = '#aed6f1', width = 2.2, height = 1.0]
+    env  [label = 'Environment / History\\n(your objects)', fillcolor = '#a9dfbf', width = 2.2, height = 1.0]
+  }
+
+  subgraph cluster_bot {
+    label = ''
+    style = invis
+    con  [label = 'Console\\n(where R runs)', fillcolor = '#f9e79f', width = 2.2, height = 1.0]
+    misc [label = 'Files / Plots /\\nPackages / Help / Viewer', fillcolor = '#f5b7b1', width = 2.2, height = 1.0]
+  }
+
+  src -> con [style = invis]
+  env -> misc [style = invis]
+  {rank = same; src; env}
+  {rank = same; con; misc}
+}
+")
+```
+
+### Source (top-left)
+
+This is your text editor. It is where you write R scripts (`.R` files) and Quarto documents (`.qmd` files). Code here is **not** executed until you send it to the Console — you can write a long script, edit it, save it, and only run it when you are ready.
+
+### Console (bottom-left)
+
+This is live R. Anything you type here is evaluated immediately and the result is printed. You can use the Console for quick calculations or one-off commands, but for anything you want to keep, write it in the Source pane and send it to the Console instead — that way your code is saved in a file.
+
+### Environment and History (top-right)
+
+The Environment tab shows every object you have created in the current R session — vectors, data frames, functions, fitted models. Clicking the spreadsheet icon next to a data frame opens it in a viewer. The History tab records every command you have run, useful if you want to retrace your steps.
+
+### Files, Plots, Packages, Help, Viewer (bottom-right)
+
+A row of tabs along the bottom-right that you will use constantly:
+
+- **Files** — a file browser for your project folder.
+- **Plots** — every plot you generate appears here. Use the arrows to navigate through your plotting history.
+- **Packages** — a list of installed packages, with checkboxes to load them. You will usually load packages from the Console instead.
+- **Help** — where function documentation appears when you type `?function_name`.
+- **Viewer** — for interactive HTML widgets, including the path diagrams produced by `tidySEM` later in this series.
+
+## RStudio Projects
+
+An RStudio **Project** is a folder on your computer that contains your R scripts, data files, and a small `.Rproj` file that tells RStudio "this folder is a self-contained unit of work". Projects are the foundation of a reproducible R workflow.
+
+### Why projects matter
+
+Without a project, R's working directory is wherever it happens to be — your desktop, your home folder, somewhere else. Your code will read data from one location on your machine, and that path will not exist on anyone else's. With a project, the working directory is **always the project folder**, so `read.csv("data/survey.csv")` reads a file sitting in your project's `data/` subfolder — no matter where you or a collaborator opens the project from.
+
+::: {.callout-important}
+Always work inside a Project. If you do not, your file paths become absolute (e.g. `C:/Users/yourname/Documents/...`) and your code becomes non-reproducible — it will not run on anyone else's machine, including the version of "your machine" two months from now.
+:::
+
+### Creating a Project
+
+1. In RStudio, click **File → New Project...**
+2. Choose **New Directory** to start from scratch, or **Existing Directory** if you already have a folder.
+3. Pick **New Project** as the project type.
+4. Name the directory (e.g. `my_sem_analysis`), choose where to create it, and click **Create Project**.
+
+RStudio restarts in the new project folder. Look at the Console's prompt — it now shows the path to your project directory. The Files pane in the bottom-right shows a new `.Rproj` file alongside any other contents.
+
+::: {.callout-tip}
+## Try it
+
+Create a new RStudio Project called `sem_practice` on your computer. Open it. In the Console, run `getwd()` — you should see the path to your `sem_practice` folder. Create a subfolder called `data` (use the New Folder button in the Files pane, or run `dir.create("data")` in the Console).
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+After creating the project through the dialogues, the Console will show your project path. Then:
+
+```{r}
+#| eval: false
+getwd()
+dir.create("data")
+```
+
+You should now see a `data/` folder in the Files pane.
+:::
+
+## Scripts versus Quarto documents
+
+RStudio supports two main file types you will use throughout this series:
+
+### R scripts (`.R`)
+
+A plain-text file containing R code and `#` comments. Run code line-by-line by placing the cursor on a line and pressing `Ctrl+Enter` (Windows/Linux) or `Cmd+Enter` (macOS). Run the whole script with `Ctrl+Shift+S` or the **Source** button.
+
+Scripts are the right choice when you are exploring data interactively or running a one-off analysis.
+
+### Quarto documents (`.qmd`)
+
+A text file that mixes prose (Markdown) with R code chunks, which Quarto renders into a polished HTML or PDF document. Each code chunk looks like this:
+
+```` markdown
+```{r}
+#| label: my-chunk
+mean(c(1, 2, 3, 4, 5))
+```
+````
+
+When you click **Render** at the top of the editor, Quarto runs every code chunk in order, weaves the output between your prose paragraphs, and writes a finished document to disk. This very tutorial is a `.qmd` file rendered into the web page you are reading.
+
+::: {.callout-note}
+For your own dissertation work, Quarto documents are usually the better choice: they keep your narrative, your code, your output, and your plots in a single file, and render into a shareable report. Scripts are better for short explorations or for functions you will reuse across documents.
+:::
+
+## Installing and loading packages
+
+A **package** is a collection of R functions, data, and documentation that someone else has written and shared. Base R comes with a few dozen packages built in; everything else you must install once and then load in every session that needs it.
+
+### Installing (once per computer)
+
+You install a package from [CRAN](https://cran.r-project.org/) (the Comprehensive R Archive Network) with `install.packages()`. You only need to do this **once per machine** — the package is downloaded and stored permanently in your R library folder.
+
+```{r}
+#| eval: false
+install.packages("lavaan")
+```
+
+To install all the packages you will need for this entire tutorial series in one go, run:
+
+```{r}
+#| eval: false
+install.packages(c("haven", "lavaan", "ggplot2", "psych",
+                   "tidySEM", "DiagrammeR", "readxl", "texreg"))
+```
+
+::: {.callout-note}
+### What each package does
+
+| Package    | Purpose                                                  |
+|------------|----------------------------------------------------------|
+| `haven`    | Reading SPSS `.sav` and Stata `.dta` files              |
+| `lavaan`   | Confirmatory factor analysis, SEM, mediation            |
+| `ggplot2`  | Publication-quality plots                                |
+| `psych`    | Descriptive statistics and Cronbach's alpha              |
+| `tidySEM`  | Drawing path diagrams from fitted lavaan models          |
+| `DiagrammeR`| Hand-authoring concept diagrams via Graphviz           |
+| `readxl`   | Reading Excel `.xlsx` files                              |
+| `texreg`   | Exporting regression and lavaan tables to HTML/LaTeX     |
+:::
+
+### Loading (every session)
+
+Installing a package downloads it onto your computer. **Loading** a package with `library()` makes its functions available in your current R session. You must load a package in **every** R session that uses it — restarting R clears the list of loaded packages.
+
+```{r}
+#| eval: false
+library(haven)
+library(lavaan)
+library(ggplot2)
+```
+
+::: {.callout-warning}
+### `install.packages()` vs `library()`
+
+The most common beginner confusion is running `install.packages("lavaan")` in a script and then re-running it every time the script is opened. `install.packages()` downloads the package from the internet — slow, and unnecessary after the first time. `library()` loads an already-installed package. Put `library()` calls at the top of every script; run `install.packages()` once, in the Console, then forget about it.
+:::
+
+### Package installation pitfalls
+
+::: {.callout-warning}
+### Choose a CRAN mirror
+
+The first time you call `install.packages()`, R may prompt you to choose a CRAN mirror — a server that hosts the package files. Pick one geographically close to you (for the UK, the "Cloud" or "Bristol" mirrors are fast). You can set a default mirror in **Tools → Global Options → Packages** so you are not asked every time.
+
+### Binary versus source
+
+On Windows and macOS, R will usually download a pre-built **binary** package — fast to install. On Linux, packages are often built from **source**, which requires compilers and can be slow. If installation fails with a message about a missing system library, install that system library through your package manager (e.g. `apt install libxml2-dev` on Ubuntu) and try again.
+
+### Compiling from source
+
+If you see `installation of package 'X' had non-zero exit status`, scroll up in the Console output — the actual error is usually a missing dependency listed a few lines earlier.
+:::
+
+## The Help system
+
+R has excellent built-in documentation. To read the help page for any function, type `?` followed by the function name in the Console:
+
+```{r}
+#| eval: false
+?mean
+?lm
+?c
+```
+
+The help page opens in the bottom-right Help pane. Every help page follows the same structure:
+
+- **Description** — one paragraph summarising what the function does.
+- **Usage** — the function signature, showing all arguments and their defaults.
+- **Arguments** — what each argument does, in order.
+- **Details** — additional notes, often including the maths or algorithm.
+- **Value** — what the function returns.
+- **References** — the source paper or book.
+- **Examples** — runnable code at the bottom of the page. You can run them all at once with `example(mean)`.
+
+::: {.callout-tip}
+## Try it
+
+Open the help page for `sd()` (the standard deviation function). What argument does it take, and what does `na.rm` do?
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+Run `?sd` in the Console. The help page shows that `sd(x, na.rm = FALSE)` takes a numeric vector `x` and a logical `na.rm` argument. Setting `na.rm = TRUE` removes missing values before computing the standard deviation — the same argument we met in Tutorial 01 for `mean()`.
+:::
+
+### Vignettes
+
+Many packages include **vignettes** — long-form tutorials that walk through the package's main features. List them with `vignette(package = "lavaan")` and open one with, e.g., `vignette("lavaan")`. Vignettes are the best way to learn a new package once you have the basics.
+
+## Global Options worth setting
+
+A few settings in **Tools → Global Options** will save you hours of confusion over a dissertation-length project.
+
+### General → Advanced
+
+Set **Save workspace to .RData into a project directory on exit** to **Never**. The default "Ask" encourages you to save a hidden `.RData` file that quietly restores yesterday's objects next time you open the project — a recipe for confusing bugs. Always start each session with a clean Environment.
+
+### Code → Saving
+
+Tick **Strip trailing horizontal whitespace when saving**. Prevents meaningless git diffs from trailing spaces.
+
+### Appearance
+
+Pick a comfortable editor theme and font size. Light themes are easier for tutorials; dark themes are easier on the eyes for long sessions.
+
+::: {.callout-important}
+### Restart R frequently
+
+When something behaves unexpectedly — a function is "not found", an object has the wrong shape — press `Ctrl+Shift+F10` to **restart R**. This clears the Environment and loaded packages, giving you a clean slate. If your script still runs top-to-bottom after a restart, your analysis is reproducible. If it does not, you have been depending on objects you forgot to create in the script.
+:::
+
+## Keyboard shortcuts
+
+A handful of shortcuts will make you noticeably faster. They are worth memorising now.
+
+| Shortcut                  | Action                                  |
+|---------------------------|------------------------------------------|
+| `Ctrl+Enter` / `Cmd+Enter`| Run the current line in the Console      |
+| `Ctrl+Shift+Enter`        | Run the entire current code chunk        |
+| `Ctrl+Shift+S`            | Source the current script (run all)      |
+| `Ctrl+Shift+F10`          | Restart R                                |
+| `Ctrl+L`                  | Clear the Console                        |
+| `Ctrl+1` / `Ctrl+2`       | Move focus to Source / Console           |
+| `Ctrl+Shift+K`            | Render the current Quarto document       |
+| `Alt+-`                   | Insert the assignment operator `<-`      |
+
+`Alt+-` is the single biggest time-saver on this list — it inserts `<-` with surrounding spaces, so you never have to type the three characters by hand.
+
+## Common errors
+
+::: {.callout-warning}
+### `could not find function "read_sav"`
+
+You have not loaded the package that provides the function. Run `library(haven)` first. If that fails with `there is no package called 'haven'`, you have not installed it: run `install.packages("haven")` once, then `library(haven)` in every subsequent session.
+
+### `Error in library(X) : there is no package called 'X'`
+
+You are trying to load a package that is not installed. Run `install.packages("X")` and try again.
+
+### Objects appear "from nowhere"
+
+You wrote a script that uses an object called `my_data`, but `my_data` is not created anywhere in the script — it exists in your Environment only because you created it interactively in the Console last week. Restart R (`Ctrl+Shift+F10`) and run your script from top to bottom. If it fails, find the line that should have created `my_data` and add it.
+:::
+
+## Exercises
+
+1. Create a new RStudio Project called `sem_practice`. In the project folder, create a subfolder called `data`. Create a new R script called `setup.R` and save it in the project root. In `setup.R`, write `library(haven)` and `library(lavaan)` at the top. Run both lines.
+
+2. Without looking at the table above, list the four RStudio panes and one thing each is used for.
+
+3. Open the help page for `lavaan::cfa()` (run `?cfa` after loading lavaan). What are the first three arguments the function takes?
+
+4. Press `Ctrl+Shift+F10` to restart R. Confirm that the Environment is now empty. Re-run your `setup.R` script — does `library(lavaan)` still work, or do you need to install anything first?
+
+::: {.callout-caution collapse="true"}
+## Solutions
+
+**Exercise 1**
+
+Follow the **File → New Project...** steps from the "Creating a Project" section. The Console prompt should now show `sem_practice/`. Run `dir.create("data")` to create the subfolder. In the Source pane, click **File → New File → R Script**, type:
+
+```{r}
+#| eval: false
+library(haven)
+library(lavaan)
+```
+
+Save the file as `setup.R` (`Ctrl+S`). Place the cursor on each line and press `Ctrl+Enter` to run it. If `lavaan` is not installed, run `install.packages("lavaan")` in the Console first.
+
+**Exercise 2**
+
+- **Source** (top-left): where you write and edit scripts and Quarto documents.
+- **Console** (bottom-left): where R actually runs your code.
+- **Environment** (top-right): lists the objects you have created in this session.
+- **Files / Plots / Packages / Help / Viewer** (bottom-right): file browser, plot history, package list, documentation, and HTML widgets.
+
+**Exercise 3**
+
+After `library(lavaan)`, run `?cfa`. The first three arguments are `model` (the model syntax string), `data` (the data frame), and `ordered` (an optional vector of variable names to treat as ordered categorical).
+
+**Exercise 4**
+
+After `Ctrl+Shift+F10`, the Environment tab is empty. Re-running `setup.R` will succeed **provided** `lavaan` and `haven` are installed on this machine — `library()` loads an installed package; it does not need to be reinstalled. If you see `there is no package called 'lavaan'`, you have not yet run `install.packages("lavaan")`.
+:::
+
+## Summary & next tutorial
+
+You now have a working RStudio Project, you can install and load the packages we will use throughout this series, and you know how to find help when a function's behaviour is unclear. In the next tutorial we put these tools to work: importing data from SPSS, CSV, and Excel files into R data frames, checking that the import worked, and handling missing-value codes.
+
+## Further reading
+
+- @rcore2024 — the official R documentation, including the `R Installation and Administration` guide.
+- @wickham2019 — covers R's environment model and scoping rules, which underpin why projects matter.
+- @dalgaard2008 — an introductory statistics text using R, with examples of importing data and running basic tests.

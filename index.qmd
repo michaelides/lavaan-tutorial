@@ -1,0 +1,112 @@
+---
+title: "A Step-by-Step Introduction to Structural Equation Modeling with lavaan in R"
+subtitle: "Structural equation modelling in R with **lavaan**"
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+# Welcome {#welcome}
+
+`lavaan-tutorial` is a tutorial site covering structural equation modelling (SEM) in R
+using the **lavaan** package. It is written for MSc students on the **Statistical
+Skills** module of the **MSc in Organisational Psychology** at the **University of
+East Anglia**.
+
+## Who this site is for
+
+You are new to R, RStudio, and lavaan. You may have used SPSS before, but we will
+not assume that — every concept is taught from the ground up in R/lavaan. By the
+end of the 16 tutorials you will be able to specify, estimate, and report
+confirmatory factor analyses, path models, structural equation models, and
+mediation models in lavaan, and you will have a path into multilevel, growth, and
+moderation analyses.
+
+## Tutorials at a glance
+
+```{r}
+#| echo: false
+#| fig-align: center
+#| out-width: "90%"
+DiagrammeR::grViz("
+digraph {
+  graph [rankdir = LR, fontsize = 10, fontname = Helvetica]
+  node  [shape = box, style = filled, fillcolor = '#ecf0f1', fontname = Helvetica]
+
+  F   [label = 'Foundations\\n1 - 4']
+  B   [label = 'Bridging\\n5']
+  C   [label = 'Core lavaan\\n6 - 12']
+  Cap [label = 'Capstone\\n13']
+  A   [label = 'Advanced\\n14 - 16']
+
+  F -> B -> C -> Cap -> A
+}
+")
+```
+
+- **Foundations (1–4)** — R basics, RStudio, importing data, simple inference (t-test, ANOVA, lm).
+- **Bridging (5)** — Introducing lavaan: declarative model specification.
+- **Core lavaan (6–12)** — CFA, parcels and second-order factors, path analysis, SEM with latents, mediation.
+- **Capstone (13)** — Reporting and exporting tables, figures, and APA write-ups.
+- **Advanced (14–16)** — Multilevel models, growth curve models, moderation.
+
+Start with **Tutorial 01** and work through in order; the later tutorials build on
+the dataset and concepts introduced earlier. You can also jump to any tutorial
+using the sidebar on the left, or use the search box at the top.
+
+## Setup in five minutes
+
+Install R from <https://cran.r-project.org/> and RStudio from
+<https://posit.co/products/desktop/rstudio/>. Then, in the R console:
+
+```{r}
+#| eval: false
+install.packages(c("haven", "lavaan", "ggplot2", "psych",
+                   "tidySEM", "DiagrammeR", "readxl", "texreg"))
+```
+
+## How to use this site
+
+Each tutorial follows the same structure:
+
+1. **Learning objectives** — what you will be able to do by the end.
+2. **Setup** — the package-loading code you need first; in later tutorials this appears in a collapsed `<details>` block.
+3. **Concept** — narrative explanation, diagrams, and equations.
+4. **Worked example** — full code, output, and interpretation paragraph.
+5. **Common errors** — `::: {.callout-warning}` callouts flagging what tends to go wrong.
+6. **Exercises** — inline `::: {.callout-tip}` Try-its during the tutorial; end-of-tutorial exercises with collapsed solutions in `::: {.callout-caution collapse="true"}`.
+7. **Summary & next tutorial** — a one-paragraph bridge to the next page.
+8. **Further reading** — academic papers, cited APA-style.
+
+Six callout colours encode meaning throughout the site:
+
+| Colour | Type | Meaning |
+|--------|------|---------|
+| Blue   | `note`      | Concepts and definitions |
+| Green  | `tip`       | Inline Try-it exercises |
+| Orange | `warning`   | Common errors to avoid |
+| Red    | `important`  | Critical watch-outs |
+| Yellow | `caution`   | Collapsed exercise solutions |
+
+## Attribution
+
+::: {.callout-note}
+This lavaan tutorial series is a port of teaching materials originally developed
+by **Kevin Daniels** (University of East Anglia) for his MSc Organisational
+Psychology Statistical Skills module, which used Mplus. The R/lavaan adaptation
+is by **George Michaelides** (University of East Anglia). The original Mplus
+materials remain with their author.
+:::
+
+## Citation
+
+If you use these tutorials in your teaching or research, please cite:
+
+> Michaelides, G. (2026). *A step-by-step introduction to structural equation modeling with lavaan in R*. University of East Anglia. https://michaelides.github.io/lavaan-tutorial/
+
+## Licence
+
+Tutorial content is licensed under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Embedded R/lavaan code snippets are released under the MIT licence.
+
+---

@@ -1,0 +1,367 @@
+---
+title: "Parcels and second-order CFA"
+subtitle: "Parcel construction and second-order factors with lavaan"
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+## Learning objectives
+
+By the end of this tutorial you will be able to:
+
+- explain what a [parcel](../glossary.qmd#parcel) is and why researchers use them
+- construct parcels from individual items using base R
+- fit a CFA on parceled indicators instead of individual items
+- specify and fit a [second-order factor](../glossary.qmd#second-order-factor) model in lavaan
+- decide when parceling is appropriate and when it is not
+
+## Setup
+
+<details>
+<summary>Setup code (you have seen this before)</summary>
+
+```{r}
+#| include: false
+knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(comment = "##")
+```
+
+```{r}
+library(haven)
+library(lavaan)
+library(tidySEM)
+```
+
+```{r}
+#| include: false
+ps <- haven::read_sav("data/ps_data_reduced.sav")
+ps <- haven::zap_labels(ps)
+ps[ps == -99] <- NA
+```
+
+</details>
+
+## What is a parcel?
+
+A [parcel](../glossary.qmd#parcel) is an aggregate — usually a mean or sum — of two or more items, used as a single indicator of a latent variable. Instead of specifying a factor with six individual items as indicators, you might group those six items into three parcels of two items each, and specify the factor with three parcel indicators.
+
+### Why parcel?
+
+Researchers parcel for several reasons:
+
+1. **Fewer indicators per factor.** A model with 30 individual items has many parameters to estimate and many degrees of freedom. Parceling the same 30 items into 10 parcels reduces both, often producing a model that converges more easily and fits better.
+
+2. **Reduced measurement error.** Averaging two or more items reduces the random error in each individual item, so parcels are more reliable than individual items.
+
+3. **Continuous-ish indicators.** A mean of two 5-point Likert items can take values like 3.5, which behaves more like a continuous variable than an individual item with only 5 possible values. This makes the normality assumption of ML estimation more plausible.
+
+### Why *not* parcel?
+
+Parceling is [controversial](../glossary.qmd#parcel):
+
+1. **Loss of item-level information.** Once you average items into a parcel, you cannot test whether individual items load well on the factor. A parcel can mask a badly-functioning item.
+
+2. **Parcels are not interpretable.** A parcel made of `con1` and `con10` does not correspond to any single questionnaire item, so you cannot say what a high score on that parcel "means" in the way you can for an individual item.
+
+3. **It can hide a multidimensional structure.** If your six items actually measure two different sub-factors, parceling them into three parcels of two items each can hide this — the parcels will all appear to load on a single factor even though the underlying structure is two-dimensional.
+
+::: {.callout-warning}
+### Parcel only when justified
+
+Parcel only when (a) you have a theory that says the items measure a single unidimensional construct, and (b) you have checked this with an item-level CFA or EFA first. If an item-level CFA fits well, parceling is a reasonable simplification for a larger SEM. If an item-level CFA fits poorly, parceling will mask the problem rather than solve it.
+:::
+
+## Parcel construction
+
+There are two main strategies for constructing parcels, both of which appear in the SEM literature.
+
+### Domain-representative parcels
+
+Each parcel contains items from across the sub-domains of the construct. If an EFA suggests the items split into two sub-factors, you build parcels that each contain one item from each sub-factor. This ensures each parcel represents the full breadth of the construct.
+
+### Homogeneous parcels
+
+Each parcel contains items from a single sub-domain. This is simpler but produces parcels that may reflect sub-factors rather than the overall construct.
+
+### Building parcels in R
+
+We use base R — `rowMeans()` is the cleanest way to compute parcel scores from a data frame. No `dplyr` needed.
+
+We will parcel the six job-control items (`con1`, `con3`, `con6`, `con8`, `con9`, `con10`) into three parcels of two items each, using a domain-representative strategy. The pairing is arbitrary for this teaching example; in real use you would pair items based on an EFA or theoretical reasoning.
+
+```{r}
+ps$p1 <- (ps$con9 + ps$con10) / 2
+ps$p2 <- (ps$con1 + ps$con8)  / 2
+ps$p3 <- (ps$con3 + ps$con6)  / 2
+```
+
+Each parcel is the mean of two items. The new columns `p1`, `p2`, `p3` are added to the `ps` data frame and can be used as indicators in a CFA.
+
+::: {.callout-note}
+### `rowMeans()` for larger parcels
+
+For parcels of three or more items, `rowMeans()` is cleaner than summing and dividing manually:
+
+```{r}
+#| eval: false
+ps$p1 <- rowMeans(ps[, c("con9", "con10", "con1")], na.rm = TRUE)
+```
+
+The `na.rm = TRUE` argument ensures that a participant with one missing item still gets a parcel score from the remaining items. Be careful: if all items are missing, `rowMeans()` returns `NaN`, not `NA`. You may want to recode `NaN` to `NA` after parceling.
+:::
+
+## A CFA on parceled indicators
+
+Now we fit a one-factor CFA on the three job-control parcels:
+
+```{r}
+model_parcel <- '
+  con =~ p1 + p2 + p3
+'
+fit_parcel <- cfa(model_parcel, data = ps, estimator = "MLR")
+summary(fit_parcel, standardized = TRUE, fit.measures = TRUE)
+```
+
+### Reading the output
+
+The structure is identical to the CFA we fitted in Tutorial 07 — only the indicators have changed. The key differences:
+
+- **Fewer parameters.** A one-factor CFA with three indicators has 6 free parameters (2 loadings + 1 latent variance + 3 residual variances) and $\text{df} = 6 - 6 = 0$. The model is just-identified — it fits perfectly by construction.
+- **Higher loadings.** Parcels are more reliable than individual items, so the standardised loadings on the factor are usually higher — often above .80.
+
+### The just-identification problem
+
+A one-factor CFA with three parcels is just-identified — it has zero degrees of freedom and fits perfectly. This means we cannot test whether the factor model is correct. The parcels will always appear to load on a single factor, even if the underlying items have a multidimensional structure.
+
+This is the central tension of parceling: you gain a simpler, better-fitting model, but you lose the ability to test the measurement model. For this reason, parceling is most defensible when:
+
+1. You have already confirmed the item-level factor structure in a separate CFA, and
+2. You are using the parcels in a larger SEM (Tutorial 10) where the measurement model is not the primary focus.
+
+::: {.callout-tip}
+## Try it
+
+Parcel the four problem-solving demands items (`prob1`, `prob2`, `prob3`, `prob4`) into two parcels of two items each. Fit a one-factor CFA on the two parcels. What happens to the degrees of freedom? Why?
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{r}
+ps$prob_p1 <- (ps$prob1 + ps$prob2) / 2
+ps$prob_p2 <- (ps$prob3 + ps$prob4) / 2
+
+model_prob <- '
+  prob =~ prob_p1 + prob_p2
+'
+fit_prob <- cfa(model_prob, data = ps, estimator = "MLR")
+fitMeasures(fit_prob, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr"))
+```
+
+A one-factor CFA with **two** indicators has $q = 2$, so $q(q+1)/2 = 3$, and $t = 3$ (1 loading + 1 latent variance + 2 residual variances), giving $\text{df} = 0$. The model is just-identified. This is the same problem as a one-factor CFA with two individual items — parceling has not helped. To get an overidentified model, you need at least three parcels per factor.
+:::
+
+## Second-order factor models
+
+A [second-order factor](../glossary.qmd#second-order-factor) is a latent variable whose indicators are themselves latent variables. Instead of items loading directly on a single factor, items load on first-order factors, and those first-order factors load on a second-order factor.
+
+### When to use a second-order factor
+
+Second-order factors are used when theory suggests that several related but distinct constructs are all manifestations of a single higher-order construct. A classic example is **burnout**, measured by two first-order factors — emotional exhaustion and cynicism — which are both manifestations of the higher-order construct "burnout".
+
+In our PS dataset, we can model **affect** as a second-order factor measured by two first-order factors: positive affect (PA) and negative affect (neg). The theory is that PA and neg are distinct but related dimensions of an underlying "affect" construct.
+
+### Specifying a second-order factor in lavaan
+
+The syntax extends naturally. We define the first-order factors as usual, then define the second-order factor as measured *by* the first-order factors:
+
+```{r}
+model_2nd <- '
+  PA     =~ pa1 + pa2 + pa3
+  neg    =~ na1 + na2 + na3
+  affect =~ PA + neg
+'
+fit_2nd <- cfa(model_2nd, data = ps, estimator = "MLR")
+```
+
+The line `affect =~ PA + neg` says "the second-order factor `affect` is measured by the first-order factors `PA` and `neg`". The first-order factors are now [endogenous](../glossary.qmd#endogenous) — they are predicted by the second-order factor — and their residual variances ($\zeta$, [disturbances](../glossary.qmd#disturbance)) are estimated.
+
+### Identification of second-order factors
+
+The identification rules for second-order factors are the same as for first-order factors:
+
+- The second-order factor's scale must be set (by the marker-variable method or `std.lv = TRUE`)
+- Each second-order factor should have at least three first-order indicators
+
+Our `affect` second-order factor has only **two** first-order indicators (PA and neg). This makes the second-order portion just-identified — the relationship between `affect`, `PA`, and `neg` fits perfectly. The overall model's degrees of freedom come entirely from the first-order measurement model.
+
+To have an overidentified second-order portion, you would need at least three first-order factors loading on the second-order factor — for example, if you had PA, neg, and a third factor like "activation" loading on `affect`.
+
+::: {.callout-note}
+### Two first-order factors is common in practice
+
+Many published second-order models have only two first-order factors per second-order factor. This is acceptable when the second-order factor is not the primary focus of the analysis and the overall model is overidentified through the first-order portion. Just be aware that the second-order portion itself is not testable with only two indicators.
+:::
+
+### Reading the output
+
+```{r}
+summary(fit_2nd, standardized = TRUE, fit.measures = TRUE)
+```
+
+The output now has an additional layer:
+
+- **First-order loadings** (PA =~ pa1, pa2, pa3; neg =~ na1, na2, na3) — identical to the two-factor CFA from Tutorial 07
+- **Second-order loadings** (affect =~ PA, neg) — the loadings of the first-order factors on the second-order factor
+- **First-order residual variances** ($\zeta$ for PA and neg) — the variance in each first-order factor not explained by the second-order factor
+
+The second-order loadings tell you how strongly each first-order factor reflects the higher-order construct. The first-order residual variances tell you how much of each first-order factor is *not* explained by the second-order factor — a large residual variance means the first-order factor has substantial unique variance beyond the higher-order construct.
+
+### Fit indices
+
+```{r}
+fitMeasures(fit_2nd, c("chisq", "df", "pvalue",
+                       "cfi", "tli",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+                       "srmr"))
+```
+
+Compare these to the fit indices from the two-factor CFA in Tutorial 07. The second-order model has the same number of observed variables (6) but fewer free parameters — the covariance between PA and neg has been replaced by a structural relationship through `affect`. This gives the second-order model more degrees of freedom. If the second-order structure is correct, the fit should be nearly as good as the first-order model. If the second-order structure is wrong (PA and neg do not share a common higher-order cause), the fit will be worse.
+
+### Comparing nested models
+
+We can formally compare the second-order model to the first-order model with a likelihood-ratio test. Because both models were fitted with `MLR`, we use `lavTestLRT()` rather than `anova()`. First, we refit the first-order two-factor CFA:
+
+```{r}
+model_1st <- '
+  PA  =~ pa1 + pa2 + pa3
+  neg =~ na1 + na2 + na3
+  PA  ~~ neg
+'
+fit_1st <- cfa(model_1st, data = ps, estimator = "MLR")
+lavTestLRT(fit_1st, fit_2nd)
+```
+
+The output tests whether the second-order model fits significantly worse than the first-order model. A non-significant result means the second-order model fits as well as the first-order model — the more parsimonious second-order structure is supported. A significant result means the second-order restriction worsens fit, and the first-order model is preferred.
+
+::: {.callout-warning}
+### `lavTestLRT()` for MLR models
+
+When comparing nested models fitted with `MLR`, do not use `anova()` — it does not apply the Satorra–Bentler scaling correction. Use `lavTestLRT()` instead, which by default uses the scaled difference test. We cover this in more detail in Tutorial 13.
+:::
+
+## Drawing the second-order model
+
+```{r}
+#| fig-align: center
+#| out-width: "85%"
+#| fig-cap: "Path diagram for the second-order factor model of affect. The top circle is the second-order factor 'affect'; the middle circles are the first-order factors PA and neg; the bottom squares are the observed indicators."
+tidySEM::graph_sem(fit_2nd, std = TRUE)
+```
+
+The diagram shows three layers:
+
+1. **Top:** the second-order factor `affect` (circle)
+2. **Middle:** the two first-order factors PA and neg (circles), with arrows from `affect` — these are the second-order loadings
+3. **Bottom:** the six observed indicators (squares), with arrows from their respective first-order factors — these are the first-order loadings
+
+## When to use parcels and second-order factors
+
+| Technique | When to use | When to avoid |
+|-----------|-------------|---------------|
+| Item-level CFA | When testing a measurement model is the primary goal | When the model is too large to converge |
+| Parcels | When the item-level structure is confirmed and you need a simpler model for a larger SEM | When you have not verified unidimensionality; when item-level information matters |
+| Second-order factors | When theory posits a hierarchical structure with distinct sub-factors under a common construct | When the first-order factors are not theoretically related; when you have fewer than three first-order factors |
+
+## Common errors
+
+::: {.callout-warning}
+### Parcels with `NaN` instead of `NA`
+
+`rowMeans(..., na.rm = TRUE)` returns `NaN` when all items in a parcel are missing. lavaan treats `NaN` differently from `NA`, which can cause problems. After parceling, replace `NaN` with `NA`:
+
+```{r}
+#| eval: false
+ps$p1[is.nan(ps$p1)] <- NA
+```
+
+### Second-order model with two first-order factors is just-identified
+
+If your second-order factor has only two first-order indicators, the second-order portion is just-identified. The overall model may still be overidentified through the first-order portion, but the second-order structure itself is not testable. Do not claim that the second-order model "fits well" based solely on the overall fit indices — the second-order portion could be replaced by any other just-identified relationship without changing the fit.
+
+### Negative residual variances in second-order models
+
+Second-order models sometimes produce [Heywood cases](../glossary.qmd#heywood-case) — negative residual variances for the first-order factors. This often means the second-order structure is not appropriate for the data; the first-order factors are not sufficiently related to share a common higher-order cause.
+:::
+
+## Exercises
+
+1. Parcel the six job-control items into three parcels of two items each (use the pairing from the tutorial). Fit a one-factor CFA on the parcels. Then fit a one-factor CFA on the six individual items. Compare the standardised loadings — are the parcel loadings higher? Why?
+
+2. Create a second-order factor model where `affect` is measured by PA and neg, and PA and neg are each measured by their three items. Compare this model's fit indices to the first-order two-factor CFA from Tutorial 07. Does the second-order restriction worsen fit?
+
+3. Use `lavTestLRT()` to formally compare the first-order and second-order models from Exercise 2. Is the second-order model significantly worse than the first-order model?
+
+4. A researcher wants to parcel 12 items into 4 parcels of 3 items each. They plan to fit a one-factor CFA on the 4 parcels. How many degrees of freedom will this model have? Is it overidentified?
+
+::: {.callout-caution collapse="true"}
+## Solutions
+
+**Exercise 1**
+
+```{r}
+ps$p1 <- (ps$con9 + ps$con10) / 2
+ps$p2 <- (ps$con1 + ps$con8)  / 2
+ps$p3 <- (ps$con3 + ps$con6)  / 2
+
+fit_parcel <- cfa("con =~ p1 + p2 + p3", data = ps, estimator = "MLR")
+fit_item   <- cfa("con =~ con1 + con3 + con6 + con8 + con9 + con10",
+                  data = ps, estimator = "MLR")
+
+summary(fit_parcel, standardized = TRUE)
+summary(fit_item, standardized = TRUE)
+```
+
+The parcel loadings should be higher than most of the individual-item loadings because averaging two items reduces measurement error, making the parcel a more reliable indicator of the factor.
+
+**Exercise 2**
+
+```{r}
+model_2nd <- '
+  PA     =~ pa1 + pa2 + pa3
+  neg    =~ na1 + na2 + na3
+  affect =~ PA + neg
+'
+fit_2nd <- cfa(model_2nd, data = ps, estimator = "MLR")
+fitMeasures(fit_2nd, c("chisq", "df", "pvalue", "cfi", "tli",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper", "srmr"))
+```
+
+Compare these to the Tutorial 07 fit indices ($\chi^2(8) = 7.93$, CFI = 1.00, RMSEA = 0.00, SRMR = 0.01). The second-order model should have slightly more degrees of freedom and very similar fit if the second-order structure is appropriate.
+
+**Exercise 3**
+
+```{r}
+fit_1st <- cfa("PA =~ pa1 + pa2 + pa3
+               neg =~ na1 + na2 + na3
+               PA ~~ neg", data = ps, estimator = "MLR")
+lavTestLRT(fit_1st, fit_2nd)
+```
+
+A non-significant result means the second-order model fits as well as the first-order model — the more parsimonious second-order structure is supported.
+
+**Exercise 4**
+
+With $q = 4$ parcels, the covariance matrix has $4 \times 5 / 2 = 10$ elements. Free parameters: 3 loadings (first fixed to 1) + 1 latent variance + 4 residual variances = 8. So $\text{df} = 10 - 8 = 2$. The model is overidentified — it can be tested against the data.
+:::
+
+## Summary & next tutorial
+
+You can now construct parcels from individual items and fit CFA models on parceled indicators, and you can specify and fit second-order factor models in lavaan. Both techniques appear frequently in published organisational psychology research, particularly in SEM models where the measurement model is not the primary focus. In the next tutorial we move from measurement models to structural models: we fit a [path analysis](../glossary.qmd#path-analysis) with observed variables — a system of regression equations — and learn why a model with zero degrees of freedom fits perfectly.
+
+## Further reading
+
+- @beaujean2014 — covers parceling and second-order factors in detail, with lavaan code.
+- @kelloway2015 — the textbook basis for the original Mplus teaching materials; discusses when to parcel and when not to.
+- @hoyle2012 — the *Handbook of Structural Equation Modeling* includes chapters on parceling and hierarchical factor models.

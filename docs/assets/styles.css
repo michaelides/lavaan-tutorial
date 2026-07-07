@@ -1,0 +1,73 @@
+/*
+ * lavaan-tutorial — site custom styles
+ *
+ * Augments the Bootswatch flatly / darkly themes from _quarto.yml.
+ * Kept minimal: only rules that aren't defaults in flatly/darkly.
+ */
+
+/* ----------------------------------------------------------------- *
+ * Code output: scroll long chunks rather than dominate the page.
+ * Per Q18b-i: code-cell output past ~20 lines is wrapped in a
+ * vertical scroll container so the page stays readable.
+ * ----------------------------------------------------------------- */
+div.cell-output-display pre,
+div.cell-output pre,
+pre.cell-output {
+  max-height: 22em;
+  overflow-y: auto;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.25rem;
+}
+
+/* ----------------------------------------------------------------- *
+ * Callout tweaks: distinguish the six callout types more sharply.
+ * Mirrors the colour code documented on the landing page's
+ * "How to use this site" section.
+ * ----------------------------------------------------------------- */
+.callout-note > .callout-header,
+.callout-tip > .callout-header,
+.callout-warning > .callout-header,
+.callout-important > .callout-header,
+.callout-caution > .callout-header {
+  font-weight: 600;
+}
+
+/* Collapsed solutions: make the "click to reveal" affordance obvious. */
+details.callout-caution > summary {
+  cursor: pointer;
+  font-style: italic;
+}
+
+/* ----------------------------------------------------------------- *
+ * Tables: denser APA-style tables for fit indices and parameter
+ * estimates that appear in tutorials 06–13.
+ * ----------------------------------------------------------------- */
+table {
+  font-size: 0.92em;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+th, td {
+  padding: 0.35rem 0.55rem;
+}
+
+/* ----------------------------------------------------------------- *
+ * MathJax: ensure display equations breathe.
+ * ----------------------------------------------------------------- */
+mjx-container[display="true"] {
+  margin: 1.2em 0;
+}
+
+/* ----------------------------------------------------------------- *
+ * Print: when students print a tutorial for offline reading,
+ * expand all collapsed callouts.
+ * ----------------------------------------------------------------- */
+@media print {
+  details.callout-caution {
+    display: block !important;
+  }
+  details.callout-caution[open] {
+    display: block !important;
+  }
+}

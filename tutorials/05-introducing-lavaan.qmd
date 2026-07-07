@@ -1,0 +1,456 @@
+---
+title: "Introducing lavaan"
+subtitle: "Declarative model specification with =~, ~, ~~, :="
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+## Learning objectives
+
+By the end of this tutorial you will be able to:
+
+- describe the declarative model-specification mindset that underpins lavaan
+- write lavaan model syntax using the four core operators: `=~`, `~`, `~~`, and `~ 1`
+- label parameters and define new derived quantities with `:=`
+- distinguish the three entry-point functions `cfa()`, `sem()`, and `lavaan()` and know when to use each
+- fit a simple one-factor CFA on the PS dataset with `MLR` estimation and read the basic `summary()` output
+- set the scale of a latent variable using either the marker-variable method or `std.lv = TRUE`
+
+## Setup
+
+This is the first tutorial that uses lavaan. We load it alongside `haven` (for data import) and `psych` (for descriptives). The setup chunk sets the knit root directory to the project folder so the `data/` paths work, and applies the `## ` output comment prefix we have used since Tutorial 01.
+
+```{r}
+#| include: false
+knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(comment = "##")
+```
+
+```{r}
+library(haven)
+library(lavaan)
+library(psych)
+```
+
+```{r}
+#| include: false
+ps <- haven::read_sav("data/ps_data_reduced.sav")
+ps <- haven::zap_labels(ps)
+ps[ps == -99] <- NA
+```
+
+We import the PS dataset and strip the SPSS labels, exactly as in Tutorial 03. From this tutorial onward we will use this same setup block at the top of every tutorial that analyses the PS data — in later tutorials it will be hidden inside a collapsed `<details>` tag so it does not dominate the page.
+
+## A declarative mindset
+
+In Tutorial 04 you used `lm()` to fit a regression. You wrote a **formula** — `creat ~ pa + con` — that described the model you wanted, and R's `lm()` function worked out how to estimate it. You never told R *how* to compute the coefficients; you only told it *what* model you wanted.
+
+lavaan works the same way, but it extends the formula idea to a much richer class of models. You write a **model syntax string** that describes the relationships among your variables — both observed and latent — and lavaan works out how to estimate the parameters. This is called **declarative model specification**: you declare what the model is, not how to fit it.
+
+The shift in mindset is important. In a menu-driven statistics package you think about *which buttons to click* and *which dialogue boxes to fill in*. In lavaan you think about *what model you want to specify* and you write that specification down as text. The text *is* the model. If you share your syntax with a colleague, they can see exactly what model you fitted — there is no hidden configuration to explain.
+
+### The model syntax string
+
+A lavaan model is written as a single character string — a piece of text enclosed in single or double quotes. Inside that string, you describe the model using a small set of operators. The string can span multiple lines, which makes it readable:
+
+```{r}
+#| eval: false
+model <- '
+  pa =~ pa1 + pa2 + pa3
+  creat ~ pa
+'
+```
+
+We always use string-literal model syntax in this series — never the unquoted form — because it makes clear that what you are writing is a model specification, not an R expression. It also lets you combine multiple operators cleanly across multiple lines.
+
+## The four core operators
+
+lavaan's syntax revolves around four operators. Master these and you can specify almost any model in this tutorial series.
+
+### `=~` — "is measured by" (latent variable definition)
+
+The `=~` operator defines a [latent variable](../glossary.qmd#latent-variable) by listing its [indicators](../glossary.qmd#indicator). Read it as "is measured by".
+
+```{r}
+#| eval: false
+pa =~ pa1 + pa2 + pa3
+```
+
+This line says: "a latent variable called `pa` is measured by the observed variables `pa1`, `pa2`, and `pa3`." In the language of confirmatory factor analysis, `pa` is a factor with three indicators, and the coefficients linking the factor to its indicators are [factor loadings](../glossary.qmd#factor-loading) ($\lambda$).
+
+The latent variable's name (`pa`) is something you choose — it can be any valid R name. The indicator names (`pa1`, `pa2`, `pa3`) must match columns in your data frame.
+
+### `~` — "is regressed on" (regression path)
+
+The `~` operator defines a regression path. Read it as "is regressed on". This is the same operator you met in Tutorial 04 with `lm()`, and it means the same thing.
+
+```{r}
+#| eval: false
+creat ~ pa
+```
+
+This line says: "the observed variable `creat` is regressed on `pa`." The coefficient is a regression weight ($\beta$). The variable on the left is the outcome ([endogenous](../glossary.qmd#endogenous)); the variable on the right is the predictor.
+
+You can have multiple predictors on the right, separated by `+`:
+
+```{r}
+#| eval: false
+creat ~ pa + con
+```
+
+You can also have a latent variable on either side of `~`, which is what makes this a structural equation model rather than a plain regression:
+
+```{r}
+#| eval: false
+creat ~ pa
+pa ~ con
+```
+
+### `~~` — "is correlated with" (covariance)
+
+The `~~` operator specifies a covariance — a non-directional relationship — between two variables. Read it as "is correlated with".
+
+```{r}
+#| eval: false
+pa ~~ na
+```
+
+This line says: "the latent variable `pa` is correlated with the latent variable `na`." The parameter is a covariance, not a regression coefficient. In a CFA, the covariances among factors are usually freely estimated — that is what `~~` does.
+
+A variable can also be correlated with itself:
+
+```{r}
+#| eval: false
+pa ~~ pa
+```
+
+This specifies the **variance** of `pa`. lavaan does this for you automatically for exogenous variables, so you rarely need to write it explicitly. But it is useful to know that variance is just a covariance of a variable with itself.
+
+### `~ 1` — intercept / mean
+
+The `~ 1` operator specifies an intercept (a mean). You will rarely write this yourself because lavaan estimates intercepts for observed variables automatically. It becomes relevant when you want to estimate or constrain latent means, which we cover briefly in Tutorial 13.
+
+```{r}
+#| eval: false
+pa ~ 1
+```
+
+This line says: "estimate the mean of `pa`." For latent variables, lavaan fixes the mean to 0 by default; you free it by passing `meanstructure = TRUE` to `cfa()` or `sem()` and then writing `latent ~ 1`.
+
+## Labelling parameters with `*`
+
+To constrain, compare, or define new parameters, you need to **label** individual parameters. You do this by placing a label and a `*` before the variable name on the right-hand side of `=~`, `~`, or `~~`.
+
+```{r}
+#| eval: false
+creat ~ b * pa + c * con
+pa   ~ a * con
+```
+
+Here the path from `pa` to `creat` is labelled `b`, the path from `con` to `creat` is labelled `c`, and the path from `con` to `pa` is labelled `a`. Once a parameter has a label, you can refer to it by that label elsewhere in the model — most commonly to define an indirect effect.
+
+You can also fix a parameter to a specific value with a number and `*`:
+
+```{r}
+#| eval: false
+pa =~ 1 * pa1 + pa2 + pa3
+```
+
+This fixes the loading of `pa1` on `pa` to exactly 1 — the [marker-variable method](../glossary.qmd#marker-variable) for setting the latent variable's scale. This is lavaan's default behaviour for the first indicator, so you rarely need to write it out explicitly, but it is worth understanding what the default is doing behind the scenes.
+
+## Defining new parameters with `:=`
+
+The `:=` operator defines a **new parameter** as a function of existing labelled parameters. The classic use is defining an [indirect effect](../glossary.qmd#indirect-effect) in a mediation model.
+
+```{r}
+#| eval: false
+indirect := a * b
+direct   := c
+total    := c + (a * b)
+```
+
+These three lines define:
+
+- `indirect` as the product $a \times b$ (the indirect effect of `con` on `creat` through `pa`)
+- `direct` as the coefficient $c$ (the direct effect of `con` on `creat`)
+- `total` as the sum $c + ab$ (the total effect)
+
+lavaan estimates these derived parameters and gives you standard errors, confidence intervals, and p-values for them, just as it does for the directly-specified parameters. We use `:=` extensively in Tutorials 11 and 12 on mediation.
+
+::: {.callout-note}
+The `:=` operator is a lavaan-specific extension. It does not exist in base R's formula interface. It is one of the features that makes lavaan well-suited to mediation analysis — you can define any algebraic combination of model parameters and lavaan will estimate it with appropriate uncertainty.
+:::
+
+## The three entry-point functions
+
+lavaan provides three functions that take a model syntax string and a data frame and return a fitted model object. They differ only in their default settings.
+
+### `cfa()` — confirmatory factor analysis
+
+Use `cfa()` when your model contains only `=~` statements (latent variables defined by indicators) and `~~` statements (covariances among latents and residual covariances among indicators). There are no regression paths (`~`) between variables.
+
+```{r}
+#| eval: false
+fit <- cfa(model, data = ps)
+```
+
+`cfa()` sets sensible defaults for a pure measurement model: factor covariances are freely estimated, residual covariances default to zero, and the first loading of each factor is fixed to 1.
+
+### `sem()` — structural equation model
+
+Use `sem()` when your model contains *both* a measurement part (`=~`) and a structural part (`~`). This is the most general case and covers everything from path analysis with observed variables to full SEM with latent variables.
+
+```{r}
+#| eval: false
+fit <- sem(model, data = ps)
+```
+
+`sem()` and `cfa()` are nearly identical in their defaults; the main difference is that `sem()` does not assume every latent variable is exogenous, so it will not freely estimate covariances among latent variables that are predicted by other variables in the model. Use `sem()` for any model that includes `~` paths between latent variables.
+
+### `lavaan()` — the general function
+
+`cfa()` and `sem()` are both wrappers around `lavaan()`, the underlying fitting function. If you want full control over every default, call `lavaan()` directly. For this series you will not need to — `cfa()` and `sem()` cover everything we do.
+
+```{r}
+#| eval: false
+fit <- lavaan(model, data = ps,
+              model.type = "sem",
+              auto.fix.first = TRUE,
+              auto.var = TRUE,
+              ordered = NULL,
+              estimator = "MLR",
+              se = "standard",
+              missing = "ml")
+```
+
+::: {.callout-note}
+### Which function should I use?
+
+For Tutorials 06–08 (CFA, parcels, second-order) use `cfa()`. For Tutorials 09–12 (path analysis, SEM, mediation) use `sem()`. For Tutorial 15 (growth curves) use `growth()`. You will not need to call `lavaan()` directly in this series.
+:::
+
+## A worked example: one-factor CFA on positive affect
+
+Let us put the syntax together. We fit a one-factor CFA on the three positive-affect items, using the `MLR` estimator (our default throughout this series — see the callout below).
+
+```{r}
+model_pa <- '
+  PA =~ pa1 + pa2 + pa3
+'
+
+fit_pa <- cfa(model_pa, data = ps, estimator = "MLR")
+summary(fit_pa, standardized = TRUE)
+```
+
+### Reading the output
+
+The `summary()` output has several sections:
+
+1. **Header** — lavaan version, optimisation info, number of observations, the estimator, and the model syntax.
+2. **Parameter estimates** — a table with one row per parameter. The `Estimate` column gives the unstandardised value, `Std.Err` its standard error, `z` the Wald statistic, and `P(>|z|)` the two-tailed p-value. The `std.all` column (added because we passed `standardized = TRUE`) gives the fully standardised estimate — for loadings, this is the correlation between the indicator and the factor.
+3. **Variances** — the variance of the latent variable ($\psi$) and the residual variances of the indicators ($\theta$).
+
+The first loading (`pa1`) is fixed to 1 — you can see it has no standard error or p-value. This is the marker-variable method: the latent variable's scale is set by fixing one loading, and the latent variance is freely estimated.
+
+::: {.callout-note}
+### Why `MLR`?
+
+We use `estimator = "MLR"` — maximum likelihood with robust (Satorra–Bentler) standard errors — as our default throughout this series. Likert-scale items are rarely perfectly normal, and `MLR` corrects the standard errors and the model $\chi^2$ for non-normality. The point estimates are identical to plain `ML`; only the standard errors and the $\chi^2$ test change. The one exception is when we use bootstrapping in Tutorial 12, where we must switch back to `ML` because `MLR` is incompatible with `se = "boot"`.
+:::
+
+### Fit indices
+
+So far we have only seen the parameter estimates. To assess whether the model *fits* the data, we look at fit indices. We extract the canonical set with a named `fitMeasures()` call:
+
+```{r}
+fitMeasures(fit_pa, c("chisq", "df", "pvalue",
+                      "cfi", "tli",
+                      "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+                      "srmr"))
+```
+
+A one-factor model with three indicators is just-identified (zero degrees of freedom), so the fit is perfect by construction — the $\chi^2$ is zero, CFI = TLI = 1, RMSEA = 0, SRMR = 0. We cannot reject this model because it has no degrees of freedom to test. We will meet overidentified models with interpretable fit indices in Tutorial 07.
+
+::: {.callout-tip}
+## Try it
+
+Fit a one-factor CFA on the three negative-affect items (`na1`, `na2`, `na3`) using the same syntax pattern as above. Read the `summary()` output. What is the standardised loading of `na2` on the neg factor?
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{r}
+model_na <- '
+  neg =~ na1 + na2 + na3
+'
+fit_na <- cfa(model_na, data = ps, estimator = "MLR")
+summary(fit_na, standardized = TRUE)
+```
+
+Find the row `neg =~ na2` in the parameter estimates table and read the `std.all` column. That value — between 0 and 1 — is the standardised loading. The closer it is to 1, the more strongly `na2` reflects the underlying negative-affect factor.
+:::
+
+## Setting the scale of a latent variable
+
+Every [latent variable](../glossary.qmd#latent-variable) needs a scale — a unit of measurement — because it is not directly observed. There are two ways to set it, and you must choose one for every latent variable in your model.
+
+### Marker-variable method (lavaan's default)
+
+Fix one [factor loading](../glossary.qmd#factor-loading) to 1. The latent variable then has the same scale as that indicator. The latent variance is freely estimated. This is what lavaan does by default — it fixes the first indicator's loading to 1.
+
+```{r}
+#| eval: false
+PA =~ pa1 + pa2 + pa3     # pa1's loading is fixed to 1 by default
+```
+
+### Standardised latent variable (`std.lv = TRUE`)
+
+Fix the latent variance to 1. All factor loadings are then freely estimated. The latent variable is in standard-deviation units. Use this when you want the loadings themselves to carry the scale information.
+
+```{r}
+fit_pa_stdlv <- cfa(model_pa, data = ps, estimator = "MLR", std.lv = TRUE)
+summary(fit_pa_stdlv, standardized = TRUE)
+```
+
+Notice that with `std.lv = TRUE`, *all three* loadings are estimated (none is fixed to 1), and the latent variance is fixed at 1. The standardised loadings (`std.all`) are identical between the two methods — only the unstandardised estimates differ.
+
+::: {.callout-note}
+For the rest of this series we use the marker-variable method (lavaan's default). We mention `std.lv = TRUE` here so you recognise it when you see it in papers or in the [cheat sheet](../cheatsheet.qmd). Both methods give the same standardised solution and the same fit indices; they differ only in how the unstandardised parameters are scaled.
+:::
+
+## A concept diagram
+
+The model we just fitted — one latent factor measured by three indicators — looks like this:
+
+```{r}
+#| echo: false
+#| fig-align: center
+#| out-width: "70%"
+#| fig-cap: "A one-factor CFA with three indicators. The circle is the latent variable PA; the squares are the observed indicators. Arrows from the latent factor to the indicators are the factor loadings (λ). The small circles on each indicator are the residual variances (θ)."
+DiagrammeR::grViz("
+digraph {
+  graph [layout = neato, rankdir = TB]
+  node  [fontname = Helvetica, fontsize = 11]
+
+  PA  [label = 'PA', shape = ellipse, style = filled, fillcolor = '#aed6f1', pos = '1.5,2!']
+  pa1 [label = 'pa1', shape = box, style = filled, fillcolor = '#f9e79f', pos = '0,0!']
+  pa2 [label = 'pa2', shape = box, style = filled, fillcolor = '#f9e79f', pos = '1.5,0!']
+  pa3 [label = 'pa3', shape = box, style = filled, fillcolor = '#f9e79f', pos = '3,0!']
+
+  e1  [label = '', shape = circle, style = filled, fillcolor = '#d5dbdb', width = 0.2, pos = '0,1!']
+  e2  [label = '', shape = circle, style = filled, fillcolor = '#d5dbdb', width = 0.2, pos = '1.5,1!']
+  e3  [label = '', shape = circle, style = filled, fillcolor = '#d5dbdb', width = 0.2, pos = '3,1!']
+
+  PA -> pa1 [label = '  λ1']
+  PA -> pa2 [label = '  λ2']
+  PA -> pa3 [label = '  λ3']
+
+  e1 -> pa1
+  e2 -> pa2
+  e3 -> pa3
+}
+")
+```
+
+In path diagrams throughout this series:
+
+- **Circles** represent [latent variables](../glossary.qmd#latent-variable) — unobserved factors.
+- **Squares** represent [observed variables](../glossary.qmd#observed-variable) — the items in your dataset.
+- **Single-headed arrows** represent regression paths (factor loadings or structural coefficients).
+- **Small circles** on observed variables represent [measurement error](../glossary.qmd#measurement-error) ($\theta$) — the residual variance of each indicator.
+
+This diagrammatic language is consistent across the SEM literature and we will use it throughout the series. We will produce these diagrams from fitted lavaan objects with `tidySEM::graph_sem()` from Tutorial 07 onward, and hand-author them with `DiagrammeR::grViz()` when we want to illustrate a concept before fitting the model.
+
+## Common errors
+
+::: {.callout-warning}
+### `Error in lavaanify(...): syntax error in model syntax`
+
+There is a typo in your model string. Check that every `=~`, `~`, `~~`, and `:=` is correctly placed, that variable names match columns in your data frame exactly, and that every line ends correctly (no trailing `+` with nothing after it).
+
+### `Error: model is syntax-invalid`
+
+A more general syntax error. Run `lavaanify(model)` on your model string to see where lavaan fails to parse it.
+
+### `lavaan WARNING: some observed variances are (at least) a factor 1000 times larger than others`
+
+Your variables are on wildly different scales — one might be in milliseconds and another in Likert units. Standardise the variables with `scale()` before fitting, or check whether you have accidentally included an ID column as a variable.
+
+### `lavaan WARNING: model has not converged`
+
+The estimation algorithm could not find a stable solution. Usually a sign of model misspecification, underidentification, or a Heywood case (negative variance). We cover diagnosis and fixes in Tutorial 07.
+:::
+
+## Exercises
+
+1. Write a lavaan model syntax string that defines *two* latent factors: `PA` measured by `pa1`, `pa2`, `pa3`, and `neg` measured by `na1`, `na2`, `na3`. Allow the two factors to correlate. Fit it with `cfa()` and `MLR`. Read the `summary()` output — what is the standardised correlation between PA and neg?
+
+2. Refit the same two-factor model using `std.lv = TRUE`. Compare the standardised loadings to those from the marker-variable method. Are they the same or different? Why?
+
+3. Extract the canonical set of fit indices (`chisq`, `df`, `pvalue`, `cfi`, `tli`, `rmsea` with its CI, and `srmr`) for the two-factor model from Exercise 1. How many degrees of freedom does this model have? Is the model just-identified or overidentified?
+
+4. Write a model syntax string that adds a regression path from `PA` to `NA`. Fit it with `sem()` rather than `cfa()`. What changes in the output compared to Exercise 1? (Note: this is not a theoretically sensible model — it is just to practise the syntax.)
+
+::: {.callout-caution collapse="true"}
+## Solutions
+
+**Exercise 1**
+
+```{r}
+model_2f <- '
+  PA =~ pa1 + pa2 + pa3
+  neg =~ na1 + na2 + na3
+  PA ~~ neg
+'
+fit_2f <- cfa(model_2f, data = ps, estimator = "MLR")
+summary(fit_2f, standardized = TRUE)
+```
+
+Look at the `Covariances` section of the output. The `std.all` value for `PA ~~ neg` is the standardised correlation between the two factors. It should be moderately negative — positive and negative affect tend to be inversely related.
+
+**Exercise 2**
+
+```{r}
+fit_2f_stdlv <- cfa(model_2f, data = ps, estimator = "MLR", std.lv = TRUE)
+summary(fit_2f_stdlv, standardized = TRUE)
+```
+
+The `std.all` loadings are identical to those from the marker-variable method. The unstandardised loadings differ: in the marker-variable method, the first loading of each factor is fixed to 1; with `std.lv = TRUE`, all loadings are freely estimated and the latent variances are fixed to 1. Standardisation puts both parameterisations on the same footing — they describe the same model, just in different units.
+
+**Exercise 3**
+
+```{r}
+fitMeasures(fit_2f, c("chisq", "df", "pvalue",
+                      "cfi", "tli",
+                      "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+                      "srmr"))
+```
+
+With 6 observed variables, the covariance matrix has $6 \times 7 / 2 = 21$ non-redundant elements. The model estimates 13 free parameters (4 loadings + 2 latent variances + 1 covariance + 6 residual variances), so $df = 21 - 13 = 8$. A model with positive degrees of freedom is [overidentified](../glossary.qmd#overidentified) — it can be empirically tested against the data.
+
+**Exercise 4**
+
+```{r}
+model_reg <- '
+  PA =~ pa1 + pa2 + pa3
+  neg =~ na1 + na2 + na3
+  neg ~ PA
+'
+fit_reg <- sem(model_reg, data = ps, estimator = "MLR")
+summary(fit_reg, standardized = TRUE)
+```
+
+The main change is that the `~~` covariance between PA and neg has been replaced by a `~` regression path from PA to neg. The coefficient in the `Regressions` section tells you how much neg changes for a one-unit increase in PA. Note also that PA is now exogenous (its variance is estimated, but it is no longer predicted by anything), while neg is endogenous (it has a disturbance $\zeta$ representing unexplained variance).
+:::
+
+## Summary & next tutorial
+
+You now have the lavaan syntax in your hands: `=~` defines latent variables, `~` defines regression paths, `~~` defines covariances, `~ 1` defines intercepts, `*` labels parameters, and `:=` defines new derived parameters. You have fitted your first CFA with `MLR` and read the `summary()` output. In the next tutorial we slow down and build the conceptual foundation for confirmatory factor analysis — what latent variables are, how identification works, why the marker-variable method sets a latent variable's scale, and what fit indices tell us — before fitting a full two-factor CFA on the PS dataset in Tutorial 07.
+
+## Further reading
+
+- @rosseel2012 — the original lavaan paper, a clear overview of the package's design and syntax.
+- @beaujean2014 — a step-by-step introduction to latent variable modelling using lavaan; the notation conventions in this series follow Beaujean's simplified lowercase Greek style.
+- @kelloway2015 — the textbook the original Mplus teaching materials were based on; useful for seeing how the same models are specified in Mplus, if you encounter Mplus syntax in published papers.

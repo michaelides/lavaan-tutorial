@@ -1,0 +1,39 @@
+# R / RStudio
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# renv — only the lockfile and activate.R are committed
+renv/library/
+renv/staging/
+renv/local/
+*.tar.gz
+
+# Quarto
+/.quarto/
+*_cache/
+*_files/
+__pycache__/
+
+# Rendered output is committed (served by Pages) — keep docs/
+# but ignore intermediate Quarto artefacts:
+docs/.quarto/
+
+# OS / editor
+.DS_Store
+~$*
+.vscode/
+.idea/
+*.tmp
+
+# Source material is kept private (Kevin Daniels' originals)
+/source-material/
+
+# Office lockfiles anywhere
+~$*.docx
+~$*.pptx
+~$*.xlsx
+
+**/*.quarto_ipynb

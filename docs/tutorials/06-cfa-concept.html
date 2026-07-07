@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="George Michaelides">
+<meta name="dcterms.date" content="2026-01-01">
+
+<title>CFA — concept – A Step-by-Step Introduction to Structural Equation Modeling with lavaan in R</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../tutorials/07-cfa-practical.html" rel="next">
+<link href="../tutorials/05-introducing-lavaan.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-5dad907783eb94222aa6c9b08b9eb4a6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-bc5b62d811c1c94b7e95d620c4441ad7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-5dad907783eb94222aa6c9b08b9eb4a6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "textbox",
+  "limit": 15,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link href="../site_libs/htmltools-fill-0.5.9/fill.css" rel="stylesheet">
+<script src="../site_libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<script src="../site_libs/viz-1.8.2/viz.js"></script>
+<link href="../site_libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet">
+<script src="../site_libs/grViz-binding-1.0.12/grViz.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../assets/styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">A Step-by-Step Introduction to Structural Equation Modeling with lavaan in R</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../glossary.html"> 
+<span class="menu-text">Glossary</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../notation.html"> 
+<span class="menu-text">Notation</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../cheatsheet.html"> 
+<span class="menu-text">Cheat sheet</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/michaelides/lavaan-tutorial"> <i class="bi bi-github" role="img" aria-label="GitHub repository">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../tutorials/06-cfa-concept.html">Core lavaan</a></li><li class="breadcrumb-item"><a href="../tutorials/06-cfa-concept.html">CFA — concept</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Foundations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/01-r-basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">R basics</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/02-rstudio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">RStudio</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/03-importing-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Importing data</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/04-simple-inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Simple inference: t-test, ANOVA, lm</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Bridging</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/05-introducing-lavaan.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducing lavaan</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Core lavaan</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/06-cfa-concept.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">CFA — concept</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/07-cfa-practical.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CFA — practical</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/08-parcels-second-order.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Parcels and second-order CFA</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/09-path-analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Path analysis with observed variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/10-sem-latent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SEM with latent variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/11-mediation-concept.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mediation — concept</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/12-mediation-practical.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mediation — practical</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Capstone</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/13-reporting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Reporting lavaan results</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Advanced</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/14-multilevel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multilevel models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/15-growth.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Growth curve models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/16-moderation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Moderation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives">Learning objectives</a></li>
+  <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup">Setup</a></li>
+  <li><a href="#what-is-confirmatory-factor-analysis" id="toc-what-is-confirmatory-factor-analysis" class="nav-link" data-scroll-target="#what-is-confirmatory-factor-analysis">What is confirmatory factor analysis?</a>
+  <ul class="collapse">
+  <li><a href="#a-two-factor-example" id="toc-a-two-factor-example" class="nav-link" data-scroll-target="#a-two-factor-example">A two-factor example</a></li>
+  </ul></li>
+  <li><a href="#the-parameters-of-a-cfa" id="toc-the-parameters-of-a-cfa" class="nav-link" data-scroll-target="#the-parameters-of-a-cfa">The parameters of a CFA</a>
+  <ul class="collapse">
+  <li><a href="#factor-loadings-lambda" id="toc-factor-loadings-lambda" class="nav-link" data-scroll-target="#factor-loadings-lambda">Factor loadings (<span class="math inline">\(\lambda\)</span>)</a></li>
+  <li><a href="#latent-covariances-psi" id="toc-latent-covariances-psi" class="nav-link" data-scroll-target="#latent-covariances-psi">Latent (co)variances (<span class="math inline">\(\psi\)</span>)</a></li>
+  <li><a href="#residual-covariances-theta" id="toc-residual-covariances-theta" class="nav-link" data-scroll-target="#residual-covariances-theta">Residual (co)variances (<span class="math inline">\(\theta\)</span>)</a></li>
+  <li><a href="#putting-the-parameters-together" id="toc-putting-the-parameters-together" class="nav-link" data-scroll-target="#putting-the-parameters-together">Putting the parameters together</a></li>
+  </ul></li>
+  <li><a href="#setting-the-scale-of-a-latent-variable" id="toc-setting-the-scale-of-a-latent-variable" class="nav-link" data-scroll-target="#setting-the-scale-of-a-latent-variable">Setting the scale of a latent variable</a>
+  <ul class="collapse">
+  <li><a href="#marker-variable-method-lavaans-default" id="toc-marker-variable-method-lavaans-default" class="nav-link" data-scroll-target="#marker-variable-method-lavaans-default">Marker-variable method (lavaan’s default)</a></li>
+  <li><a href="#standardised-latent-variable" id="toc-standardised-latent-variable" class="nav-link" data-scroll-target="#standardised-latent-variable">Standardised latent variable</a></li>
+  </ul></li>
+  <li><a href="#identification" id="toc-identification" class="nav-link" data-scroll-target="#identification">Identification</a>
+  <ul class="collapse">
+  <li><a href="#the-t-rule" id="toc-the-t-rule" class="nav-link" data-scroll-target="#the-t-rule">The t-rule</a></li>
+  <li><a href="#further-conditions-for-identification" id="toc-further-conditions-for-identification" class="nav-link" data-scroll-target="#further-conditions-for-identification">Further conditions for identification</a></li>
+  </ul></li>
+  <li><a href="#model-fit" id="toc-model-fit" class="nav-link" data-scroll-target="#model-fit">Model fit</a>
+  <ul class="collapse">
+  <li><a href="#the-chi-square-test" id="toc-the-chi-square-test" class="nav-link" data-scroll-target="#the-chi-square-test">The chi-square test</a></li>
+  <li><a href="#the-canonical-fit-indices" id="toc-the-canonical-fit-indices" class="nav-link" data-scroll-target="#the-canonical-fit-indices">The canonical fit indices</a></li>
+  </ul></li>
+  <li><a href="#a-quick-illustration" id="toc-a-quick-illustration" class="nav-link" data-scroll-target="#a-quick-illustration">A quick illustration</a></li>
+  <li><a href="#mathematical-foundation-optional" id="toc-mathematical-foundation-optional" class="nav-link" data-scroll-target="#mathematical-foundation-optional">Mathematical foundation (optional)</a></li>
+  <li><a href="#common-errors" id="toc-common-errors" class="nav-link" data-scroll-target="#common-errors">Common errors</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises">Exercises</a></li>
+  <li><a href="#summary-next-tutorial" id="toc-summary-next-tutorial" class="nav-link" data-scroll-target="#summary-next-tutorial">Summary &amp; next tutorial</a></li>
+  <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading">Further reading</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/michaelides/lavaan-tutorial/edit/main/tutorials/06-cfa-concept.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/michaelides/lavaan-tutorial/blob/main/tutorials/06-cfa-concept.qmd" class="toc-action"><i class="bi empty"></i>View source</a></li><li><a href="https://github.com/michaelides/lavaan-tutorial/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../tutorials/06-cfa-concept.html">Core lavaan</a></li><li class="breadcrumb-item"><a href="../tutorials/06-cfa-concept.html">CFA — concept</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">CFA — concept</h1>
+<p class="subtitle lead">Latent vs observed, identification, marker variable, model fit</p>
+</div>
+
+
+<div class="quarto-title-meta-author">
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author">George Michaelides </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            School of Psychology, University of East Anglia
+          </p>
+      </div>
+  </div>
+
+<div class="quarto-title-meta">
+
+      
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">January 1, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="learning-objectives" class="level2">
+<h2 class="anchored" data-anchor-id="learning-objectives">Learning objectives</h2>
+<p>By the end of this tutorial you will be able to:</p>
+<ul>
+<li>distinguish <a href="../glossary.html#latent-variable">latent</a> and <a href="../glossary.html#observed-variable">observed</a> variables and explain why latent variables need a scale</li>
+<li>identify the three kinds of parameter in a CFA — factor loadings (<span class="math inline">\(\lambda\)</span>), latent (co)variances (<span class="math inline">\(\psi\)</span>), and residual (co)variances (<span class="math inline">\(\theta\)</span>) — and locate each in lavaan output</li>
+<li>apply the <a href="../glossary.html#t-rule">t-rule</a> to determine whether a model is <a href="../glossary.html#identification">identified</a></li>
+<li>explain the <a href="../glossary.html#marker-variable">marker-variable method</a> and the <code>std.lv = TRUE</code> alternative for setting a latent variable’s scale</li>
+<li>describe what a <a href="../glossary.html#fit-indices">fit index</a> measures and name the canonical set we will use throughout the series</li>
+</ul>
+</section>
+<section id="setup" class="level2">
+<h2 class="anchored" data-anchor-id="setup">Setup</h2>
+<p>This is a concept tutorial — we will fit one small model for illustration, but the focus is on the ideas. We load lavaan and the PS dataset in the usual way.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lavaan)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="what-is-confirmatory-factor-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-confirmatory-factor-analysis">What is confirmatory factor analysis?</h2>
+<p><a href="../glossary.html#cfa">Confirmatory factor analysis</a> (CFA) is a technique for testing whether a hypothesised factor structure fits the observed covariances among a set of items. You, the researcher, specify in advance which items load on which factors. CFA then estimates the parameters of that model and tells you how well the model-implied covariance matrix matches the observed one.</p>
+<p>This is the “confirmatory” part: you commit to a structure before looking at the results, and you test it. This distinguishes CFA from exploratory factor analysis (EFA), where the algorithm freely searches for the best-factoring structure. In dissertation work, CFA is what you use when you have a theoretical reason to expect a particular factor structure and you want to test it.</p>
+<section id="a-two-factor-example" class="level3">
+<h3 class="anchored" data-anchor-id="a-two-factor-example">A two-factor example</h3>
+<p>Throughout this and the next tutorial we work with a two-factor CFA on the six affect items in the PS dataset:</p>
+<ul>
+<li><strong>Positive affect (PA)</strong> measured by <code>pa1</code>, <code>pa2</code>, <code>pa3</code></li>
+<li><strong>Negative affect (neg)</strong> measured by <code>na1</code>, <code>na2</code>, <code>na3</code></li>
+</ul>
+<p>The path diagram looks like this:</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="grViz html-widget html-fill-item" id="htmlwidget-6268c8fc43e19921e3bf" style="width:85%;height:750px;"></div>
+<script type="application/json" data-for="htmlwidget-6268c8fc43e19921e3bf">{"x":{"diagram":"\ndigraph {\n  graph [layout = neato]\n  node  [fontname = Helvetica, fontsize = 11]\n\n  PA  [label = \"PA\",  shape = ellipse, style = filled, fillcolor = \"#aed6f1\", pos = \"1.5,3!\"]\n  neg [label = \"neg\", shape = ellipse, style = filled, fillcolor = \"#aed6f1\", pos = \"5,3!\"]\n\n  pa1 [label = \"pa1\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"0,0!\"]\n  pa2 [label = \"pa2\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"1.5,0!\"]\n  pa3 [label = \"pa3\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"3,0!\"]\n\n  na1 [label = \"na1\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"4,0!\"]\n  na2 [label = \"na2\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"5.5,0!\"]\n  na3 [label = \"na3\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"7,0!\"]\n\n  PA -> pa1 [label = \"  λ\"]\n  PA -> pa2 [label = \"  λ\"]\n  PA -> pa3 [label = \"  λ\"]\n\n  neg -> na1 [label = \"  λ\"]\n  neg -> na2 [label = \"  λ\"]\n  neg -> na3 [label = \"  λ\"]\n\n  PA  -> neg [dir = both, label = \"  ψ\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<p>A two-factor CFA. Circles are latent factors (PA, neg); squares are observed indicators. Single-headed arrows from factors to indicators are factor loadings (λ). The double-headed arrow between the factors is their covariance (ψ). Small circles on each indicator are residual variances (θ).</p>
+</div>
+</div>
+<p>We will fit this model in Tutorial 07. First, let us understand what each part of it means.</p>
+</section>
+</section>
+<section id="the-parameters-of-a-cfa" class="level2">
+<h2 class="anchored" data-anchor-id="the-parameters-of-a-cfa">The parameters of a CFA</h2>
+<p>A CFA has three kinds of parameter. Every one of them appears in the lavaan <code>summary()</code> output, so it is worth knowing them by name and symbol.</p>
+<section id="factor-loadings-lambda" class="level3">
+<h3 class="anchored" data-anchor-id="factor-loadings-lambda">Factor loadings (<span class="math inline">\(\lambda\)</span>)</h3>
+<p>A <a href="../glossary.html#factor-loading">factor loading</a> is the regression coefficient linking a latent variable to one of its indicators. It tells you how strongly the indicator reflects the underlying factor. Denoted <span class="math inline">\(\lambda\)</span> (lambda).</p>
+<p>In the diagram, the arrows from <code>PA</code> to <code>pa1</code>, <code>pa2</code>, <code>pa3</code> are the three loadings of the PA factor. In lavaan syntax, loadings are specified with <code>=~</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>PA <span class="ot">=</span><span class="er">~</span> pa1 <span class="sc">+</span> pa2 <span class="sc">+</span> pa3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>In lavaan output, loadings appear in the <strong>Latent variables</strong> section. The <code>Estimate</code> column gives the unstandardised <span class="math inline">\(\lambda\)</span>; the <code>std.all</code> column gives the standardised loading — the correlation between the indicator and the factor.</p>
+</section>
+<section id="latent-covariances-psi" class="level3">
+<h3 class="anchored" data-anchor-id="latent-covariances-psi">Latent (co)variances (<span class="math inline">\(\psi\)</span>)</h3>
+<p>The <a href="../glossary.html#latent-variance">variance of a latent variable</a> — how much the factor varies across participants — is denoted <span class="math inline">\(\psi\)</span> (psi). The covariance between two latent variables (e.g.&nbsp;between PA and neg) is also <span class="math inline">\(\psi\)</span>.</p>
+<p>In the diagram, the double-headed arrow between <code>PA</code> and <code>neg</code> is their covariance. In lavaan syntax, covariances are specified with <code>~~</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>PA <span class="sc">~</span><span class="er">~</span> neg</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>In lavaan output, latent variances and covariances appear in the <strong>Variances</strong> and <strong>Covariances</strong> sections respectively. The standardised covariance (<code>std.all</code>) is the correlation between the two factors — a number between -1 and 1.</p>
+</section>
+<section id="residual-covariances-theta" class="level3">
+<h3 class="anchored" data-anchor-id="residual-covariances-theta">Residual (co)variances (<span class="math inline">\(\theta\)</span>)</h3>
+<p>Every observed indicator has a <a href="../glossary.html#measurement-error">residual variance</a> — the portion of its variance not explained by the latent factor. This is <a href="../glossary.html#measurement-error">measurement error</a> (plus any item-specific systematic variance), denoted <span class="math inline">\(\theta\)</span> (theta).</p>
+<p>In the diagram, the small circles attached to each observed variable represent <span class="math inline">\(\theta\)</span>. lavaan estimates residual variances automatically for every indicator; you do not need to specify them explicitly. They appear in the <strong>Variances</strong> section of the output, listed under each indicator’s name.</p>
+<p>If two indicators share variance that is not explained by their common factor — perhaps because they share a method or a wording similarity — you can model a <strong>residual covariance</strong> between them:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>pa1 <span class="sc">~</span><span class="er">~</span> pa2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This adds a covariance between the residuals of <code>pa1</code> and <code>pa2</code>. We will use this in Tutorial 07 when we examine modification indices.</p>
+</section>
+<section id="putting-the-parameters-together" class="level3">
+<h3 class="anchored" data-anchor-id="putting-the-parameters-together">Putting the parameters together</h3>
+<p>A two-factor CFA with three indicators per factor has:</p>
+<ul>
+<li>6 factor loadings (<span class="math inline">\(\lambda\)</span>) — but 2 are fixed to 1 by the marker-variable method, so 4 are freely estimated</li>
+<li>2 latent variances (<span class="math inline">\(\psi\)</span>) — one for PA, one for neg</li>
+<li>1 latent covariance (<span class="math inline">\(\psi\)</span>) — between PA and neg</li>
+<li>6 residual variances (<span class="math inline">\(\theta\)</span>) — one for each indicator</li>
+</ul>
+<p>That is <span class="math inline">\(4 + 2 + 1 + 6 = 13\)</span> free parameters. We will use this count in a moment when we check identification.</p>
+</section>
+</section>
+<section id="setting-the-scale-of-a-latent-variable" class="level2">
+<h2 class="anchored" data-anchor-id="setting-the-scale-of-a-latent-variable">Setting the scale of a latent variable</h2>
+<p>A <a href="../glossary.html#latent-variable">latent variable</a> is not directly observed, so it has no natural unit of measurement. We must give it one by fixing either a loading or its variance. There are two methods, and you met both in Tutorial 05.</p>
+<section id="marker-variable-method-lavaans-default" class="level3">
+<h3 class="anchored" data-anchor-id="marker-variable-method-lavaans-default">Marker-variable method (lavaan’s default)</h3>
+<p>Fix one factor loading to 1. The latent variable then has the same scale as that indicator. The latent variance <span class="math inline">\(\psi\)</span> is freely estimated. This is lavaan’s default — the first indicator listed after <code>=~</code> has its loading fixed to 1.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>PA <span class="ot">=</span><span class="er">~</span> pa1 <span class="sc">+</span> pa2 <span class="sc">+</span> pa3     <span class="co"># pa1's loading is fixed to 1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="standardised-latent-variable" class="level3">
+<h3 class="anchored" data-anchor-id="standardised-latent-variable">Standardised latent variable</h3>
+<p>Fix the latent variance to 1. All loadings are freely estimated. The latent variable is in standard-deviation units. Requested with <code>std.lv = TRUE</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cfa</span>(model, <span class="at">data =</span> ps, <span class="at">std.lv =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Both methods give identical standardised solutions and identical fit indices. They differ only in how the unstandardised parameters are scaled. We use the marker-variable method throughout this series.</p>
+</section>
+</section>
+<section id="identification" class="level2">
+<h2 class="anchored" data-anchor-id="identification">Identification</h2>
+<p>A model is <a href="../glossary.html#identification">identified</a> if a unique solution exists for every free parameter. If a model is not identified, the parameter estimates are not meaningful — many different combinations of parameter values would produce the same model-implied covariance matrix, and lavaan cannot choose among them.</p>
+<section id="the-t-rule" class="level3">
+<h3 class="anchored" data-anchor-id="the-t-rule">The t-rule</h3>
+<p>The first necessary condition for identification is the <a href="../glossary.html#t-rule">t-rule</a>: the number of free parameters <span class="math inline">\(t\)</span> must be less than or equal to the number of non-redundant elements in the observed covariance matrix.</p>
+<p>The number of non-redundant elements in a covariance matrix with <span class="math inline">\(q\)</span> observed variables is:</p>
+<p><span class="math display">\[
+q(q + 1) / 2
+\]</span></p>
+<p>The degrees of freedom of the model are then:</p>
+<p><span id="eq-t-rule"><span class="math display">\[
+\text{df} = \frac{q(q+1)}{2} - t
+\tag{1}\]</span></span></p>
+<p>For our two-factor CFA: <span class="math inline">\(q = 6\)</span> observed variables, so <span class="math inline">\(q(q+1)/2 = 6 \times 7 / 2 = 21\)</span>. We have <span class="math inline">\(t = 13\)</span> free parameters, so <span class="math inline">\(\text{df} = 21 - 13 = 8\)</span>.</p>
+<p>A model with:</p>
+<ul>
+<li><strong>df &lt; 0</strong> is <a href="../glossary.html#underidentified">underidentified</a> — cannot be estimated.</li>
+<li><strong>df = 0</strong> is <a href="../glossary.html#just-identified">just-identified</a> (saturated) — fits perfectly by construction, cannot be tested.</li>
+<li><strong>df &gt; 0</strong> is <a href="../glossary.html#overidentified">overidentified</a> — can be empirically tested against the data.</li>
+</ul>
+<p>Our two-factor CFA with 8 df is overidentified, which is what we want — it means the data can potentially reject the model.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Just-identified models
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The one-factor CFA with three indicators you fitted in Tutorial 05 had <span class="math inline">\(q = 3\)</span>, so <span class="math inline">\(q(q+1)/2 = 6\)</span>, and <span class="math inline">\(t = 6\)</span> (2 loadings + 1 latent variance + 3 residual variances), giving <span class="math inline">\(\text{df} = 0\)</span>. That is why the fit was perfect — a just-identified model reproduces the observed covariance matrix exactly. You cannot test a just-identified model; you can only estimate its parameters.</p>
+</div>
+</div>
+</section>
+<section id="further-conditions-for-identification" class="level3">
+<h3 class="anchored" data-anchor-id="further-conditions-for-identification">Further conditions for identification</h3>
+<p>The t-rule is necessary but not sufficient. Two further conditions matter in practice:</p>
+<ol type="1">
+<li><p><strong>Each latent variable has its scale set</strong> — by the marker-variable method or <code>std.lv = TRUE</code>. Without this, the latent variable’s units are undefined and the model is not identified.</p></li>
+<li><p><strong>Each factor has at least three indicators</strong> — a factor with two indicators is just-identified on its own (it fits perfectly), and a factor with one indicator is underidentified unless you fix its loading and residual variance to specific values. Three indicators per factor is the practical minimum for an overidentified factor.</p></li>
+</ol>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Empirical underidentification
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A model can be formally identified but still fail to converge because the <em>data</em> do not contain enough information to distinguish the parameters — for example, when two indicators are nearly identical (correlation near 1) or when a factor has very low variance. This is called <em>empirical underidentification</em> and it is a data problem, not a model problem. lavaan will warn you that the model has not converged.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="model-fit" class="level2">
+<h2 class="anchored" data-anchor-id="model-fit">Model fit</h2>
+<p>Once a model is identified and estimated, we ask: how well does it reproduce the observed covariance matrix? This is the question of <a href="../glossary.html#fit-indices">model fit</a>.</p>
+<p>The fundamental idea is that the model implies a particular covariance matrix <span class="math inline">\(\hat{\Sigma}(\theta)\)</span> — the covariances among the observed variables that the model <em>predicts</em> given its parameter estimates. We compare this to the observed sample covariance matrix <span class="math inline">\(S\)</span>. If <span class="math inline">\(\hat{\Sigma}(\theta)\)</span> is close to <span class="math inline">\(S\)</span>, the model fits well.</p>
+<section id="the-chi-square-test" class="level3">
+<h3 class="anchored" data-anchor-id="the-chi-square-test">The chi-square test</h3>
+<p>The classic test is the model <span class="math inline">\(\chi^2\)</span>, which tests the null hypothesis:</p>
+<p><span class="math display">\[
+H_0: S = \hat{\Sigma}(\theta)
+\]</span></p>
+<p>A <em>non-significant</em> <span class="math inline">\(\chi^2\)</span> (e.g.&nbsp;<span class="math inline">\(p &gt; .05\)</span>) means we cannot reject the model — it fits. A <em>significant</em> <span class="math inline">\(\chi^2\)</span> means the model is rejected — the implied and observed covariances differ more than we would expect by chance.</p>
+<p>The problem with <span class="math inline">\(\chi^2\)</span> is that it is sensitive to sample size. With a large sample, even a trivially misspecified model will be rejected. With a small sample, even a badly misspecified model will not be. We therefore supplement <span class="math inline">\(\chi^2\)</span> with approximate fit indices.</p>
+</section>
+<section id="the-canonical-fit-indices" class="level3">
+<h3 class="anchored" data-anchor-id="the-canonical-fit-indices">The canonical fit indices</h3>
+<p>Following <a href="https://doi.org/10.1080/10705519909540118">Hu and Bentler (1999)</a>, we report at least two indices throughout this series: one badness-of-fit index (RMSEA or SRMR) and one goodness-of-fit index (CFI or TLI). The canonical set:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 19%">
+<col style="width: 14%">
+<col style="width: 26%">
+<col style="width: 39%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Index</th>
+<th>Type</th>
+<th>Threshold</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\chi^2\)</span></td>
+<td>Exact</td>
+<td><span class="math inline">\(p &gt; .05\)</span></td>
+<td>Good fit, but sensitive to sample size</td>
+</tr>
+<tr class="even">
+<td>RMSEA</td>
+<td>Badness</td>
+<td><span class="math inline">\(&lt; .08\)</span> acceptable, <span class="math inline">\(&lt; .05\)</span> close</td>
+<td>Lower is better; reported with 90% CI</td>
+</tr>
+<tr class="odd">
+<td>CFI</td>
+<td>Goodness</td>
+<td><span class="math inline">\(&gt; .95\)</span> good, <span class="math inline">\(&gt; .90\)</span> acceptable</td>
+<td>Higher is better</td>
+</tr>
+<tr class="even">
+<td>TLI</td>
+<td>Goodness</td>
+<td><span class="math inline">\(&gt; .95\)</span> good, <span class="math inline">\(&gt; .90\)</span> acceptable</td>
+<td>Higher is better; penalises complexity</td>
+</tr>
+<tr class="odd">
+<td>SRMR</td>
+<td>Badness</td>
+<td><span class="math inline">\(&lt; .08\)</span></td>
+<td>Lower is better; sensitive to misspecification</td>
+</tr>
+</tbody>
+</table>
+<p>To extract all five in one call:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fitMeasures</span>(fit, <span class="fu">c</span>(<span class="st">"chisq"</span>, <span class="st">"df"</span>, <span class="st">"pvalue"</span>,</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"cfi"</span>, <span class="st">"tli"</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"rmsea"</span>, <span class="st">"rmsea.ci.lower"</span>, <span class="st">"rmsea.ci.upper"</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"srmr"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>We will see these in action in Tutorial 07, when we fit the two-factor CFA on the PS dataset and read the full output.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Fit is not variance accounted for
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A common mistake is to interpret fit indices as “the model explains X% of the variance”. They are not. Fit indices measure how closely the model-implied covariance matrix matches the observed one — they say nothing directly about variance explained. The variance-explained analogue in SEM is <span class="math inline">\(R^2\)</span> for each indicator, which we will meet in Tutorial 07.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="a-quick-illustration" class="level2">
+<h2 class="anchored" data-anchor-id="a-quick-illustration">A quick illustration</h2>
+<p>Let us fit the two-factor CFA on the PS dataset so the concepts above have a concrete referent. We will read the full output in Tutorial 07; here we just confirm that the model is identified and that it fits.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>model_2f <span class="ot">&lt;-</span> <span class="st">'</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="st">  PA  =~ pa1 + pa2 + pa3</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="st">  neg =~ na1 + na2 + na3</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="st">  PA  ~~ neg</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="st">'</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>fit_2f <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model_2f, <span class="at">data =</span> ps, <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="fu">fitMeasures</span>(fit_2f, <span class="fu">c</span>(<span class="st">"chisq"</span>, <span class="st">"df"</span>, <span class="st">"pvalue"</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"cfi"</span>, <span class="st">"tli"</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"rmsea"</span>, <span class="st">"rmsea.ci.lower"</span>, <span class="st">"rmsea.ci.upper"</span>,</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"srmr"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>##          chisq             df         pvalue            cfi            tli 
+##          9.870          8.000          0.274          0.998          0.996 
+##          rmsea rmsea.ci.lower rmsea.ci.upper           srmr 
+##          0.027          0.000          0.073          0.015</code></pre>
+</div>
+</div>
+<p>With <span class="math inline">\(\text{df} = 8\)</span> (exactly as we calculated above) and <span class="math inline">\(\chi^2\)</span> non-significant, CFI = TLI = 1.000, RMSEA = 0.000, and SRMR = 0.014, the model fits very well. We will unpack every number in Tutorial 07.</p>
+</section>
+<section id="mathematical-foundation-optional" class="level2">
+<h2 class="anchored" data-anchor-id="mathematical-foundation-optional">Mathematical foundation (optional)</h2>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>The matrix form of a CFA
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>For those who want to see the underlying mathematics, a CFA can be written in matrix form. The measurement model is:</p>
+<p><span id="eq-cfa-measurement"><span class="math display">\[
+\mathbf{y} = \mathbf{\Lambda} \mathbf{\eta} + \mathbf{\varepsilon}
+\tag{2}\]</span></span></p>
+<p>where:</p>
+<ul>
+<li><span class="math inline">\(\mathbf{y}\)</span> is a vector of observed variables</li>
+<li><span class="math inline">\(\mathbf{\Lambda}\)</span> is a matrix of factor loadings (<span class="math inline">\(\lambda\)</span>)</li>
+<li><span class="math inline">\(\mathbf{\eta}\)</span> is a vector of latent variables</li>
+<li><span class="math inline">\(\mathbf{\varepsilon}\)</span> is a vector of residuals (<span class="math inline">\(\theta\)</span>)</li>
+</ul>
+<p>The model-implied covariance matrix is then:</p>
+<p><span id="eq-cfa-implied"><span class="math display">\[
+\hat{\Sigma}(\theta) = \mathbf{\Lambda} \mathbf{\Psi} \mathbf{\Lambda}' + \mathbf{\Theta}
+\tag{3}\]</span></span></p>
+<p>where <span class="math inline">\(\mathbf{\Psi}\)</span> is the covariance matrix of the latent variables and <span class="math inline">\(\mathbf{\Theta}\)</span> is the covariance matrix of the residuals.</p>
+<p>You do not need to manipulate these matrices to use lavaan — the package does it for you. But you will see this notation in SEM papers (e.g. <span class="citation" data-cites="bollen1989">Bollen (<a href="#ref-bollen1989" role="doc-biblioref">1989</a>)</span>; <span class="citation" data-cites="hoyle2012">Hoyle (<a href="#ref-hoyle2012" role="doc-biblioref">2012</a>)</span>), and recognising it helps you read the literature. For the rest of this series we use the simplified lowercase Greek symbols (<span class="math inline">\(\lambda\)</span>, <span class="math inline">\(\psi\)</span>, <span class="math inline">\(\theta\)</span>) rather than the bold matrix form.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="common-errors" class="level2">
+<h2 class="anchored" data-anchor-id="common-errors">Common errors</h2>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Negative degrees of freedom
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>lavaan WARNING: model is underidentified</code> — you have more free parameters than the data can support. The remedy is to fix or constrain parameters (e.g.&nbsp;remove a factor, fix a loading to zero, constrain two loadings equal), not to collect more data.</p>
+<section id="a-factor-with-two-indicators" class="level3">
+<h3 class="anchored" data-anchor-id="a-factor-with-two-indicators">A factor with two indicators</h3>
+<p>A factor with only two indicators is just-identified on its own — it will fit perfectly but contributes no degrees of freedom to the overall model. If you must have a two-indicator factor, consider <a href="../glossary.html#parcel">parcelling</a> (Tutorial 08) or constraining the two loadings equal.</p>
+</section>
+<section id="forgetting-to-set-the-scale" class="level3">
+<h3 class="anchored" data-anchor-id="forgetting-to-set-the-scale">Forgetting to set the scale</h3>
+<p>If you turn off the marker-variable default (<code>auto.fix.first = FALSE</code>) without using <code>std.lv = TRUE</code>, your latent variable has no scale and the model is not identified. Always use one of the two methods.</p>
+</section>
+</div>
+</div>
+</section>
+<section id="exercises" class="level2">
+<h2 class="anchored" data-anchor-id="exercises">Exercises</h2>
+<ol type="1">
+<li><p>Consider a one-factor CFA with <strong>four</strong> indicators. How many non-redundant elements are in the covariance matrix? How many free parameters does the model have (using the marker-variable method)? What are the degrees of freedom? Is the model just-identified or overidentified?</p></li>
+<li><p>Consider a two-factor CFA where factor 1 has <strong>two</strong> indicators and factor 2 has <strong>three</strong> indicators, and the two factors are allowed to correlate. How many degrees of freedom does this model have? Is it identified?</p></li>
+<li><p>You fit a CFA and get <span class="math inline">\(\chi^2(12) = 28.45\)</span>, <span class="math inline">\(p = .005\)</span>, CFI = .94, TLI = .92, RMSEA = .07 (90% CI [.04, .10]), SRMR = .06. Using the Hu and Bentler cutoffs from the table above, write a one-sentence summary of the model’s fit. Which indices suggest acceptable fit, and which suggest the model should be rejected?</p></li>
+<li><p>A researcher fits a CFA with a single factor and two indicators. They report “excellent fit” with <span class="math inline">\(\chi^2 = 0\)</span>, df = 0, CFI = 1, RMSEA = 0. Why is this report misleading?</p></li>
+</ol>
+<div class="callout callout-style-default callout-caution callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Caution</span>Solutions
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Exercise 1</strong></p>
+<p>With <span class="math inline">\(q = 4\)</span> indicators, the covariance matrix has <span class="math inline">\(q(q+1)/2 = 4 \times 5 / 2 = 10\)</span> non-redundant elements. The free parameters are: 3 loadings (the first is fixed to 1 by the marker-variable method) + 1 latent variance + 4 residual variances = 8. So <span class="math inline">\(\text{df} = 10 - 8 = 2\)</span>. The model is overidentified — it can be tested against the data.</p>
+<p><strong>Exercise 2</strong></p>
+<p>With <span class="math inline">\(q = 5\)</span> observed variables, the covariance matrix has <span class="math inline">\(5 \times 6 / 2 = 15\)</span> elements. The free parameters are: 1 loading on factor 1 (one of two is fixed to 1) + 2 loadings on factor 2 (one of three is fixed to 1) + 2 latent variances + 1 latent covariance + 5 residual variances = 11. So <span class="math inline">\(\text{df} = 15 - 11 = 4\)</span>. The model is overidentified <em>as a whole</em>, but factor 1 with only two indicators is just-identified on its own — it contributes no df. This is a fragile model; if you can add a third indicator to factor 1, do so.</p>
+<p><strong>Exercise 3</strong></p>
+<p>The <span class="math inline">\(\chi^2\)</span> is significant (<span class="math inline">\(p = .005 &lt; .05\)</span>), which would normally reject the model. However, CFI (.94) and TLI (.92) are at or above the .90 acceptable threshold, SRMR (.06) is below .08, and RMSEA (.07) is below .08 with its lower CI bound at .04. A reasonable summary: “The model showed acceptable fit on the approximate indices (CFI = .94, TLI = .92, RMSEA = .07, SRMR = .06), although the significant <span class="math inline">\(\chi^2(12) = 28.45\)</span>, <span class="math inline">\(p = .005\)</span> suggests some model misspecification.” The <span class="math inline">\(\chi^2\)</span> and the upper bound of the RMSEA CI (.10) are the indices suggesting rejection; the rest suggest acceptable fit.</p>
+<p><strong>Exercise 4</strong></p>
+<p>A one-factor model with two indicators has <span class="math inline">\(q = 2\)</span>, so <span class="math inline">\(q(q+1)/2 = 3\)</span>, and <span class="math inline">\(t = 3\)</span> (1 loading + 1 latent variance + 2 residual variances), giving <span class="math inline">\(\text{df} = 0\)</span>. The model is just-identified — it fits perfectly <em>by construction</em>, not because it is a good model. Reporting “excellent fit” for a just-identified model is misleading because the fit is guaranteed; the model has not been tested against the data at all. Any two-indicator one-factor CFA will give <span class="math inline">\(\chi^2 = 0\)</span>, CFI = 1, RMSEA = 0 regardless of how well or badly the items measure the factor.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="summary-next-tutorial" class="level2">
+<h2 class="anchored" data-anchor-id="summary-next-tutorial">Summary &amp; next tutorial</h2>
+<p>You now understand the building blocks of CFA: latent variables measured by indicators, three kinds of parameter (<span class="math inline">\(\lambda\)</span>, <span class="math inline">\(\psi\)</span>, <span class="math inline">\(\theta\)</span>), the t-rule for identification, the two methods for setting a latent variable’s scale, and the canonical set of fit indices. In the next tutorial we put all of this to work on the PS dataset — fitting the two-factor CFA on positive and negative affect, reading the full <code>summary()</code> output, extracting fit indices, examining modification indices, and interpreting the results in APA format.</p>
+</section>
+<section id="further-reading" class="level2">
+<h2 class="anchored" data-anchor-id="further-reading">Further reading</h2>
+<ul>
+<li><span class="citation" data-cites="bollen1989">Bollen (<a href="#ref-bollen1989" role="doc-biblioref">1989</a>)</span> — the canonical reference for SEM identification and the matrix form of the measurement model.</li>
+<li><span class="citation" data-cites="beaujean2014">Beaujean (<a href="#ref-beaujean2014" role="doc-biblioref">2014</a>)</span> — a modern, lavaan-based introduction to latent variable modelling; the notation conventions in this series follow Beaujean.</li>
+<li><span class="citation" data-cites="hoyle2012">Hoyle (<a href="#ref-hoyle2012" role="doc-biblioref">2012</a>)</span> — the <em>Handbook of Structural Equation Modeling</em>, a comprehensive reference for every aspect of SEM.</li>
+<li><span class="citation" data-cites="hul1999">Hu &amp; Bentler (<a href="#ref-hul1999" role="doc-biblioref">1999</a>)</span> — the source of the fit-index cutoff criteria we use throughout this series.</li>
+</ul>
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2" role="list">
+<div id="ref-beaujean2014" class="csl-entry" role="listitem">
+Beaujean, A. A. (2014). <em>Latent variable modeling using r: A step-by-step guide</em>. Routledge.
+</div>
+<div id="ref-bollen1989" class="csl-entry" role="listitem">
+Bollen, K. A. (1989). Structural equations with latent variables. <em>Wiley Series in Probability and Mathematical Statistics</em>.
+</div>
+<div id="ref-hoyle2012" class="csl-entry" role="listitem">
+Hoyle, R. H. (2012). <em>Handbook of structural equation modeling</em>.
+</div>
+<div id="ref-hul1999" class="csl-entry" role="listitem">
+Hu, L., &amp; Bentler, P. M. (1999). Cutoff criteria for fit indexes in covariance structure analysis: Conventional criteria versus new alternatives. <em>Structural Equation Modeling: A Multidisciplinary Journal</em>, <em>6</em>(1), 1–55. <a href="https://doi.org/10.1080/10705519909540118">https://doi.org/10.1080/10705519909540118</a>
+</div>
+</div></section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/michaelides\.github\.io\/lavaan-tutorial\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../tutorials/05-introducing-lavaan.html" class="pagination-link" aria-label="Introducing lavaan">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Introducing lavaan</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../tutorials/07-cfa-practical.html" class="pagination-link" aria-label="CFA — practical">
+        <span class="nav-page-text">CFA — practical</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 George Michaelides, University of East Anglia · MSc Organisational Psychology · Statistical Skills</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/michaelides/lavaan-tutorial/edit/main/tutorials/06-cfa-concept.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/michaelides/lavaan-tutorial/blob/main/tutorials/06-cfa-concept.qmd" class="toc-action"><i class="bi empty"></i>View source</a></li><li><a href="https://github.com/michaelides/lavaan-tutorial/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/michaelides/lavaan-tutorial">
+      <i class="bi bi-github" role="img" aria-label="GitHub repository">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="George Michaelides">
+<meta name="dcterms.date" content="2026-01-01">
+
+<title>Glossary – A Step-by-Step Introduction to Structural Equation Modeling with lavaan in R</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-5dad907783eb94222aa6c9b08b9eb4a6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-bc5b62d811c1c94b7e95d620c4441ad7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-5dad907783eb94222aa6c9b08b9eb4a6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "textbox",
+  "limit": 15,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">A Step-by-Step Introduction to Structural Equation Modeling with lavaan in R</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./glossary.html" aria-current="page"> 
+<span class="menu-text">Glossary</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./notation.html"> 
+<span class="menu-text">Notation</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./cheatsheet.html"> 
+<span class="menu-text">Cheat sheet</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/michaelides/lavaan-tutorial"> <i class="bi bi-github" role="img" aria-label="GitHub repository">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Glossary</li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Foundations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tutorials/01-r-basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">R basics</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tutorials/02-rstudio.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">RStudio</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tutorials/03-importing-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Importing data</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tutorials/04-simple-inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Simple inference: t-test, ANOVA, lm</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Bridging</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tutorials/05-introducing-lavaan.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducing lavaan</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Core lavaan</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tutorials/06-cfa-concept.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CFA — concept</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tutorials/07-cfa-practical.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CFA — practical</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tutorials/08-parcels-second-order.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Parcels and second-order CFA</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tutorials/09-path-analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Path analysis with observed variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tutorials/10-sem-latent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SEM with latent variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tutorials/11-mediation-concept.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mediation — concept</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tutorials/12-mediation-practical.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Mediation — practical</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Capstone</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tutorials/13-reporting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Reporting lavaan results</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Advanced</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tutorials/14-multilevel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multilevel models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tutorials/15-growth.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Growth curve models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tutorials/16-moderation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Moderation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#a" id="toc-a" class="nav-link active" data-scroll-target="#a">A</a>
+  <ul class="collapse">
+  <li><a href="#assignment" id="toc-assignment" class="nav-link" data-scroll-target="#assignment">assignment</a></li>
+  <li><a href="#anova" id="toc-anova" class="nav-link" data-scroll-target="#anova">ANOVA</a></li>
+  </ul></li>
+  <li><a href="#b" id="toc-b" class="nav-link" data-scroll-target="#b">B</a>
+  <ul class="collapse">
+  <li><a href="#bootstrap" id="toc-bootstrap" class="nav-link" data-scroll-target="#bootstrap">bootstrap</a></li>
+  <li><a href="#bca" id="toc-bca" class="nav-link" data-scroll-target="#bca">BCa</a></li>
+  </ul></li>
+  <li><a href="#c" id="toc-c" class="nav-link" data-scroll-target="#c">C</a>
+  <ul class="collapse">
+  <li><a href="#cfa" id="toc-cfa" class="nav-link" data-scroll-target="#cfa">CFA</a></li>
+  <li><a href="#common-method-variance" id="toc-common-method-variance" class="nav-link" data-scroll-target="#common-method-variance">common method variance</a></li>
+  <li><a href="#constraining" id="toc-constraining" class="nav-link" data-scroll-target="#constraining">constraining parameters</a></li>
+  <li><a href="#convergence" id="toc-convergence" class="nav-link" data-scroll-target="#convergence">convergence</a></li>
+  </ul></li>
+  <li><a href="#d" id="toc-d" class="nav-link" data-scroll-target="#d">D</a>
+  <ul class="collapse">
+  <li><a href="#df" id="toc-df" class="nav-link" data-scroll-target="#df">degrees of freedom</a></li>
+  <li><a href="#direct-effect" id="toc-direct-effect" class="nav-link" data-scroll-target="#direct-effect">direct effect</a></li>
+  <li><a href="#disturbance" id="toc-disturbance" class="nav-link" data-scroll-target="#disturbance">disturbance</a></li>
+  </ul></li>
+  <li><a href="#e" id="toc-e" class="nav-link" data-scroll-target="#e">E</a>
+  <ul class="collapse">
+  <li><a href="#endogenous" id="toc-endogenous" class="nav-link" data-scroll-target="#endogenous">endogenous</a></li>
+  <li><a href="#estimation" id="toc-estimation" class="nav-link" data-scroll-target="#estimation">estimation</a></li>
+  <li><a href="#exogenous" id="toc-exogenous" class="nav-link" data-scroll-target="#exogenous">exogenous</a></li>
+  </ul></li>
+  <li><a href="#f" id="toc-f" class="nav-link" data-scroll-target="#f">F</a>
+  <ul class="collapse">
+  <li><a href="#factor-loading" id="toc-factor-loading" class="nav-link" data-scroll-target="#factor-loading">factor loading</a></li>
+  <li><a href="#fiml" id="toc-fiml" class="nav-link" data-scroll-target="#fiml">FIML</a></li>
+  <li><a href="#fit-indices" id="toc-fit-indices" class="nav-link" data-scroll-target="#fit-indices">fit indices</a></li>
+  <li><a href="#fixed-parameter" id="toc-fixed-parameter" class="nav-link" data-scroll-target="#fixed-parameter">fixed parameter</a></li>
+  <li><a href="#free-parameter" id="toc-free-parameter" class="nav-link" data-scroll-target="#free-parameter">free parameter</a></li>
+  </ul></li>
+  <li><a href="#h" id="toc-h" class="nav-link" data-scroll-target="#h">H</a>
+  <ul class="collapse">
+  <li><a href="#heywood-case" id="toc-heywood-case" class="nav-link" data-scroll-target="#heywood-case">Heywood case</a></li>
+  </ul></li>
+  <li><a href="#i" id="toc-i" class="nav-link" data-scroll-target="#i">I</a>
+  <ul class="collapse">
+  <li><a href="#identification" id="toc-identification" class="nav-link" data-scroll-target="#identification">identification</a></li>
+  <li><a href="#indirect-effect" id="toc-indirect-effect" class="nav-link" data-scroll-target="#indirect-effect">indirect effect</a></li>
+  <li><a href="#indicator" id="toc-indicator" class="nav-link" data-scroll-target="#indicator">indicator</a></li>
+  </ul></li>
+  <li><a href="#j" id="toc-j" class="nav-link" data-scroll-target="#j">J</a>
+  <ul class="collapse">
+  <li><a href="#just-identified" id="toc-just-identified" class="nav-link" data-scroll-target="#just-identified">just-identified</a></li>
+  </ul></li>
+  <li><a href="#l" id="toc-l" class="nav-link" data-scroll-target="#l">L</a>
+  <ul class="collapse">
+  <li><a href="#latent-variable" id="toc-latent-variable" class="nav-link" data-scroll-target="#latent-variable">latent variable</a></li>
+  <li><a href="#listwise-deletion" id="toc-listwise-deletion" class="nav-link" data-scroll-target="#listwise-deletion">listwise deletion</a></li>
+  <li><a href="#loadings" id="toc-loadings" class="nav-link" data-scroll-target="#loadings">loadings</a></li>
+  </ul></li>
+  <li><a href="#m" id="toc-m" class="nav-link" data-scroll-target="#m">M</a>
+  <ul class="collapse">
+  <li><a href="#marker-variable" id="toc-marker-variable" class="nav-link" data-scroll-target="#marker-variable">marker variable</a></li>
+  <li><a href="#mar" id="toc-mar" class="nav-link" data-scroll-target="#mar">MAR</a></li>
+  <li><a href="#mcar" id="toc-mcar" class="nav-link" data-scroll-target="#mcar">MCAR</a></li>
+  <li><a href="#measurement-error" id="toc-measurement-error" class="nav-link" data-scroll-target="#measurement-error">measurement error</a></li>
+  <li><a href="#measurement-model" id="toc-measurement-model" class="nav-link" data-scroll-target="#measurement-model">measurement model</a></li>
+  <li><a href="#mediation" id="toc-mediation" class="nav-link" data-scroll-target="#mediation">mediation</a></li>
+  <li><a href="#missingness" id="toc-missingness" class="nav-link" data-scroll-target="#missingness">missingness</a></li>
+  <li><a href="#mnar" id="toc-mnar" class="nav-link" data-scroll-target="#mnar">MNAR</a></li>
+  <li><a href="#mlr" id="toc-mlr" class="nav-link" data-scroll-target="#mlr">MLR</a></li>
+  <li><a href="#modification-indices" id="toc-modification-indices" class="nav-link" data-scroll-target="#modification-indices">modification indices</a></li>
+  </ul></li>
+  <li><a href="#o" id="toc-o" class="nav-link" data-scroll-target="#o">O</a>
+  <ul class="collapse">
+  <li><a href="#observed-variable" id="toc-observed-variable" class="nav-link" data-scroll-target="#observed-variable">observed variable</a></li>
+  <li><a href="#overidentified" id="toc-overidentified" class="nav-link" data-scroll-target="#overidentified">overidentified</a></li>
+  </ul></li>
+  <li><a href="#p" id="toc-p" class="nav-link" data-scroll-target="#p">P</a>
+  <ul class="collapse">
+  <li><a href="#parcel" id="toc-parcel" class="nav-link" data-scroll-target="#parcel">parcel</a></li>
+  <li><a href="#parameter" id="toc-parameter" class="nav-link" data-scroll-target="#parameter">parameter</a></li>
+  <li><a href="#path-analysis" id="toc-path-analysis" class="nav-link" data-scroll-target="#path-analysis">path analysis</a></li>
+  <li><a href="#psi" id="toc-psi" class="nav-link" data-scroll-target="#psi">psi</a></li>
+  </ul></li>
+  <li><a href="#r" id="toc-r" class="nav-link" data-scroll-target="#r">R</a>
+  <ul class="collapse">
+  <li><a href="#residual-covariance" id="toc-residual-covariance" class="nav-link" data-scroll-target="#residual-covariance">residual covariance</a></li>
+  <li><a href="#rmsea" id="toc-rmsea" class="nav-link" data-scroll-target="#rmsea">RMSEA</a></li>
+  </ul></li>
+  <li><a href="#s" id="toc-s" class="nav-link" data-scroll-target="#s">S</a>
+  <ul class="collapse">
+  <li><a href="#saturated" id="toc-saturated" class="nav-link" data-scroll-target="#saturated">saturated model</a></li>
+  <li><a href="#second-order-factor" id="toc-second-order-factor" class="nav-link" data-scroll-target="#second-order-factor">second-order factor</a></li>
+  <li><a href="#sem" id="toc-sem" class="nav-link" data-scroll-target="#sem">SEM</a></li>
+  <li><a href="#simple-slopes" id="toc-simple-slopes" class="nav-link" data-scroll-target="#simple-slopes">simple slopes</a></li>
+  <li><a href="#sobel-test" id="toc-sobel-test" class="nav-link" data-scroll-target="#sobel-test">Sobel test</a></li>
+  <li><a href="#srmr" id="toc-srmr" class="nav-link" data-scroll-target="#srmr">SRMR</a></li>
+  <li><a href="#standardised-solution" id="toc-standardised-solution" class="nav-link" data-scroll-target="#standardised-solution">standardised solution</a></li>
+  <li><a href="#structural-model" id="toc-structural-model" class="nav-link" data-scroll-target="#structural-model">structural model</a></li>
+  </ul></li>
+  <li><a href="#t" id="toc-t" class="nav-link" data-scroll-target="#t">T</a>
+  <ul class="collapse">
+  <li><a href="#t-rule" id="toc-t-rule" class="nav-link" data-scroll-target="#t-rule">t-rule</a></li>
+  <li><a href="#theta" id="toc-theta" class="nav-link" data-scroll-target="#theta">theta</a></li>
+  <li><a href="#total-effect" id="toc-total-effect" class="nav-link" data-scroll-target="#total-effect">total effect</a></li>
+  <li><a href="#tibble" id="toc-tibble" class="nav-link" data-scroll-target="#tibble">tibble</a></li>
+  </ul></li>
+  <li><a href="#u" id="toc-u" class="nav-link" data-scroll-target="#u">U</a>
+  <ul class="collapse">
+  <li><a href="#underidentified" id="toc-underidentified" class="nav-link" data-scroll-target="#underidentified">underidentified</a></li>
+  </ul></li>
+  <li><a href="#v" id="toc-v" class="nav-link" data-scroll-target="#v">V</a>
+  <ul class="collapse">
+  <li><a href="#vector" id="toc-vector" class="nav-link" data-scroll-target="#vector">vector</a></li>
+  <li><a href="#latent-variance" id="toc-latent-variance" class="nav-link" data-scroll-target="#latent-variance">latent variance</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/michaelides/lavaan-tutorial/edit/main/glossary.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/michaelides/lavaan-tutorial/blob/main/glossary.qmd" class="toc-action"><i class="bi empty"></i>View source</a></li><li><a href="https://github.com/michaelides/lavaan-tutorial/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Glossary</h1>
+<p class="subtitle lead">Key terms used across the tutorials</p>
+</div>
+
+
+<div class="quarto-title-meta-author">
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author">George Michaelides </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            School of Psychology, University of East Anglia
+          </p>
+      </div>
+  </div>
+
+<div class="quarto-title-meta">
+
+      
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">January 1, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>This glossary collects the key terms used across the tutorial series. Terms are linked from individual tutorials on first use. Where a term has a Greek symbol, the symbol is shown in the <a href="./notation.html">notation key</a>.</p>
+<section id="a" class="level2">
+<h2 class="anchored" data-anchor-id="a">A</h2>
+<section id="assignment" class="level3">
+<h3 class="anchored" data-anchor-id="assignment">assignment</h3>
+<p>Storing a value in a named R object with the <code>&lt;-</code> operator. For example, <code>x &lt;- 5</code> assigns the value 5 to the object <code>x</code>.</p>
+</section>
+<section id="anova" class="level3">
+<h3 class="anchored" data-anchor-id="anova">ANOVA</h3>
+<p>Analysis of variance. A generalisation of the t-test to three or more groups. Tests whether the means of the groups are all equal. In R, fitted with <code>aov()</code>.</p>
+</section>
+</section>
+<section id="b" class="level2">
+<h2 class="anchored" data-anchor-id="b">B</h2>
+<section id="bootstrap" class="level3">
+<h3 class="anchored" data-anchor-id="bootstrap">bootstrap</h3>
+<p>A resampling method used to estimate the sampling distribution of a statistic — most commonly a regression coefficient or an indirect effect — by repeatedly sampling with replacement from the observed data. In lavaan, requested with <code>se = "boot"</code> and <code>bootstrap = N</code>. Bootstrap confidence intervals are preferred over the Sobel test for mediation analysis because the product of two normally distributed coefficients is not itself normally distributed.</p>
+</section>
+<section id="bca" class="level3">
+<h3 class="anchored" data-anchor-id="bca">BCa</h3>
+<p>Bias-corrected and accelerated. A refinement of the bootstrap confidence interval that corrects for both bias and skewness in the bootstrap distribution. Requested in lavaan with <code>parameterEstimates(fit, boot.ci.type = "bca.simple")</code>.</p>
+</section>
+</section>
+<section id="c" class="level2">
+<h2 class="anchored" data-anchor-id="c">C</h2>
+<section id="cfa" class="level3">
+<h3 class="anchored" data-anchor-id="cfa">CFA</h3>
+<p>Confirmatory factor analysis. A statistical technique for testing whether a hypothesised factor structure — which observed variables load on which latent factors — fits the observed covariance matrix. Fitted in lavaan with <code>cfa()</code>.</p>
+</section>
+<section id="common-method-variance" class="level3">
+<h3 class="anchored" data-anchor-id="common-method-variance">common method variance</h3>
+<p>Variance shared between observed variables due to the measurement method (e.g.&nbsp;all items measured on the same Likert scale in the same questionnaire) rather than due to the latent construct. Can be modelled as residual covariances between items in CFA.</p>
+</section>
+<section id="constraining" class="level3">
+<h3 class="anchored" data-anchor-id="constraining">constraining parameters</h3>
+<p>Forcing two or more model parameters to take the same value. In lavaan, achieved by labelling parameters with the same identifier — for example, <code>y ~ a*x1</code> and <code>z ~ a*x2</code> constrains the two regression coefficients to be equal.</p>
+</section>
+<section id="convergence" class="level3">
+<h3 class="anchored" data-anchor-id="convergence">convergence</h3>
+<p>The iterative estimation algorithm has found a solution — the difference between parameter estimates across successive iterations has fallen below a tolerance threshold. If a model does not converge, the parameter estimates are not trustworthy. lavaan prints a warning when convergence fails.</p>
+</section>
+</section>
+<section id="d" class="level2">
+<h2 class="anchored" data-anchor-id="d">D</h2>
+<section id="df" class="level3">
+<h3 class="anchored" data-anchor-id="df">degrees of freedom</h3>
+<p>The number of independent pieces of information available to estimate model parameters. In SEM, <code>df = q(q+1)/2 - t</code>, where <code>q</code> is the number of observed variables and <code>t</code> is the number of free parameters. A model with <code>df = 0</code> is just-identified; <code>df &gt; 0</code> is overidentified; <code>df &lt; 0</code> is underidentified and cannot be estimated.</p>
+</section>
+<section id="direct-effect" class="level3">
+<h3 class="anchored" data-anchor-id="direct-effect">direct effect</h3>
+<p>In a mediation model, the effect of the independent variable <span class="math inline">\(X\)</span> on the outcome <span class="math inline">\(Y\)</span> that does not pass through the mediator <span class="math inline">\(M\)</span>. Denoted <span class="math inline">\(c'\)</span>. In lavaan, estimated directly as a regression path.</p>
+</section>
+<section id="disturbance" class="level3">
+<h3 class="anchored" data-anchor-id="disturbance">disturbance</h3>
+<p>The residual variance of a <em>latent</em> dependent variable — the part of the latent variable’s variance not explained by its predictors in the structural model. Denoted <span class="math inline">\(\zeta\)</span> (zeta).</p>
+</section>
+</section>
+<section id="e" class="level2">
+<h2 class="anchored" data-anchor-id="e">E</h2>
+<section id="endogenous" class="level3">
+<h3 class="anchored" data-anchor-id="endogenous">endogenous</h3>
+<p>A variable that is predicted by at least one other variable in the model — a dependent variable. Contrast with <a href="#exogenous">exogenous</a>.</p>
+</section>
+<section id="estimation" class="level3">
+<h3 class="anchored" data-anchor-id="estimation">estimation</h3>
+<p>The process of finding the values of a model’s free parameters that best reproduce the observed covariance matrix. The default estimator in lavaan is maximum likelihood (ML); the robust variant MLR is recommended for non-normal data.</p>
+</section>
+<section id="exogenous" class="level3">
+<h3 class="anchored" data-anchor-id="exogenous">exogenous</h3>
+<p>A variable that is not predicted by any other variable in the model — an independent variable. Exogenous variables have variances and covariances as model parameters but no structural equations predicting them.</p>
+</section>
+</section>
+<section id="f" class="level2">
+<h2 class="anchored" data-anchor-id="f">F</h2>
+<section id="factor-loading" class="level3">
+<h3 class="anchored" data-anchor-id="factor-loading">factor loading</h3>
+<p>The regression coefficient linking a latent variable to one of its observed indicators. Denoted <span class="math inline">\(\lambda\)</span> (lambda). In lavaan, specified with the <code>=~</code> operator. The first loading of each factor is usually fixed to 1 (the <a href="#marker-variable">marker-variable method</a>) to set the latent variable’s scale.</p>
+</section>
+<section id="fiml" class="level3">
+<h3 class="anchored" data-anchor-id="fiml">FIML</h3>
+<p>Full information maximum likelihood. An approach to missing data that uses all available information in the dataset — every participant contributes to whichever parameters their observed values inform. The default missing-data treatment in lavaan. Preferred over listwise deletion because it is unbiased under MCAR and MAR.</p>
+</section>
+<section id="fit-indices" class="level3">
+<h3 class="anchored" data-anchor-id="fit-indices">fit indices</h3>
+<p>Statistics that measure how well a model reproduces the observed covariance matrix. The canonical set used in this series is <span class="math inline">\(\chi^2\)</span>, RMSEA, CFI, TLI, and SRMR. See <a href="https://doi.org/10.1080/10705519909540118">Hu and Bentler (1999)</a> for the cutoff criteria.</p>
+</section>
+<section id="fixed-parameter" class="level3">
+<h3 class="anchored" data-anchor-id="fixed-parameter">fixed parameter</h3>
+<p>A model parameter whose value is set by the researcher rather than estimated from the data. Common examples: a factor loading fixed to 1 (marker variable), a residual covariance fixed to 0 (default). In lavaan, fixed with <code>*</code> followed by a number — e.g.&nbsp;<code>f =~ 1*x1</code>.</p>
+</section>
+<section id="free-parameter" class="level3">
+<h3 class="anchored" data-anchor-id="free-parameter">free parameter</h3>
+<p>A model parameter whose value is estimated from the data. Most parameters in a SEM are free.</p>
+</section>
+</section>
+<section id="h" class="level2">
+<h2 class="anchored" data-anchor-id="h">H</h2>
+<section id="heywood-case" class="level3">
+<h3 class="anchored" data-anchor-id="heywood-case">Heywood case</h3>
+<p>An impossible parameter estimate — most commonly a negative variance or a standardised factor loading above 1. Usually indicates either a misspecified model, an underidentified model, or a sample that is too small. lavaan prints a warning when it detects a Heywood case.</p>
+</section>
+</section>
+<section id="i" class="level2">
+<h2 class="anchored" data-anchor-id="i">I</h2>
+<section id="identification" class="level3">
+<h3 class="anchored" data-anchor-id="identification">identification</h3>
+<p>A model is identified if a unique solution exists for every free parameter. Necessary conditions include positive degrees of freedom (the <a href="#t-rule">t-rule</a>) and a set scale for every latent variable. A model that is not identified cannot be meaningfully estimated.</p>
+</section>
+<section id="indirect-effect" class="level3">
+<h3 class="anchored" data-anchor-id="indirect-effect">indirect effect</h3>
+<p>In a mediation model, the effect of the independent variable <span class="math inline">\(X\)</span> on the outcome <span class="math inline">\(Y\)</span> that operates through the mediator <span class="math inline">\(M\)</span>. Equal to the product <span class="math inline">\(ab\)</span> of the two paths <span class="math inline">\(X \rightarrow M\)</span> and <span class="math inline">\(M \rightarrow Y\)</span>. In lavaan, defined with the <code>:=</code> operator — e.g.&nbsp;<code>indirect := a * b</code>.</p>
+</section>
+<section id="indicator" class="level3">
+<h3 class="anchored" data-anchor-id="indicator">indicator</h3>
+<p>An observed variable that measures a latent variable. For example, <code>pa1</code> is an indicator of the latent factor “positive affect”.</p>
+</section>
+</section>
+<section id="j" class="level2">
+<h2 class="anchored" data-anchor-id="j">J</h2>
+<section id="just-identified" class="level3">
+<h3 class="anchored" data-anchor-id="just-identified">just-identified</h3>
+<p>A model with zero degrees of freedom — the number of free parameters equals the number of non-redundant elements in the covariance matrix. Such a model fits perfectly by construction and cannot be rejected by the data. Also called a <em>saturated</em> model.</p>
+</section>
+</section>
+<section id="l" class="level2">
+<h2 class="anchored" data-anchor-id="l">L</h2>
+<section id="latent-variable" class="level3">
+<h3 class="anchored" data-anchor-id="latent-variable">latent variable</h3>
+<p>An unobserved variable that is inferred from its effects on observed <a href="#indicator">indicators</a>. Represented by circles in path diagrams. Examples in this series: “positive affect”, “job control”, “creativity”.</p>
+</section>
+<section id="listwise-deletion" class="level3">
+<h3 class="anchored" data-anchor-id="listwise-deletion">listwise deletion</h3>
+<p>Removing any participant with a missing value on any variable in the model. Reduces sample size, reduces power, and can bias parameter estimates if the missingness is not completely random. lavaan uses FIML by default instead.</p>
+</section>
+<section id="loadings" class="level3">
+<h3 class="anchored" data-anchor-id="loadings">loadings</h3>
+<p>See <a href="#factor-loading">factor loading</a>.</p>
+</section>
+</section>
+<section id="m" class="level2">
+<h2 class="anchored" data-anchor-id="m">M</h2>
+<section id="marker-variable" class="level3">
+<h3 class="anchored" data-anchor-id="marker-variable">marker variable</h3>
+<p>A method for setting the scale of a latent variable by fixing one of its factor loadings to 1 (and freely estimating the latent variance). lavaan’s default. The alternative is <code>std.lv = TRUE</code>, which fixes the latent variance to 1 and freely estimates all loadings.</p>
+</section>
+<section id="mar" class="level3">
+<h3 class="anchored" data-anchor-id="mar">MAR</h3>
+<p>Missing at random. The probability of a missing value on variable <span class="math inline">\(Y\)</span> is unrelated to the <em>value</em> of <span class="math inline">\(Y\)</span>, conditional on other variables in the analysis. FIML gives unbiased estimates under MAR.</p>
+</section>
+<section id="mcar" class="level3">
+<h3 class="anchored" data-anchor-id="mcar">MCAR</h3>
+<p>Missing completely at random. The probability of a missing value is unrelated to any variable in the dataset — missingness is purely random. The strongest missing-data assumption; FIML and listwise deletion both give unbiased estimates under MCAR, but FIML is more powerful.</p>
+</section>
+<section id="measurement-error" class="level3">
+<h3 class="anchored" data-anchor-id="measurement-error">measurement error</h3>
+<p>The portion of an observed variable’s variance that is not due to the latent construct — a combination of random error and item-specific systematic variance. Denoted <span class="math inline">\(\theta\)</span> (theta). Modelled as the residual variance of each indicator in CFA.</p>
+</section>
+<section id="measurement-model" class="level3">
+<h3 class="anchored" data-anchor-id="measurement-model">measurement model</h3>
+<p>The part of a SEM that specifies how latent variables are measured by observed indicators — that is, the CFA portion of the model. Contrast with the <a href="#structural-model">structural model</a>.</p>
+</section>
+<section id="mediation" class="level3">
+<h3 class="anchored" data-anchor-id="mediation">mediation</h3>
+<p>A relationship in which an independent variable <span class="math inline">\(X\)</span> influences an outcome <span class="math inline">\(Y\)</span> through an intermediate variable <span class="math inline">\(M\)</span> (the mediator). The total effect of <span class="math inline">\(X\)</span> on <span class="math inline">\(Y\)</span> is decomposed into a direct effect (<span class="math inline">\(c'\)</span>) and an indirect effect (<span class="math inline">\(ab\)</span>). See Tutorials 11 and 12.</p>
+</section>
+<section id="missingness" class="level3">
+<h3 class="anchored" data-anchor-id="missingness">missingness</h3>
+<p>The pattern of missing values in a dataset. Distinguished into <a href="#mcar">MCAR</a>, <a href="#mar">MAR</a>, and MNAR (missing not at random).</p>
+</section>
+<section id="mnar" class="level3">
+<h3 class="anchored" data-anchor-id="mnar">MNAR</h3>
+<p>Missing not at random. The probability of a missing value depends on the unobserved value itself — for example, people with very high salaries are more likely to refuse to report them. FIML is biased under MNAR; no standard method fully addresses MNAR without strong assumptions.</p>
+</section>
+<section id="mlr" class="level3">
+<h3 class="anchored" data-anchor-id="mlr">MLR</h3>
+<p>Maximum likelihood with robust standard errors (Satorra–Bentler). The default estimator we recommend throughout this series. Robust to non-normality. Requested in lavaan with <code>estimator = "MLR"</code>.</p>
+</section>
+<section id="modification-indices" class="level3">
+<h3 class="anchored" data-anchor-id="modification-indices">modification indices</h3>
+<p>Statistics that estimate how much the model’s <span class="math inline">\(\chi^2\)</span> would improve if a currently-fixed parameter were freely estimated. A value above 3.84 suggests a parameter worth considering for freeing (<span class="math inline">\(\alpha = .05\)</span>). Should be used cautiously — they are data-driven and can lead to overfitting. In lavaan: <code>modindices(fit, minimum.value = 3.84, sort. = TRUE)</code>.</p>
+</section>
+</section>
+<section id="o" class="level2">
+<h2 class="anchored" data-anchor-id="o">O</h2>
+<section id="observed-variable" class="level3">
+<h3 class="anchored" data-anchor-id="observed-variable">observed variable</h3>
+<p>A variable that is directly measured — a survey item, a test score, a demographic. Represented by squares or rectangles in path diagrams. Also called a <em>manifest</em> variable.</p>
+</section>
+<section id="overidentified" class="level3">
+<h3 class="anchored" data-anchor-id="overidentified">overidentified</h3>
+<p>A model with positive degrees of freedom — fewer free parameters than non-redundant elements in the covariance matrix. Such a model can be empirically tested against the data. The goal of SEM is to specify an overidentified model that fits well.</p>
+</section>
+</section>
+<section id="p" class="level2">
+<h2 class="anchored" data-anchor-id="p">P</h2>
+<section id="parcel" class="level3">
+<h3 class="anchored" data-anchor-id="parcel">parcel</h3>
+<p>An aggregate — usually a mean or sum — of two or more items, used as a single indicator of a latent variable. Parcelling reduces the number of indicators per factor, which can simplify a model and improve fit, at the cost of losing item-level information. Controversial; see Tutorial 08.</p>
+</section>
+<section id="parameter" class="level3">
+<h3 class="anchored" data-anchor-id="parameter">parameter</h3>
+<p>A quantity in a model that is either estimated from the data (<a href="#free-parameter">free</a>) or set by the researcher (<a href="#fixed-parameter">fixed</a>). In SEM, parameters include factor loadings, regression coefficients, variances, and covariances.</p>
+</section>
+<section id="path-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="path-analysis">path analysis</h3>
+<p>A structural equation model with observed variables only — no latent variables. A system of regression equations. Fitted in lavaan with <code>sem()</code>. See Tutorial 09.</p>
+</section>
+<section id="psi" class="level3">
+<h3 class="anchored" data-anchor-id="psi">psi</h3>
+<p>See <a href="#latent-variance">variance of a latent variable</a>.</p>
+</section>
+</section>
+<section id="r" class="level2">
+<h2 class="anchored" data-anchor-id="r">R</h2>
+<section id="residual-covariance" class="level3">
+<h3 class="anchored" data-anchor-id="residual-covariance">residual covariance</h3>
+<p>A covariance between the residuals of two observed variables. Indicates that the two variables share variance not explained by their common latent factor(s) — often due to <a href="#common-method-variance">common method variance</a> or a shared occasion. In lavaan, specified with <code>~~</code> — e.g.&nbsp;<code>x1 ~~ x2</code>.</p>
+</section>
+<section id="rmsea" class="level3">
+<h3 class="anchored" data-anchor-id="rmsea">RMSEA</h3>
+<p>Root mean square error of approximation. A badness-of-fit index (lower is better). Values below .05 indicate close fit, .05–.08 acceptable fit, above .10 poor fit. Reported with a 90% confidence interval; the upper bound of the CI should be below .08.</p>
+</section>
+</section>
+<section id="s" class="level2">
+<h2 class="anchored" data-anchor-id="s">S</h2>
+<section id="saturated" class="level3">
+<h3 class="anchored" data-anchor-id="saturated">saturated model</h3>
+<p>See <a href="#just-identified">just-identified</a>.</p>
+</section>
+<section id="second-order-factor" class="level3">
+<h3 class="anchored" data-anchor-id="second-order-factor">second-order factor</h3>
+<p>A latent variable whose indicators are themselves latent variables. For example, “burnout” might be a second-order factor measured by the first-order factors “emotional exhaustion” and “cynicism”. See Tutorial 08.</p>
+</section>
+<section id="sem" class="level3">
+<h3 class="anchored" data-anchor-id="sem">SEM</h3>
+<p>Structural equation modelling. A framework for testing models that combine a <a href="#measurement-model">measurement model</a> (latent variables measured by observed indicators) with a <a href="#structural-model">structural model</a> (regression paths among latent and observed variables). Fitted in lavaan with <code>sem()</code>.</p>
+</section>
+<section id="simple-slopes" class="level3">
+<h3 class="anchored" data-anchor-id="simple-slopes">simple slopes</h3>
+<p>In moderated regression, the slope of <span class="math inline">\(Y\)</span> on <span class="math inline">\(X\)</span> at a specific value of the moderator <span class="math inline">\(W\)</span>. Usually computed at <span class="math inline">\(W = \pm 1\)</span> SD from its mean. See Tutorial 16.</p>
+</section>
+<section id="sobel-test" class="level3">
+<h3 class="anchored" data-anchor-id="sobel-test">Sobel test</h3>
+<p>A test of the indirect effect <span class="math inline">\(ab\)</span> based on assuming the product of two normally distributed coefficients is itself normally distributed — which it is not. Superseded by <a href="#bootstrap">bootstrap</a> confidence intervals. Included here for historical context; not used in this series.</p>
+</section>
+<section id="srmr" class="level3">
+<h3 class="anchored" data-anchor-id="srmr">SRMR</h3>
+<p>Standardised root mean square residual. A badness-of-fit index (lower is better). The average of the standardised residuals between the observed and model-implied covariance matrices. Values below .08 indicate good fit.</p>
+</section>
+<section id="standardised-solution" class="level3">
+<h3 class="anchored" data-anchor-id="standardised-solution">standardised solution</h3>
+<p>Parameter estimates expressed in standard deviation units, so that loadings and path coefficients are comparable across variables on different scales. In lavaan: <code>summary(fit, standardized = TRUE)</code> or <code>standardizedSolution(fit)</code>. The <code>std.all</code> column fully standardises both observed and latent variables.</p>
+</section>
+<section id="structural-model" class="level3">
+<h3 class="anchored" data-anchor-id="structural-model">structural model</h3>
+<p>The part of a SEM that specifies the regression relationships among variables — which variables predict which. Contrast with the <a href="#measurement-model">measurement model</a>.</p>
+</section>
+</section>
+<section id="t" class="level2">
+<h2 class="anchored" data-anchor-id="t">T</h2>
+<section id="t-rule" class="level3">
+<h3 class="anchored" data-anchor-id="t-rule">t-rule</h3>
+<p>A necessary condition for <a href="#identification">identification</a>: the number of free parameters <span class="math inline">\(t\)</span> must be less than or equal to the number of non-redundant elements in the observed covariance matrix, <span class="math inline">\(q(q+1)/2\)</span>, where <span class="math inline">\(q\)</span> is the number of observed variables. The difference is the <a href="#df">degrees of freedom</a>.</p>
+</section>
+<section id="theta" class="level3">
+<h3 class="anchored" data-anchor-id="theta">theta</h3>
+<p>See <a href="#measurement-error">measurement error</a>.</p>
+</section>
+<section id="total-effect" class="level3">
+<h3 class="anchored" data-anchor-id="total-effect">total effect</h3>
+<p>In a mediation model, the sum of the direct and indirect effects: <span class="math inline">\(c' + ab\)</span>. The total effect of <span class="math inline">\(X\)</span> on <span class="math inline">\(Y\)</span> ignoring the mediator.</p>
+</section>
+<section id="tibble" class="level3">
+<h3 class="anchored" data-anchor-id="tibble">tibble</h3>
+<p>A modern data frame used by the <code>haven</code> and <code>tidyverse</code> packages. Prints more neatly than a base <code>data.frame</code> and never converts strings to factors. Behaves like a regular data frame for the purposes of this series.</p>
+</section>
+</section>
+<section id="u" class="level2">
+<h2 class="anchored" data-anchor-id="u">U</h2>
+<section id="underidentified" class="level3">
+<h3 class="anchored" data-anchor-id="underidentified">underidentified</h3>
+<p>A model with negative degrees of freedom — more free parameters than the data can support. Cannot be estimated. The remedy is to fix or constrain parameters, not to collect more data.</p>
+</section>
+</section>
+<section id="v" class="level2">
+<h2 class="anchored" data-anchor-id="v">V</h2>
+<section id="vector" class="level3">
+<h3 class="anchored" data-anchor-id="vector">vector</h3>
+<p>The fundamental data structure in R: a sequence of values of the same type (numeric, character, logical, integer). Created with <code>c()</code>. See Tutorial 01.</p>
+</section>
+<section id="latent-variance" class="level3">
+<h3 class="anchored" data-anchor-id="latent-variance">latent variance</h3>
+<p>The variance of a latent variable — a model parameter in CFA and SEM. Denoted <span class="math inline">\(\psi\)</span> (psi). In the <a href="#marker-variable">marker-variable</a> method, the latent variance is freely estimated; with <code>std.lv = TRUE</code>, it is fixed to 1.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/michaelides\.github\.io\/lavaan-tutorial\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 George Michaelides, University of East Anglia · MSc Organisational Psychology · Statistical Skills</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/michaelides/lavaan-tutorial/edit/main/glossary.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/michaelides/lavaan-tutorial/blob/main/glossary.qmd" class="toc-action"><i class="bi empty"></i>View source</a></li><li><a href="https://github.com/michaelides/lavaan-tutorial/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/michaelides/lavaan-tutorial">
+      <i class="bi bi-github" role="img" aria-label="GitHub repository">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

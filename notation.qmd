@@ -1,0 +1,77 @@
+---
+title: "Notation"
+subtitle: "Greek symbols used in SEM and their lavaan output homes"
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+This page lists every Greek symbol used across the tutorial series, its meaning, and where to find the corresponding number in lavaan's output. The notation follows the simplified lowercase Greek convention used by modern lavaan textbooks (e.g. @beaujean2014); we do not use the bold-symbol LISREL matrix form.
+
+## Symbols
+
+| Symbol | Name | Meaning | Where in lavaan output |
+|--------|------|---------|------------------------|
+| $\lambda$ | lambda | [Factor loading](glossary.qmd#factor-loading) — the regression coefficient linking a latent variable to an observed indicator | `Estimate` column under `=~` blocks; `std.all` column for the standardised loading |
+| $\beta$ | beta | Structural coefficient — a regression path between variables in the [structural model](glossary.qmd#structural-model) | `Estimate` column under `~` blocks; `std.all` for the standardised path |
+| $\psi$ | psi | [Latent (co)variance](glossary.qmd#latent-variance) — variance of a latent variable, or covariance between two latent variables | `Variances` and `Covariances` sections of `summary(fit)` |
+| $\theta$ | theta | Residual (co)variance of an [observed](glossary.qmd#observed-variable) variable — [measurement error](glossary.qmd#measurement-error) | `Residual Variances` and `Residual Covariances` sections |
+| $\zeta$ | zeta | [Disturbance](glossary.qmd#disturbance) — residual variance of a *latent* dependent variable | `Variances` section, listed under the latent variable's name |
+| $\varepsilon$ | epsilon | Residual of an observed variable (synonym for $\theta$ when referring to a single indicator) | `Residual Variances` section |
+| $a$ | — | Path from $X$ to mediator $M$ in a [mediation](glossary.qmd#mediation) model | Labelled path in lavaan; appears under `~` with its label |
+| $b$ | — | Path from mediator $M$ to $Y$ in a mediation model | Labelled path in lavaan; appears under `~` with its label |
+| $c'$ | c-prime | [Direct effect](glossary.qmd#direct-effect) of $X$ on $Y$ in a mediation model | Labelled path in lavaan |
+| $c$ | c | [Total effect](glossary.qmd#total-effect) of $X$ on $Y$ (before decomposition) | Usually computed as $c' + ab$ via `:=` |
+| $ab$ | — | [Indirect effect](glossary.qmd#indirect-effect) — the product of $a$ and $b$ | Defined parameter via `:=` in lavaan |
+| $\hat{\Sigma}(\theta)$ | Sigma-hat | The model-implied covariance matrix — what the model *predicts* the observed covariances should be | Not printed directly; underlying every fit index |
+| $S$ | S | The observed sample covariance matrix | `SAMPSTAT` output; `sampleStats` in `summary()` |
+| $\chi^2$ | chi-squared | Model fit statistic comparing $S$ and $\hat{\Sigma}(\theta)$ | `fitMeasures(fit)["chisq"]` |
+| $df$ | degrees of freedom | The number of independent pieces of information available to test the model | `fitMeasures(fit)["df"]` |
+| $p$ | p-value | Probability of observing a $\chi^2$ at least as large under the null hypothesis of perfect fit | `fitMeasures(fit)["pvalue"]` |
+| CFI | Comparative Fit Index | [Fit index](glossary.qmd#fit-indices) comparing the model to a null (independence) model; $> .95$ is good | `fitMeasures(fit)["cfi"]` |
+| TLI | Tucker–Lewis Index | Fit index penalising model complexity; $> .95$ is good | `fitMeasures(fit)["tli"]` |
+| RMSEA | Root mean square error of approximation | [Badness-of-fit](glossary.qmd#rmsea) index; $< .05$ is close, $< .08$ is acceptable | `fitMeasures(fit)["rmsea"]` |
+| SRMR | Standardised root mean square residual | Badness-of-fit index; $< .08$ is good | `fitMeasures(fit)["srmr"]` |
+| $N$ | sample size | Number of participants in the analysis | `nobs(fit)` |
+| $R^2$ | R-squared | Proportion of variance in a dependent variable explained by its predictors | `summary(fit, rsquare = TRUE)` or `lavInspect(fit, "rsquare")` |
+| MI | Modification index | Estimated drop in $\chi^2$ if a fixed parameter were freed | `modindices(fit)` output, `mi` column |
+
+## Reading the lavaan output
+
+When you run `summary(fit, standardized = TRUE, fit.measures = TRUE)`, lavaan prints the parameter estimates in sections:
+
+1. **Latent variables** — the `=~` blocks. The `Estimate` column gives the unstandardised $\lambda$; `std.all` gives the fully standardised loading.
+2. **Regressions** — the `~` blocks. The `Estimate` column gives the unstandardised $\beta$; `std.all` gives the standardised path.
+3. **Covariances** — the `~~` blocks between exogenous variables. These are $\psi$ (latent) or free covariances (observed).
+4. **Variances** — `~~` blocks for each variable with itself. Latent variances are $\psi$; observed residual variances are $\theta$.
+5. **Intercepts** — means of observed and latent variables.
+6. **Variances (residual)** — $\theta$ for observed variables; $\zeta$ for latent dependent variables.
+
+For a complete walkthrough of every section, see Tutorial 07 (CFA — practical).
+
+## Reading fit indices
+
+The canonical set we use across this series, with the Hu and Bentler [-@hul1999] cutoffs:
+
+| Index  | Threshold | Good or bad? |
+|--------|-----------|--------------|
+| $\chi^2$ | $p > .05$ | Good (non-significant) — but sensitive to sample size |
+| RMSEA | $< .08$ (acceptable), $< .05$ (close) | Badness (lower is better) |
+| CFI  | $> .95$ (good), $> .90$ (acceptable) | Goodness (higher is better) |
+| TLI  | $> .95$ (good), $> .90$ (acceptable) | Goodness (higher is better) |
+| SRMR | $< .08$ | Badness (lower is better) |
+
+To extract all of these in one call:
+
+```{r}
+#| eval: false
+fitMeasures(fit, c("chisq", "df", "pvalue",
+                   "cfi", "tli",
+                   "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+                   "srmr"))
+```
+
+## See also
+
+- [Glossary](glossary.qmd) — definitions of every term used in the series.
+- [Cheat sheet](cheatsheet.qmd) — lavaan syntax reference.

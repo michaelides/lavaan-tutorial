@@ -1,0 +1,355 @@
+---
+title: "Simple inference: t-test, ANOVA, lm"
+subtitle: "t-test, one-way ANOVA, regression with lm; introducing ggplot2"
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+## Learning objectives
+
+By the end of this tutorial you will be able to:
+
+- run one-sample, independent-samples, and paired t-tests in R and interpret the output
+- run a one-way ANOVA with `aov()` and follow up with pairwise comparisons using `TukeyHSD()`
+- fit simple and multiple regression models with `lm()` and read the `summary()` output
+- produce your first `ggplot2` scatter plot with a fitted regression line
+- check regression assumptions with the base `plot(fit)` diagnostic panels
+
+## Setup
+
+This tutorial uses the PS dataset we imported in Tutorial 03, plus `ggplot2` for the first time. We also load `psych` for descriptive statistics. The setup chunk sets the knit root directory to the project folder so the `data/` paths work.
+
+```{r}
+#| include: false
+knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(comment = "##")
+```
+
+```{r}
+library(haven)
+library(ggplot2)
+library(psych)
+```
+
+```{r}
+#| include: false
+ps <- haven::read_sav("data/ps_data_reduced.sav")
+ps <- haven::zap_labels(ps)
+ps[ps == -99] <- NA
+ps$gender <- factor(ps$gender, levels = c(0, 1), labels = c("Male", "Female"))
+ps$age <- factor(ps$age)
+```
+
+We import the PS dataset from its SPSS file, strip the labels, convert `-99` to `NA`, and turn `gender` and `age` into factors — the same workflow you met in Tutorial 03. For the rest of this tutorial we use two derived scores as our running examples:
+
+```{r}
+# Mean positive affect score per participant
+ps$pa <- (ps$pa1 + ps$pa2 + ps$pa3) / 3
+# Mean creativity score per participant
+ps$creat <- (ps$creat1 + ps$creat2 + ps$creat3) / 3
+# Mean job control score per participant
+ps$con <- (ps$con1 + ps$con3 + ps$con6 + ps$con8 + ps$con9 + ps$con10) / 6
+```
+
+Each is the average of the items that make up the scale, which gives us a single number per participant for that construct. We will use these throughout the tutorial.
+
+## t-tests
+
+A t-test compares the means of two groups (or one group against a reference value) and asks whether the difference is statistically significant. R's `t.test()` function handles all three flavours.
+
+### One-sample t-test
+
+The one-sample t-test compares the mean of a single sample against a hypothesised population mean. Is the mean positive affect score in our sample different from the scale midpoint of 3.5?
+
+```{r}
+t.test(ps$pa, mu = 3.5)
+```
+
+The output gives us the observed mean (`mean of x`), the t-statistic, degrees of freedom, p-value, the 95% confidence interval for the mean, and a reminder of the hypothesised `mu`. Read it as: *t*(`r`) = ..., *p* = ..., with the 95% CI for the mean.
+
+### Independent-samples t-test
+
+The independent-samples t-test compares the means of two unrelated groups. Do male and female participants differ in their mean positive affect? We pass a **formula** — `pa ~ gender` — which R reads as "model `pa` as a function of `gender`".
+
+```{r}
+t.test(pa ~ gender, data = ps, var.equal = FALSE)
+```
+
+`var.equal = FALSE` requests **Welch's t-test**, which does not assume equal variances in the two groups. This is the safer default and is what R uses unless you say otherwise. Setting `var.equal = TRUE` gives the classical Student's t-test, which assumes equal variances — only use this if you have checked the assumption with `var.test()` or a Levene's test.
+
+::: {.callout-note}
+The formula interface `y ~ group` is the same syntax you will use throughout R for regression, ANOVA, and (from Tutorial 05 onward) lavaan models. Get comfortable with the tilde `~` now — it means "is modelled by" or "depends on".
+:::
+
+### Paired t-test
+
+The paired t-test compares two measurements from the same participants — for example, pre- and post-intervention scores. The PS dataset is cross-sectional, so we do not have a natural paired example, but the syntax is:
+
+```{r}
+#| eval: false
+t.test(pre_scores, post_scores, paired = TRUE)
+```
+
+The `paired = TRUE` argument tells R to compute the difference score for each participant and test whether the mean difference is zero.
+
+## One-way ANOVA
+
+Analysis of variance (ANOVA) generalises the t-test to three or more groups. We test whether mean positive affect differs across the five age bands in the PS dataset.
+
+### Fitting the model
+
+```{r}
+fit_aov <- aov(pa ~ age, data = ps)
+summary(fit_aov)
+```
+
+The `summary()` output shows two rows: `age` (the between-groups effect) and `Residuals` (the within-groups variation). The F-statistic tests whether the group means are all equal. The p-value tells you whether to reject that null hypothesis.
+
+### Pairwise comparisons
+
+A significant ANOVA tells you that *some* group differences exist, but not *which* groups differ. Follow up with **Tukey's Honest Significant Difference** test, which performs all pairwise comparisons while controlling the family-wise error rate:
+
+```{r}
+TukeyHSD(fit_aov)
+```
+
+The output lists every pairwise comparison, the difference in means, the lower and upper bounds of the 95% confidence interval, and the adjusted p-value (`p adj`). A comparison is significant at the .05 level if `p adj` is below .05.
+
+::: {.callout-warning}
+### ANOVA requires a factor
+
+If your grouping variable is numeric (e.g. `age` coded 1, 2, 3, 4, 5), `aov()` will treat it as a continuous predictor and run a regression instead of an ANOVA. Always confirm that the grouping variable is a factor with `class(ps$age)` before fitting the model. We converted `age` to a factor in the setup chunk above for exactly this reason.
+:::
+
+### Two-way ANOVA
+
+To test the effects of two grouping variables and their interaction, list both on the right-hand side of the formula separated by `*`:
+
+```{r}
+#| eval: false
+fit_2way <- aov(pa ~ gender * age, data = ps)
+summary(fit_2way)
+```
+
+The `*` expands to `gender + age + gender:age`, where the colon denotes the interaction term. We will not pursue two-way ANOVA further here; the principle is the same as one-way, with one extra row in the summary table per additional effect.
+
+## Simple linear regression with `lm()`
+
+Regression models a continuous outcome as a linear function of one or more predictors. The workhorse function is `lm()` — "linear model".
+
+### Fitting the model
+
+Does positive affect predict creativity? We fit the regression of `creat` on `pa`:
+
+```{r}
+fit_lm <- lm(creat ~ pa, data = ps)
+summary(fit_lm)
+```
+
+The `summary()` output for an `lm` object has four sections worth understanding:
+
+1. **Call** — the model formula, repeated for reference.
+2. **Residuals** — a five-number summary of the differences between observed and predicted values. Symmetric residuals (median near zero) are a good sign.
+3. **Coefficients** — a table with one row per parameter. The `(Intercept)` row is the predicted `creat` when `pa` is zero; the `pa` row is the slope — the change in `creat` for a one-unit increase in `pa`. The columns are the estimate, its standard error, the t-statistic, and the two-tailed p-value.
+4. **Model fit** — `Multiple R-squared` is the proportion of variance in `creat` explained by `pa`. `Adjusted R-squared` corrects for the number of predictors. The `F-statistic` tests the overall model — whether the slope is significantly different from zero.
+
+### Confidence intervals for coefficients
+
+```{r}
+confint(fit_lm)
+```
+
+This gives the 95% confidence interval for each coefficient. If the interval for the slope does not include zero, the effect is statistically significant at the .05 level — equivalent to the p-value in the `summary()` output being below .05.
+
+### Plotting the regression with `ggplot2`
+
+This is our first `ggplot2` plot. The grammar takes getting used to, but the payoff is publication-quality figures with consistent styling.
+
+```{r}
+ggplot(ps, aes(x = pa, y = creat)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = TRUE, colour = "blue") +
+  labs(x = "Positive affect (mean of 3 items)",
+       y = "Creativity (mean of 3 items)",
+       title = "Creativity as a function of positive affect") +
+  theme_minimal()
+```
+
+Reading the code:
+
+- `ggplot(ps, aes(x = pa, y = creat))` — initialise the plot with the data frame and the **aesthetic mapping** (which variable goes on which axis).
+- `geom_point(alpha = 0.5)` — add a scatter of points; `alpha = 0.5` makes them semi-transparent so overlapping points are visible.
+- `geom_smooth(method = "lm", se = TRUE)` — add a fitted regression line; `se = TRUE` shades the 95% confidence band around the line.
+- `labs(...)` — label the axes and title.
+- `theme_minimal()` — a clean white background with subtle gridlines.
+
+::: {.callout-note}
+### The `ggplot2` mental model
+
+A `ggplot2` figure is built up in **layers** connected by `+`. You always start with `ggplot(data, aes(...))`, then add geoms (point, line, smooth, bar, boxplot), then scales, labels, and a theme. Every `ggplot2` plot in this series follows this same layer-by-layer pattern. We will use `ggplot2` for all plots from this tutorial onward.
+:::
+
+### Residual diagnostics
+
+The base `plot(fit_lm)` call produces four diagnostic plots. We display them in a 2 × 2 grid with `par(mfrow = c(2, 2))` — base R graphics, which we use here because these diagnostic plots come straight from `lm` itself.
+
+```{r}
+#| fig-width: 7
+#| fig-height: 6
+par(mfrow = c(2, 2))
+plot(fit_lm)
+par(mfrow = c(1, 1))
+```
+
+The four panels are:
+
+1. **Residuals vs Fitted** — checks linearity. A roughly horizontal red line with no clear pattern is what you want. A curved line suggests a non-linear relationship.
+2. **Normal Q–Q** — checks normality of residuals. Points should lie close to the diagonal dashed line. Systematic departure from the line at the tails indicates non-normal residuals.
+3. **Scale–Location** — checks homoscedasticity (equal variance). A roughly horizontal line with evenly spread points is what you want. A funnel shape indicates heteroscedasticity.
+4. **Residuals vs Leverage** — flags influential observations. Points with high leverage and large residuals (top-right corner) are worth inspecting; they may disproportionately influence the fitted line.
+
+::: {.callout-tip}
+## Try it
+
+Fit a simple regression of `creat` on `con` (job control as predictor of creativity). Is the slope significant? What is the R²? Produce a `ggplot2` scatter with the fitted line.
+:::
+
+::: {.callout-caution collapse="true"}
+## Solution
+
+```{r}
+fit_con <- lm(creat ~ con, data = ps)
+summary(fit_con)
+
+ggplot(ps, aes(x = con, y = creat)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", colour = "blue") +
+  labs(x = "Job control (mean of 6 items)",
+       y = "Creativity (mean of 3 items)") +
+  theme_minimal()
+```
+
+The slope of `con` and its p-value appear in the coefficients table of the `summary()` output. The multiple R-squared is reported further down in the same summary.
+:::
+
+## Multiple regression
+
+Multiple regression extends `lm()` to two or more predictors. The formula uses `+` to add predictors:
+
+```{r}
+fit_multi <- lm(creat ~ pa + con, data = ps)
+summary(fit_multi)
+```
+
+Each coefficient is now interpreted as the effect of that predictor **holding the other predictors constant**. The slope for `pa` is the change in `creat` for a one-unit increase in `pa`, with `con` held constant — and vice versa.
+
+Compare the slope of `pa` in this multiple regression to its slope in the simple regression above. It will usually be different (often smaller) because some of the variance `pa` shared with `con` has been statistically controlled.
+
+### Confidence intervals
+
+```{r}
+confint(fit_multi)
+```
+
+### Comparing nested models
+
+To test whether adding a predictor significantly improves the model fit, use `anova()` to compare the nested models:
+
+```{r}
+anova(fit_lm, fit_multi)
+```
+
+The output tests the null hypothesis that the additional predictor's coefficient is zero. A significant p-value means adding `con` to a model that already contains `pa` significantly improves the fit.
+
+::: {.callout-note}
+This `anova()` call is different from the `aov()` we used earlier. Here, `anova()` takes two (or more) fitted `lm` objects and performs a likelihood-ratio test between them. With `aov()`, you fit a single ANOVA model and `summary()` partitions the variance.
+:::
+
+## From regression to path analysis
+
+The multiple regression model `creat ~ pa + con` is, in fact, a tiny **path model** — a system of regression equations with multiple predictors of a single outcome. In Tutorial 09 we will extend this idea to a model with multiple outcomes and multiple equations, fitted with `lavaan::sem()` instead of `lm()`. The jump from `lm()` to `sem()` is smaller than it looks: the model syntax changes from a formula to a string, but the underlying idea — modelling an outcome as a linear function of predictors — is identical.
+
+Similarly, the regression of `creat` on `pa` is the simplest possible building block of the structural models we will fit in Tutorials 10 and 12. Keep the structure of `summary(fit_lm)` in mind: the coefficient table, the R², and the F-test all reappear in lavaan output, just in slightly different formatting.
+
+## Common errors
+
+::: {.callout-warning}
+### `not all arguments have the same length`
+
+You passed vectors of different lengths to `t.test()` — usually because one vector has `NA`s that the other does not, or because you subsetted one but not the other. Use the **formula interface** (`y ~ group, data = df`) instead of passing separate vectors; R then handles missing data consistently.
+
+### `contrasts can be applied only to factors with 2 or more levels`
+
+You tried to run an ANOVA with a grouping variable that has only one level — perhaps because you accidentally filtered the data down to a single group first. Check `table(ps$age)` before fitting the model.
+
+### `NA` coefficients in `lm()` output
+
+A coefficient shows as `NA` in the `summary()` table when the predictor is a linear combination of other predictors (perfect multicollinearity). This happens most often when you include a categorical predictor as both a numeric variable and a factor in the same model.
+:::
+
+## Exercises
+
+1. Run an independent-samples t-test comparing male and female participants on mean creativity (`creat`). Report the t-statistic, degrees of freedom, p-value, and 95% CI in APA format. Use `var.equal = FALSE` (Welch's test).
+
+2. Run a one-way ANOVA testing whether mean job control (`con`) differs across the five age bands. Is the overall F-test significant? If so, run `TukeyHSD()` and report which pairwise comparisons are significant at the .05 level.
+
+3. Fit a multiple regression model predicting `creat` from `pa`, `con`, and `age` (as a factor). Interpret each coefficient. Use `confint()` to get the 95% CIs. Which predictors are statistically significant?
+
+4. Use `ggplot2` to produce a scatter plot of `con` (x-axis) against `creat` (y-axis), with points coloured by `gender`. Add a separate fitted regression line for each gender using `geom_smooth(method = "lm", aes(colour = gender))`.
+
+::: {.callout-caution collapse="true"}
+## Solutions
+
+**Exercise 1**
+
+```{r}
+t.test(creat ~ gender, data = ps, var.equal = FALSE)
+```
+
+Read the t-statistic, df, p-value, and 95% CI from the output. In APA format: *t*(`df`) = `value`, *p* = `value`, 95% CI [`lower`, `upper`].
+
+**Exercise 2**
+
+```{r}
+fit_age <- aov(con ~ age, data = ps)
+summary(fit_age)
+TukeyHSD(fit_age)
+```
+
+The `summary()` output gives the F-test for the overall effect of age on job control. If `Pr(>F)` is below .05, the omnibus test is significant. `TukeyHSD()` then lists all pairwise comparisons; significant differences are those with `p adj` below .05.
+
+**Exercise 3**
+
+```{r}
+fit_full <- lm(creat ~ pa + con + age, data = ps)
+summary(fit_full)
+confint(fit_full)
+```
+
+Each coefficient's significance is judged by its p-value in the `summary()` output (or, equivalently, whether its 95% CI in `confint()` excludes zero). The `pa` and `con` slopes are interpreted as the change in `creat` for a one-unit increase in that predictor, holding the others constant. The `age` coefficients are differences relative to the reference level (the first level of the factor, here age band 1).
+
+**Exercise 4**
+
+```{r}
+ggplot(ps, aes(x = con, y = creat, colour = gender)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(x = "Job control (mean of 6 items)",
+       y = "Creativity (mean of 3 items)",
+       colour = "Gender") +
+  theme_minimal()
+```
+
+The `colour = gender` aesthetic inside `ggplot()` maps gender to point colour; passing the same aesthetic to `geom_smooth()` makes it fit a separate line for each gender.
+:::
+
+## Summary & next tutorial
+
+You can now run t-tests, one-way ANOVA, and regression with `lm()`, read the `summary()` output, and produce your first `ggplot2` figures. The regression framework you have met here — a formula `y ~ x`, a fitted object, a `summary()` call — is the direct ancestor of the lavaan models we will fit from Tutorial 05 onward. In the next tutorial we make the jump: we introduce `lavaan`'s model syntax (`=~`, `~`, `~~`, `:=`) and the three functions (`cfa()`, `sem()`, `lavaan()`) that you will use for the rest of this series.
+
+## Further reading
+
+- @dalgaard2008 — Chapters 4 and 6 cover t-tests, ANOVA, and regression with worked R examples.
+- @rcore2024 — the official R manuals, including *An Introduction to R*, which has concise chapters on each test covered here.
+- @wickham2019 — for the deeper theory of R's formula interface, which underpins `lm()`, `aov()`, and (from Tutorial 05) `lavaan`.

@@ -1,0 +1,285 @@
+---
+title: "Glossary"
+subtitle: "Key terms used across the tutorials"
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+This glossary collects the key terms used across the tutorial series. Terms are linked from individual tutorials on first use. Where a term has a Greek symbol, the symbol is shown in the [notation key](notation.qmd).
+
+## A
+
+### assignment {#assignment}
+
+Storing a value in a named R object with the `<-` operator. For example, `x <- 5` assigns the value 5 to the object `x`.
+
+### ANOVA {#anova}
+
+Analysis of variance. A generalisation of the t-test to three or more groups. Tests whether the means of the groups are all equal. In R, fitted with `aov()`.
+
+## B
+
+### bootstrap {#bootstrap}
+
+A resampling method used to estimate the sampling distribution of a statistic — most commonly a regression coefficient or an indirect effect — by repeatedly sampling with replacement from the observed data. In lavaan, requested with `se = "boot"` and `bootstrap = N`. Bootstrap confidence intervals are preferred over the Sobel test for mediation analysis because the product of two normally distributed coefficients is not itself normally distributed.
+
+### BCa {#bca}
+
+Bias-corrected and accelerated. A refinement of the bootstrap confidence interval that corrects for both bias and skewness in the bootstrap distribution. Requested in lavaan with `parameterEstimates(fit, boot.ci.type = "bca.simple")`.
+
+## C
+
+### CFA {#cfa}
+
+Confirmatory factor analysis. A statistical technique for testing whether a hypothesised factor structure — which observed variables load on which latent factors — fits the observed covariance matrix. Fitted in lavaan with `cfa()`.
+
+### common method variance {#common-method-variance}
+
+Variance shared between observed variables due to the measurement method (e.g. all items measured on the same Likert scale in the same questionnaire) rather than due to the latent construct. Can be modelled as residual covariances between items in CFA.
+
+### constraining parameters {#constraining}
+
+Forcing two or more model parameters to take the same value. In lavaan, achieved by labelling parameters with the same identifier — for example, `y ~ a*x1` and `z ~ a*x2` constrains the two regression coefficients to be equal.
+
+### convergence {#convergence}
+
+The iterative estimation algorithm has found a solution — the difference between parameter estimates across successive iterations has fallen below a tolerance threshold. If a model does not converge, the parameter estimates are not trustworthy. lavaan prints a warning when convergence fails.
+
+## D
+
+### degrees of freedom {#df}
+
+The number of independent pieces of information available to estimate model parameters. In SEM, `df = q(q+1)/2 - t`, where `q` is the number of observed variables and `t` is the number of free parameters. A model with `df = 0` is just-identified; `df > 0` is overidentified; `df < 0` is underidentified and cannot be estimated.
+
+### direct effect {#direct-effect}
+
+In a mediation model, the effect of the independent variable $X$ on the outcome $Y$ that does not pass through the mediator $M$. Denoted $c'$. In lavaan, estimated directly as a regression path.
+
+### disturbance {#disturbance}
+
+The residual variance of a *latent* dependent variable — the part of the latent variable's variance not explained by its predictors in the structural model. Denoted $\zeta$ (zeta).
+
+## E
+
+### endogenous {#endogenous}
+
+A variable that is predicted by at least one other variable in the model — a dependent variable. Contrast with [exogenous](#exogenous).
+
+### estimation {#estimation}
+
+The process of finding the values of a model's free parameters that best reproduce the observed covariance matrix. The default estimator in lavaan is maximum likelihood (ML); the robust variant MLR is recommended for non-normal data.
+
+### exogenous {#exogenous}
+
+A variable that is not predicted by any other variable in the model — an independent variable. Exogenous variables have variances and covariances as model parameters but no structural equations predicting them.
+
+## F
+
+### factor loading {#factor-loading}
+
+The regression coefficient linking a latent variable to one of its observed indicators. Denoted $\lambda$ (lambda). In lavaan, specified with the `=~` operator. The first loading of each factor is usually fixed to 1 (the [marker-variable method](#marker-variable)) to set the latent variable's scale.
+
+### FIML {#fiml}
+
+Full information maximum likelihood. An approach to missing data that uses all available information in the dataset — every participant contributes to whichever parameters their observed values inform. The default missing-data treatment in lavaan. Preferred over listwise deletion because it is unbiased under MCAR and MAR.
+
+### fit indices {#fit-indices}
+
+Statistics that measure how well a model reproduces the observed covariance matrix. The canonical set used in this series is $\chi^2$, RMSEA, CFI, TLI, and SRMR. See [Hu and Bentler (1999)](https://doi.org/10.1080/10705519909540118) for the cutoff criteria.
+
+### fixed parameter {#fixed-parameter}
+
+A model parameter whose value is set by the researcher rather than estimated from the data. Common examples: a factor loading fixed to 1 (marker variable), a residual covariance fixed to 0 (default). In lavaan, fixed with `*` followed by a number — e.g. `f =~ 1*x1`.
+
+### free parameter {#free-parameter}
+
+A model parameter whose value is estimated from the data. Most parameters in a SEM are free.
+
+## H
+
+### Heywood case {#heywood-case}
+
+An impossible parameter estimate — most commonly a negative variance or a standardised factor loading above 1. Usually indicates either a misspecified model, an underidentified model, or a sample that is too small. lavaan prints a warning when it detects a Heywood case.
+
+## I
+
+### identification {#identification}
+
+A model is identified if a unique solution exists for every free parameter. Necessary conditions include positive degrees of freedom (the [t-rule](#t-rule)) and a set scale for every latent variable. A model that is not identified cannot be meaningfully estimated.
+
+### indirect effect {#indirect-effect}
+
+In a mediation model, the effect of the independent variable $X$ on the outcome $Y$ that operates through the mediator $M$. Equal to the product $ab$ of the two paths $X \rightarrow M$ and $M \rightarrow Y$. In lavaan, defined with the `:=` operator — e.g. `indirect := a * b`.
+
+### indicator {#indicator}
+
+An observed variable that measures a latent variable. For example, `pa1` is an indicator of the latent factor "positive affect".
+
+## J
+
+### just-identified {#just-identified}
+
+A model with zero degrees of freedom — the number of free parameters equals the number of non-redundant elements in the covariance matrix. Such a model fits perfectly by construction and cannot be rejected by the data. Also called a *saturated* model.
+
+## L
+
+### latent variable {#latent-variable}
+
+An unobserved variable that is inferred from its effects on observed [indicators](#indicator). Represented by circles in path diagrams. Examples in this series: "positive affect", "job control", "creativity".
+
+### listwise deletion {#listwise-deletion}
+
+Removing any participant with a missing value on any variable in the model. Reduces sample size, reduces power, and can bias parameter estimates if the missingness is not completely random. lavaan uses FIML by default instead.
+
+### loadings
+
+See [factor loading](#factor-loading).
+
+## M
+
+### marker variable {#marker-variable}
+
+A method for setting the scale of a latent variable by fixing one of its factor loadings to 1 (and freely estimating the latent variance). lavaan's default. The alternative is `std.lv = TRUE`, which fixes the latent variance to 1 and freely estimates all loadings.
+
+### MAR {#mar}
+
+Missing at random. The probability of a missing value on variable $Y$ is unrelated to the *value* of $Y$, conditional on other variables in the analysis. FIML gives unbiased estimates under MAR.
+
+### MCAR {#mcar}
+
+Missing completely at random. The probability of a missing value is unrelated to any variable in the dataset — missingness is purely random. The strongest missing-data assumption; FIML and listwise deletion both give unbiased estimates under MCAR, but FIML is more powerful.
+
+### measurement error {#measurement-error}
+
+The portion of an observed variable's variance that is not due to the latent construct — a combination of random error and item-specific systematic variance. Denoted $\theta$ (theta). Modelled as the residual variance of each indicator in CFA.
+
+### measurement model {#measurement-model}
+
+The part of a SEM that specifies how latent variables are measured by observed indicators — that is, the CFA portion of the model. Contrast with the [structural model](#structural-model).
+
+### mediation {#mediation}
+
+A relationship in which an independent variable $X$ influences an outcome $Y$ through an intermediate variable $M$ (the mediator). The total effect of $X$ on $Y$ is decomposed into a direct effect ($c'$) and an indirect effect ($ab$). See Tutorials 11 and 12.
+
+### missingness {#missingness}
+
+The pattern of missing values in a dataset. Distinguished into [MCAR](#mcar), [MAR](#mar), and MNAR (missing not at random).
+
+### MNAR {#mnar}
+
+Missing not at random. The probability of a missing value depends on the unobserved value itself — for example, people with very high salaries are more likely to refuse to report them. FIML is biased under MNAR; no standard method fully addresses MNAR without strong assumptions.
+
+### MLR {#mlr}
+
+Maximum likelihood with robust standard errors (Satorra–Bentler). The default estimator we recommend throughout this series. Robust to non-normality. Requested in lavaan with `estimator = "MLR"`.
+
+### modification indices {#modification-indices}
+
+Statistics that estimate how much the model's $\chi^2$ would improve if a currently-fixed parameter were freely estimated. A value above 3.84 suggests a parameter worth considering for freeing ($\alpha = .05$). Should be used cautiously — they are data-driven and can lead to overfitting. In lavaan: `modindices(fit, minimum.value = 3.84, sort. = TRUE)`.
+
+## O
+
+### observed variable {#observed-variable}
+
+A variable that is directly measured — a survey item, a test score, a demographic. Represented by squares or rectangles in path diagrams. Also called a *manifest* variable.
+
+### overidentified {#overidentified}
+
+A model with positive degrees of freedom — fewer free parameters than non-redundant elements in the covariance matrix. Such a model can be empirically tested against the data. The goal of SEM is to specify an overidentified model that fits well.
+
+## P
+
+### parcel {#parcel}
+
+An aggregate — usually a mean or sum — of two or more items, used as a single indicator of a latent variable. Parcelling reduces the number of indicators per factor, which can simplify a model and improve fit, at the cost of losing item-level information. Controversial; see Tutorial 08.
+
+### parameter {#parameter}
+
+A quantity in a model that is either estimated from the data ([free](#free-parameter)) or set by the researcher ([fixed](#fixed-parameter)). In SEM, parameters include factor loadings, regression coefficients, variances, and covariances.
+
+### path analysis {#path-analysis}
+
+A structural equation model with observed variables only — no latent variables. A system of regression equations. Fitted in lavaan with `sem()`. See Tutorial 09.
+
+### psi {#psi}
+
+See [variance of a latent variable](#latent-variance).
+
+## R
+
+### residual covariance {#residual-covariance}
+
+A covariance between the residuals of two observed variables. Indicates that the two variables share variance not explained by their common latent factor(s) — often due to [common method variance](#common-method-variance) or a shared occasion. In lavaan, specified with `~~` — e.g. `x1 ~~ x2`.
+
+### RMSEA {#rmsea}
+
+Root mean square error of approximation. A badness-of-fit index (lower is better). Values below .05 indicate close fit, .05–.08 acceptable fit, above .10 poor fit. Reported with a 90% confidence interval; the upper bound of the CI should be below .08.
+
+## S
+
+### saturated model {#saturated}
+
+See [just-identified](#just-identified).
+
+### second-order factor {#second-order-factor}
+
+A latent variable whose indicators are themselves latent variables. For example, "burnout" might be a second-order factor measured by the first-order factors "emotional exhaustion" and "cynicism". See Tutorial 08.
+
+### SEM {#sem}
+
+Structural equation modelling. A framework for testing models that combine a [measurement model](#measurement-model) (latent variables measured by observed indicators) with a [structural model](#structural-model) (regression paths among latent and observed variables). Fitted in lavaan with `sem()`.
+
+### simple slopes {#simple-slopes}
+
+In moderated regression, the slope of $Y$ on $X$ at a specific value of the moderator $W$. Usually computed at $W = \pm 1$ SD from its mean. See Tutorial 16.
+
+### Sobel test {#sobel-test}
+
+A test of the indirect effect $ab$ based on assuming the product of two normally distributed coefficients is itself normally distributed — which it is not. Superseded by [bootstrap](#bootstrap) confidence intervals. Included here for historical context; not used in this series.
+
+### SRMR {#srmr}
+
+Standardised root mean square residual. A badness-of-fit index (lower is better). The average of the standardised residuals between the observed and model-implied covariance matrices. Values below .08 indicate good fit.
+
+### standardised solution {#standardised-solution}
+
+Parameter estimates expressed in standard deviation units, so that loadings and path coefficients are comparable across variables on different scales. In lavaan: `summary(fit, standardized = TRUE)` or `standardizedSolution(fit)`. The `std.all` column fully standardises both observed and latent variables.
+
+### structural model {#structural-model}
+
+The part of a SEM that specifies the regression relationships among variables — which variables predict which. Contrast with the [measurement model](#measurement-model).
+
+## T
+
+### t-rule {#t-rule}
+
+A necessary condition for [identification](#identification): the number of free parameters $t$ must be less than or equal to the number of non-redundant elements in the observed covariance matrix, $q(q+1)/2$, where $q$ is the number of observed variables. The difference is the [degrees of freedom](#df).
+
+### theta {#theta}
+
+See [measurement error](#measurement-error).
+
+### total effect {#total-effect}
+
+In a mediation model, the sum of the direct and indirect effects: $c' + ab$. The total effect of $X$ on $Y$ ignoring the mediator.
+
+### tibble {#tibble}
+
+A modern data frame used by the `haven` and `tidyverse` packages. Prints more neatly than a base `data.frame` and never converts strings to factors. Behaves like a regular data frame for the purposes of this series.
+
+## U
+
+### underidentified {#underidentified}
+
+A model with negative degrees of freedom — more free parameters than the data can support. Cannot be estimated. The remedy is to fix or constrain parameters, not to collect more data.
+
+## V
+
+### vector {#vector}
+
+The fundamental data structure in R: a sequence of values of the same type (numeric, character, logical, integer). Created with `c()`. See Tutorial 01.
+
+### latent variance {#latent-variance}
+
+The variance of a latent variable — a model parameter in CFA and SEM. Denoted $\psi$ (psi). In the [marker-variable](#marker-variable) method, the latent variance is freely estimated; with `std.lv = TRUE`, it is fixed to 1.

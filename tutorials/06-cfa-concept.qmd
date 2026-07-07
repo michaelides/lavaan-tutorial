@@ -1,0 +1,374 @@
+---
+title: "CFA — concept"
+subtitle: "Latent vs observed, identification, marker variable, model fit"
+author: "George Michaelides"
+institute: "School of Psychology, University of East Anglia"
+date: "2026"
+---
+
+## Learning objectives
+
+By the end of this tutorial you will be able to:
+
+- distinguish [latent](../glossary.qmd#latent-variable) and [observed](../glossary.qmd#observed-variable) variables and explain why latent variables need a scale
+- identify the three kinds of parameter in a CFA — factor loadings ($\lambda$), latent (co)variances ($\psi$), and residual (co)variances ($\theta$) — and locate each in lavaan output
+- apply the [t-rule](../glossary.qmd#t-rule) to determine whether a model is [identified](../glossary.qmd#identification)
+- explain the [marker-variable method](../glossary.qmd#marker-variable) and the `std.lv = TRUE` alternative for setting a latent variable's scale
+- describe what a [fit index](../glossary.qmd#fit-indices) measures and name the canonical set we will use throughout the series
+
+## Setup
+
+This is a concept tutorial — we will fit one small model for illustration, but the focus is on the ideas. We load lavaan and the PS dataset in the usual way.
+
+```{r}
+#| include: false
+knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(comment = "##")
+```
+
+```{r}
+library(haven)
+library(lavaan)
+```
+
+```{r}
+#| include: false
+ps <- haven::read_sav("data/ps_data_reduced.sav")
+ps <- haven::zap_labels(ps)
+ps[ps == -99] <- NA
+```
+
+## What is confirmatory factor analysis?
+
+[Confirmatory factor analysis](../glossary.qmd#cfa) (CFA) is a technique for testing whether a hypothesised factor structure fits the observed covariances among a set of items. You, the researcher, specify in advance which items load on which factors. CFA then estimates the parameters of that model and tells you how well the model-implied covariance matrix matches the observed one.
+
+This is the "confirmatory" part: you commit to a structure before looking at the results, and you test it. This distinguishes CFA from exploratory factor analysis (EFA), where the algorithm freely searches for the best-factoring structure. In dissertation work, CFA is what you use when you have a theoretical reason to expect a particular factor structure and you want to test it.
+
+### A two-factor example
+
+Throughout this and the next tutorial we work with a two-factor CFA on the six affect items in the PS dataset:
+
+- **Positive affect (PA)** measured by `pa1`, `pa2`, `pa3`
+- **Negative affect (neg)** measured by `na1`, `na2`, `na3`
+
+The path diagram looks like this:
+
+```{r}
+#| echo: false
+#| fig-align: center
+#| out-width: "85%"
+#| fig-cap: "A two-factor CFA. Circles are latent factors (PA, neg); squares are observed indicators. Single-headed arrows from factors to indicators are factor loadings (λ). The double-headed arrow between the factors is their covariance (ψ). Small circles on each indicator are residual variances (θ)."
+DiagrammeR::grViz("
+digraph {
+  graph [layout = neato]
+  node  [fontname = Helvetica, fontsize = 11]
+
+  PA  [label = 'PA',  shape = ellipse, style = filled, fillcolor = '#aed6f1', pos = '1.5,3!']
+  neg [label = 'neg', shape = ellipse, style = filled, fillcolor = '#aed6f1', pos = '5,3!']
+
+  pa1 [label = 'pa1', shape = box, style = filled, fillcolor = '#f9e79f', pos = '0,0!']
+  pa2 [label = 'pa2', shape = box, style = filled, fillcolor = '#f9e79f', pos = '1.5,0!']
+  pa3 [label = 'pa3', shape = box, style = filled, fillcolor = '#f9e79f', pos = '3,0!']
+
+  na1 [label = 'na1', shape = box, style = filled, fillcolor = '#f9e79f', pos = '4,0!']
+  na2 [label = 'na2', shape = box, style = filled, fillcolor = '#f9e79f', pos = '5.5,0!']
+  na3 [label = 'na3', shape = box, style = filled, fillcolor = '#f9e79f', pos = '7,0!']
+
+  PA -> pa1 [label = '  λ']
+  PA -> pa2 [label = '  λ']
+  PA -> pa3 [label = '  λ']
+
+  neg -> na1 [label = '  λ']
+  neg -> na2 [label = '  λ']
+  neg -> na3 [label = '  λ']
+
+  PA  -> neg [dir = both, label = '  ψ']
+}
+")
+```
+
+We will fit this model in Tutorial 07. First, let us understand what each part of it means.
+
+## The parameters of a CFA
+
+A CFA has three kinds of parameter. Every one of them appears in the lavaan `summary()` output, so it is worth knowing them by name and symbol.
+
+### Factor loadings ($\lambda$)
+
+A [factor loading](../glossary.qmd#factor-loading) is the regression coefficient linking a latent variable to one of its indicators. It tells you how strongly the indicator reflects the underlying factor. Denoted $\lambda$ (lambda).
+
+In the diagram, the arrows from `PA` to `pa1`, `pa2`, `pa3` are the three loadings of the PA factor. In lavaan syntax, loadings are specified with `=~`:
+
+```{r}
+#| eval: false
+PA =~ pa1 + pa2 + pa3
+```
+
+In lavaan output, loadings appear in the **Latent variables** section. The `Estimate` column gives the unstandardised $\lambda$; the `std.all` column gives the standardised loading — the correlation between the indicator and the factor.
+
+### Latent (co)variances ($\psi$)
+
+The [variance of a latent variable](../glossary.qmd#latent-variance) — how much the factor varies across participants — is denoted $\psi$ (psi). The covariance between two latent variables (e.g. between PA and neg) is also $\psi$.
+
+In the diagram, the double-headed arrow between `PA` and `neg` is their covariance. In lavaan syntax, covariances are specified with `~~`:
+
+```{r}
+#| eval: false
+PA ~~ neg
+```
+
+In lavaan output, latent variances and covariances appear in the **Variances** and **Covariances** sections respectively. The standardised covariance (`std.all`) is the correlation between the two factors — a number between -1 and 1.
+
+### Residual (co)variances ($\theta$)
+
+Every observed indicator has a [residual variance](../glossary.qmd#measurement-error) — the portion of its variance not explained by the latent factor. This is [measurement error](../glossary.qmd#measurement-error) (plus any item-specific systematic variance), denoted $\theta$ (theta).
+
+In the diagram, the small circles attached to each observed variable represent $\theta$. lavaan estimates residual variances automatically for every indicator; you do not need to specify them explicitly. They appear in the **Variances** section of the output, listed under each indicator's name.
+
+If two indicators share variance that is not explained by their common factor — perhaps because they share a method or a wording similarity — you can model a **residual covariance** between them:
+
+```{r}
+#| eval: false
+pa1 ~~ pa2
+```
+
+This adds a covariance between the residuals of `pa1` and `pa2`. We will use this in Tutorial 07 when we examine modification indices.
+
+### Putting the parameters together
+
+A two-factor CFA with three indicators per factor has:
+
+- 6 factor loadings ($\lambda$) — but 2 are fixed to 1 by the marker-variable method, so 4 are freely estimated
+- 2 latent variances ($\psi$) — one for PA, one for neg
+- 1 latent covariance ($\psi$) — between PA and neg
+- 6 residual variances ($\theta$) — one for each indicator
+
+That is $4 + 2 + 1 + 6 = 13$ free parameters. We will use this count in a moment when we check identification.
+
+## Setting the scale of a latent variable
+
+A [latent variable](../glossary.qmd#latent-variable) is not directly observed, so it has no natural unit of measurement. We must give it one by fixing either a loading or its variance. There are two methods, and you met both in Tutorial 05.
+
+### Marker-variable method (lavaan's default)
+
+Fix one factor loading to 1. The latent variable then has the same scale as that indicator. The latent variance $\psi$ is freely estimated. This is lavaan's default — the first indicator listed after `=~` has its loading fixed to 1.
+
+```{r}
+#| eval: false
+PA =~ pa1 + pa2 + pa3     # pa1's loading is fixed to 1
+```
+
+### Standardised latent variable
+
+Fix the latent variance to 1. All loadings are freely estimated. The latent variable is in standard-deviation units. Requested with `std.lv = TRUE`:
+
+```{r}
+#| eval: false
+cfa(model, data = ps, std.lv = TRUE)
+```
+
+Both methods give identical standardised solutions and identical fit indices. They differ only in how the unstandardised parameters are scaled. We use the marker-variable method throughout this series.
+
+## Identification
+
+A model is [identified](../glossary.qmd#identification) if a unique solution exists for every free parameter. If a model is not identified, the parameter estimates are not meaningful — many different combinations of parameter values would produce the same model-implied covariance matrix, and lavaan cannot choose among them.
+
+### The t-rule
+
+The first necessary condition for identification is the [t-rule](../glossary.qmd#t-rule): the number of free parameters $t$ must be less than or equal to the number of non-redundant elements in the observed covariance matrix.
+
+The number of non-redundant elements in a covariance matrix with $q$ observed variables is:
+
+$$
+q(q + 1) / 2
+$$
+
+The degrees of freedom of the model are then:
+
+$$
+\text{df} = \frac{q(q+1)}{2} - t
+$$ {#eq-t-rule}
+
+For our two-factor CFA: $q = 6$ observed variables, so $q(q+1)/2 = 6 \times 7 / 2 = 21$. We have $t = 13$ free parameters, so $\text{df} = 21 - 13 = 8$.
+
+A model with:
+
+- **df < 0** is [underidentified](../glossary.qmd#underidentified) — cannot be estimated.
+- **df = 0** is [just-identified](../glossary.qmd#just-identified) (saturated) — fits perfectly by construction, cannot be tested.
+- **df > 0** is [overidentified](../glossary.qmd#overidentified) — can be empirically tested against the data.
+
+Our two-factor CFA with 8 df is overidentified, which is what we want — it means the data can potentially reject the model.
+
+::: {.callout-note}
+### Just-identified models
+
+The one-factor CFA with three indicators you fitted in Tutorial 05 had $q = 3$, so $q(q+1)/2 = 6$, and $t = 6$ (2 loadings + 1 latent variance + 3 residual variances), giving $\text{df} = 0$. That is why the fit was perfect — a just-identified model reproduces the observed covariance matrix exactly. You cannot test a just-identified model; you can only estimate its parameters.
+:::
+
+### Further conditions for identification
+
+The t-rule is necessary but not sufficient. Two further conditions matter in practice:
+
+1. **Each latent variable has its scale set** — by the marker-variable method or `std.lv = TRUE`. Without this, the latent variable's units are undefined and the model is not identified.
+
+2. **Each factor has at least three indicators** — a factor with two indicators is just-identified on its own (it fits perfectly), and a factor with one indicator is underidentified unless you fix its loading and residual variance to specific values. Three indicators per factor is the practical minimum for an overidentified factor.
+
+::: {.callout-warning}
+### Empirical underidentification
+
+A model can be formally identified but still fail to converge because the *data* do not contain enough information to distinguish the parameters — for example, when two indicators are nearly identical (correlation near 1) or when a factor has very low variance. This is called *empirical underidentification* and it is a data problem, not a model problem. lavaan will warn you that the model has not converged.
+:::
+
+## Model fit
+
+Once a model is identified and estimated, we ask: how well does it reproduce the observed covariance matrix? This is the question of [model fit](../glossary.qmd#fit-indices).
+
+The fundamental idea is that the model implies a particular covariance matrix $\hat{\Sigma}(\theta)$ — the covariances among the observed variables that the model *predicts* given its parameter estimates. We compare this to the observed sample covariance matrix $S$. If $\hat{\Sigma}(\theta)$ is close to $S$, the model fits well.
+
+### The chi-square test
+
+The classic test is the model $\chi^2$, which tests the null hypothesis:
+
+$$
+H_0: S = \hat{\Sigma}(\theta)
+$$
+
+A *non-significant* $\chi^2$ (e.g. $p > .05$) means we cannot reject the model — it fits. A *significant* $\chi^2$ means the model is rejected — the implied and observed covariances differ more than we would expect by chance.
+
+The problem with $\chi^2$ is that it is sensitive to sample size. With a large sample, even a trivially misspecified model will be rejected. With a small sample, even a badly misspecified model will not be. We therefore supplement $\chi^2$ with approximate fit indices.
+
+### The canonical fit indices
+
+Following [Hu and Bentler (1999)](https://doi.org/10.1080/10705519909540118), we report at least two indices throughout this series: one badness-of-fit index (RMSEA or SRMR) and one goodness-of-fit index (CFI or TLI). The canonical set:
+
+| Index  | Type | Threshold | Interpretation |
+|--------|------|-----------|----------------|
+| $\chi^2$ | Exact | $p > .05$ | Good fit, but sensitive to sample size |
+| RMSEA | Badness | $< .08$ acceptable, $< .05$ close | Lower is better; reported with 90% CI |
+| CFI  | Goodness | $> .95$ good, $> .90$ acceptable | Higher is better |
+| TLI  | Goodness | $> .95$ good, $> .90$ acceptable | Higher is better; penalises complexity |
+| SRMR | Badness | $< .08$ | Lower is better; sensitive to misspecification |
+
+To extract all five in one call:
+
+```{r}
+#| eval: false
+fitMeasures(fit, c("chisq", "df", "pvalue",
+                   "cfi", "tli",
+                   "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+                   "srmr"))
+```
+
+We will see these in action in Tutorial 07, when we fit the two-factor CFA on the PS dataset and read the full output.
+
+::: {.callout-note}
+### Fit is not variance accounted for
+
+A common mistake is to interpret fit indices as "the model explains X% of the variance". They are not. Fit indices measure how closely the model-implied covariance matrix matches the observed one — they say nothing directly about variance explained. The variance-explained analogue in SEM is $R^2$ for each indicator, which we will meet in Tutorial 07.
+:::
+
+## A quick illustration
+
+Let us fit the two-factor CFA on the PS dataset so the concepts above have a concrete referent. We will read the full output in Tutorial 07; here we just confirm that the model is identified and that it fits.
+
+```{r}
+model_2f <- '
+  PA  =~ pa1 + pa2 + pa3
+  neg =~ na1 + na2 + na3
+  PA  ~~ neg
+'
+
+fit_2f <- cfa(model_2f, data = ps, estimator = "MLR")
+fitMeasures(fit_2f, c("chisq", "df", "pvalue",
+                      "cfi", "tli",
+                      "rmsea", "rmsea.ci.lower", "rmsea.ci.upper",
+                      "srmr"))
+```
+
+With $\text{df} = 8$ (exactly as we calculated above) and $\chi^2$ non-significant, CFI = TLI = 1.000, RMSEA = 0.000, and SRMR = 0.014, the model fits very well. We will unpack every number in Tutorial 07.
+
+## Mathematical foundation (optional)
+
+::: {.callout-note collapse="true"}
+### The matrix form of a CFA
+
+For those who want to see the underlying mathematics, a CFA can be written in matrix form. The measurement model is:
+
+$$
+\mathbf{y} = \mathbf{\Lambda} \mathbf{\eta} + \mathbf{\varepsilon}
+$$ {#eq-cfa-measurement}
+
+where:
+
+- $\mathbf{y}$ is a vector of observed variables
+- $\mathbf{\Lambda}$ is a matrix of factor loadings ($\lambda$)
+- $\mathbf{\eta}$ is a vector of latent variables
+- $\mathbf{\varepsilon}$ is a vector of residuals ($\theta$)
+
+The model-implied covariance matrix is then:
+
+$$
+\hat{\Sigma}(\theta) = \mathbf{\Lambda} \mathbf{\Psi} \mathbf{\Lambda}' + \mathbf{\Theta}
+$$ {#eq-cfa-implied}
+
+where $\mathbf{\Psi}$ is the covariance matrix of the latent variables and $\mathbf{\Theta}$ is the covariance matrix of the residuals.
+
+You do not need to manipulate these matrices to use lavaan — the package does it for you. But you will see this notation in SEM papers (e.g. @bollen1989; @hoyle2012), and recognising it helps you read the literature. For the rest of this series we use the simplified lowercase Greek symbols ($\lambda$, $\psi$, $\theta$) rather than the bold matrix form.
+:::
+
+## Common errors
+
+::: {.callout-warning}
+### Negative degrees of freedom
+
+`lavaan WARNING: model is underidentified` — you have more free parameters than the data can support. The remedy is to fix or constrain parameters (e.g. remove a factor, fix a loading to zero, constrain two loadings equal), not to collect more data.
+
+### A factor with two indicators
+
+A factor with only two indicators is just-identified on its own — it will fit perfectly but contributes no degrees of freedom to the overall model. If you must have a two-indicator factor, consider [parcelling](../glossary.qmd#parcel) (Tutorial 08) or constraining the two loadings equal.
+
+### Forgetting to set the scale
+
+If you turn off the marker-variable default (`auto.fix.first = FALSE`) without using `std.lv = TRUE`, your latent variable has no scale and the model is not identified. Always use one of the two methods.
+:::
+
+## Exercises
+
+1. Consider a one-factor CFA with **four** indicators. How many non-redundant elements are in the covariance matrix? How many free parameters does the model have (using the marker-variable method)? What are the degrees of freedom? Is the model just-identified or overidentified?
+
+2. Consider a two-factor CFA where factor 1 has **two** indicators and factor 2 has **three** indicators, and the two factors are allowed to correlate. How many degrees of freedom does this model have? Is it identified?
+
+3. You fit a CFA and get $\chi^2(12) = 28.45$, $p = .005$, CFI = .94, TLI = .92, RMSEA = .07 (90% CI [.04, .10]), SRMR = .06. Using the Hu and Bentler cutoffs from the table above, write a one-sentence summary of the model's fit. Which indices suggest acceptable fit, and which suggest the model should be rejected?
+
+4. A researcher fits a CFA with a single factor and two indicators. They report "excellent fit" with $\chi^2 = 0$, df = 0, CFI = 1, RMSEA = 0. Why is this report misleading?
+
+::: {.callout-caution collapse="true"}
+## Solutions
+
+**Exercise 1**
+
+With $q = 4$ indicators, the covariance matrix has $q(q+1)/2 = 4 \times 5 / 2 = 10$ non-redundant elements. The free parameters are: 3 loadings (the first is fixed to 1 by the marker-variable method) + 1 latent variance + 4 residual variances = 8. So $\text{df} = 10 - 8 = 2$. The model is overidentified — it can be tested against the data.
+
+**Exercise 2**
+
+With $q = 5$ observed variables, the covariance matrix has $5 \times 6 / 2 = 15$ elements. The free parameters are: 1 loading on factor 1 (one of two is fixed to 1) + 2 loadings on factor 2 (one of three is fixed to 1) + 2 latent variances + 1 latent covariance + 5 residual variances = 11. So $\text{df} = 15 - 11 = 4$. The model is overidentified *as a whole*, but factor 1 with only two indicators is just-identified on its own — it contributes no df. This is a fragile model; if you can add a third indicator to factor 1, do so.
+
+**Exercise 3**
+
+The $\chi^2$ is significant ($p = .005 < .05$), which would normally reject the model. However, CFI (.94) and TLI (.92) are at or above the .90 acceptable threshold, SRMR (.06) is below .08, and RMSEA (.07) is below .08 with its lower CI bound at .04. A reasonable summary: "The model showed acceptable fit on the approximate indices (CFI = .94, TLI = .92, RMSEA = .07, SRMR = .06), although the significant $\chi^2(12) = 28.45$, $p = .005$ suggests some model misspecification." The $\chi^2$ and the upper bound of the RMSEA CI (.10) are the indices suggesting rejection; the rest suggest acceptable fit.
+
+**Exercise 4**
+
+A one-factor model with two indicators has $q = 2$, so $q(q+1)/2 = 3$, and $t = 3$ (1 loading + 1 latent variance + 2 residual variances), giving $\text{df} = 0$. The model is just-identified — it fits perfectly *by construction*, not because it is a good model. Reporting "excellent fit" for a just-identified model is misleading because the fit is guaranteed; the model has not been tested against the data at all. Any two-indicator one-factor CFA will give $\chi^2 = 0$, CFI = 1, RMSEA = 0 regardless of how well or badly the items measure the factor.
+:::
+
+## Summary & next tutorial
+
+You now understand the building blocks of CFA: latent variables measured by indicators, three kinds of parameter ($\lambda$, $\psi$, $\theta$), the t-rule for identification, the two methods for setting a latent variable's scale, and the canonical set of fit indices. In the next tutorial we put all of this to work on the PS dataset — fitting the two-factor CFA on positive and negative affect, reading the full `summary()` output, extracting fit indices, examining modification indices, and interpreting the results in APA format.
+
+## Further reading
+
+- @bollen1989 — the canonical reference for SEM identification and the matrix form of the measurement model.
+- @beaujean2014 — a modern, lavaan-based introduction to latent variable modelling; the notation conventions in this series follow Beaujean.
+- @hoyle2012 — the *Handbook of Structural Equation Modeling*, a comprehensive reference for every aspect of SEM.
+- @hul1999 — the source of the fit-index cutoff criteria we use throughout this series.
