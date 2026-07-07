@@ -103,9 +103,9 @@ div.csl-indent {
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-5dad907783eb94222aa6c9b08b9eb4a6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-bc5b62d811c1c94b7e95d620c4441ad7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-5dad907783eb94222aa6c9b08b9eb4a6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-d39ef345fed343aacb47def7005ceb5f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-02b65f167c2d966d551ba942f35cfa31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-d39ef345fed343aacb47def7005ceb5f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -1051,8 +1051,8 @@ Note
 <p>The model we just fitted — one latent factor measured by three indicators — looks like this:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div class="grViz html-widget html-fill-item" id="htmlwidget-e46b42b94492c622414c" style="width:70%;height:750px;"></div>
-<script type="application/json" data-for="htmlwidget-e46b42b94492c622414c">{"x":{"diagram":"\ndigraph {\n  graph [layout = neato, rankdir = TB]\n  node  [fontname = Helvetica, fontsize = 11]\n\n  PA  [label = \"PA\", shape = ellipse, style = filled, fillcolor = \"#aed6f1\", pos = \"1.5,2!\"]\n  pa1 [label = \"pa1\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"0,0!\"]\n  pa2 [label = \"pa2\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"1.5,0!\"]\n  pa3 [label = \"pa3\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"3,0!\"]\n\n  e1  [label = \"\", shape = circle, style = filled, fillcolor = \"#d5dbdb\", width = 0.2, pos = \"0,1!\"]\n  e2  [label = \"\", shape = circle, style = filled, fillcolor = \"#d5dbdb\", width = 0.2, pos = \"1.5,1!\"]\n  e3  [label = \"\", shape = circle, style = filled, fillcolor = \"#d5dbdb\", width = 0.2, pos = \"3,1!\"]\n\n  PA -> pa1 [label = \"  λ1\"]\n  PA -> pa2 [label = \"  λ2\"]\n  PA -> pa3 [label = \"  λ3\"]\n\n  e1 -> pa1\n  e2 -> pa2\n  e3 -> pa3\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-5abc52342bd4c2a88d24" style="width:70%;height:750px;"></div>
+<script type="application/json" data-for="htmlwidget-5abc52342bd4c2a88d24">{"x":{"diagram":"\ndigraph {\n  graph [layout = neato, rankdir = TB]\n  node  [fontname = Helvetica, fontsize = 11]\n\n  PA  [label = \"PA\", shape = ellipse, style = filled, fillcolor = \"#aed6f1\", pos = \"1.5,2!\"]\n  pa1 [label = \"pa1\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"0,0!\"]\n  pa2 [label = \"pa2\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"1.5,0!\"]\n  pa3 [label = \"pa3\", shape = box, style = filled, fillcolor = \"#f9e79f\", pos = \"3,0!\"]\n\n  e1  [label = \"\", shape = circle, style = filled, fillcolor = \"#d5dbdb\", width = 0.2, pos = \"0,1!\"]\n  e2  [label = \"\", shape = circle, style = filled, fillcolor = \"#d5dbdb\", width = 0.2, pos = \"1.5,1!\"]\n  e3  [label = \"\", shape = circle, style = filled, fillcolor = \"#d5dbdb\", width = 0.2, pos = \"3,1!\"]\n\n  PA -> pa1 [label = \"  λ1\"]\n  PA -> pa2 [label = \"  λ2\"]\n  PA -> pa3 [label = \"  λ3\"]\n\n  e1 -> pa1\n  e2 -> pa2\n  e3 -> pa3\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 <p>A one-factor CFA with three indicators. The circle is the latent variable PA; the squares are the observed indicators. Arrows from the latent factor to the indicators are the factor loadings (λ). The small circles on each indicator are the residual variances (θ).</p>
 </div>
 </div>
