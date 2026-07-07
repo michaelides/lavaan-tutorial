@@ -192,7 +192,7 @@ pe <- parameterEstimates(fit_config, standardized = TRUE)
 pe[pe$op == "=~", c("lhs", "rhs", "group", "est", "std.all")]
 ```
 
-The marker indicators (`pa1`, `na1`) are fixed to 1 in both groups by default, so they cannot differ. Of the free loadings, `pa3` (0.941 in males vs 1.288 in females) and `na2` (1.073 vs 0.828) differ the most — the same two parameters the score test flagged.
+The marker indicators (`pa1`, `na1`) are fixed to 1 in both groups by default, so they cannot differ. Of the free loadings, `pa3` (0.941 in females vs 1.288 in males) and `na2` (1.073 vs 0.828) differ the most — the same two parameters the score test flagged.
 
 ### Fitting a partial metric model
 
@@ -257,7 +257,7 @@ fit_means <- cfa(model_cfa, data = ps, group = "gender",
                  group.partial = c("PA =~ pa3", "neg =~ na2"),
                  estimator = "MLR", meanstructure = TRUE)
 
-# Latent mean of group 1 (Male) is fixed to 0; group 2 (Female) is estimated
+# Latent mean of group 1 (Female, alphabetically first) is fixed to 0; group 2 (Male) is estimated
 pe_means <- parameterEstimates(fit_means)
 pe_means[pe_means$op == "~1" & pe_means$lhs %in% c("PA", "neg"),
          c("lhs", "group", "est", "se", "z", "pvalue")]
@@ -267,11 +267,11 @@ pe_means[pe_means$op == "~1" & pe_means$lhs %in% c("PA", "neg"),
 #| echo: false
 #| fig-align: center
 #| out-width: "75%"
-#| fig-cap: "Latent factor means by gender (males fixed at 0 as the reference). Females score significantly higher on Positive Affect; the Negative Affect difference is not significant."
+#| fig-cap: "Latent factor means by gender (females fixed at 0 as the alphabetical reference). Males score significantly higher on Positive Affect; the Negative Affect difference is not significant."
 means_df <- data.frame(
   factor = c("PA", "PA", "neg", "neg"),
-  gender = c("Male", "Female", "Male", "Female"),
-  mean = c(0, 0.263, 0, -0.131),
+  gender = c("Female", "Male", "Female", "Male"),
+  mean = c(0, 0.263, 0, 0.131),
   se   = c(NA, 0.115, NA, 0.116)
 )
 
@@ -280,26 +280,28 @@ ggplot(means_df, aes(x = factor, y = mean, fill = gender)) +
   geom_errorbar(aes(ymin = mean - 1.96 * se, ymax = mean + 1.96 * se),
                 position = position_dodge(0.8), width = 0.25) +
   geom_hline(yintercept = 0, colour = "grey50", linetype = "dashed") +
-  labs(x = "Latent factor", y = "Latent mean (Male = 0 reference)",
+  labs(x = "Latent factor", y = "Latent mean (Female = 0 reference)",
        fill = "Gender",
        title = "Latent factor means by gender") +
   theme_minimal()
 ```
 
-- **Positive Affect**: the female latent mean is 0.263 higher than the male mean ($z = 2.29$, $p = .022$). Females report significantly higher PA, in the metric of the `pa1` marker indicator.
-- **Negative Affect**: the female mean is 0.131 lower ($z = -1.13$, $p = .260$) — not significantly different from males.
+- **Positive Affect**: the male latent mean is 0.263 higher than the female mean ($z = 2.29$, $p = .022$). Males report significantly higher PA, in the metric of the `pa1` marker indicator.
+- **Negative Affect**: the male mean is 0.131 higher than the female mean ($z = 1.13$, $p = .260$) — not significantly different from females.
 
 ::: {.callout-note}
 ### Why the reference group mean is zero
 
-In multigroup lavaan, the first group's latent mean is fixed to 0 (identification), and the other group's latent mean is estimated as a difference from that reference. The signs and $p$-values are therefore group-order dependent in form but not in substance — reversing the group order flips the sign of the estimate and leaves the $p$-value unchanged. The factor order in `factor()` determines the reference group; here Male is level 1.
+In multigroup lavaan, the first group's latent mean is fixed to 0 (identification), and the other group's latent mean is estimated as a difference from that reference. The signs and $p$-values are therefore group-order dependent in form but not in substance — reversing the group order flips the sign of the estimate and leaves the $p$-value unchanged.
+
+Note that lavaan orders groups **alphabetically by their label values**, not by the `factor()` levels you declared. Although `ps$gender` was declared with Male as level 1, the labels "Female" and "Male" sort Female first alphabetically, so **Female is the reference group** (Group 1) and Male (Group 2) is estimated. To force Male as the reference regardless of label order, pass `group.label = c("Male", "Female")` in the `cfa()` call (lavaan ≥ 0.6-19).
 :::
 
 ## Reporting measurement invariance
 
 An APA-style summary of the analysis above:
 
-> To establish the measurement equivalence of the Positive Affect and Negative Affect scales across gender, we tested a sequence of multigroup confirmatory factor models using robust maximum likelihood (MLR). The configural model fitted well, $\chi^2(16) = 17.15$, $p = .376$, CFI = .999, RMSEA = .021, establishing that the same two-factor structure held in both groups. Imposing equal loadings significantly worsened fit according to the scaled chi-square difference test, $\Delta\chi^2_{\text{SB}}(4) = 12.71$, $p = .013$, although the change in CFI (.007) was below the .010 criterion recommended by Chen (2007). Score tests identified two loadings (`pa3`, `na2`) as non-invariant; freeing these yielded partial metric invariance, $\Delta\chi^2_{\text{SB}}(2) = 1.39$, $p = .500$. Adding equal intercepts did not worsen fit, $\Delta\chi^2_{\text{SB}}(4) = 6.90$, $p = .141$, establishing partial scalar invariance. Under this model, females reported significantly higher Positive Affect than males (latent mean difference = 0.263, $z = 2.29$, $p = .022$); the Negative Affect difference was not significant (difference = -0.131, $z = -1.13$, $p = .260$).
+> To establish the measurement equivalence of the Positive Affect and Negative Affect scales across gender, we tested a sequence of multigroup confirmatory factor models using robust maximum likelihood (MLR). The configural model fitted well, $\chi^2(16) = 17.15$, $p = .376$, CFI = .999, RMSEA = .021, establishing that the same two-factor structure held in both groups. Imposing equal loadings significantly worsened fit according to the scaled chi-square difference test, $\Delta\chi^2_{\text{SB}}(4) = 12.71$, $p = .013$, although the change in CFI (.007) was below the .010 criterion recommended by Chen (2007). Score tests identified two loadings (`pa3`, `na2`) as non-invariant; freeing these yielded partial metric invariance, $\Delta\chi^2_{\text{SB}}(2) = 1.39$, $p = .500$. Adding equal intercepts did not worsen fit, $\Delta\chi^2_{\text{SB}}(4) = 6.90$, $p = .141$, establishing partial scalar invariance. Under this model, males reported significantly higher Positive Affect than females (latent mean difference = 0.263, $z = 2.29$, $p = .022$); the Negative Affect difference was not significant (difference = 0.131, $z = 1.13$, $p = .260$).
 
 ::: {.callout-tip}
 ### Try it
