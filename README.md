@@ -38,35 +38,16 @@ lavaan-tutorial/
 └── docs/                Rendered HTML output served by GitHub Pages
 ```
 
-## Running locally
+## Setup
 
-1. Install [R](https://cran.r-project.org/) (≥ 4.3) and [Quarto](https://quarto.org/) (≥ 1.4).
-2. Clone the repository and `cd` into it.
-3. Restore the R package environment:
+Install R from <https://cran.r-project.org/> and Quarto from <https://quarto.org/>. Then, in the R console:
 
-   ```r
-   install.packages("renv")
-   renv::restore()
-   ```
+```r
+install.packages(c("haven", "lavaan", "ggplot2", "psych",
+                   "tidySEM", "DiagrammeR", "readxl", "texreg"))
+```
 
-4. Install the canonical tutorial packages (already covered by `renv::restore()`):
-
-   ```r
-   install.packages(c("haven", "lavaan", "ggplot2", "psych",
-                      "tidySEM", "DiagrammeR", "readxl", "texreg"))
-   ```
-
-5. Preview the site:
-
-   ```bash
-   quarto preview
-   ```
-
-6. Render the full site into `docs/`:
-
-   ```bash
-   quarto render
-   ```
+To reproduce the pinned package versions tracked in `renv.lock`, run `install.packages("renv"); renv::restore()` instead. Preview the site with `quarto preview`, or render the full site into `docs/` with `quarto render`.
 
 ## Building the data files
 
