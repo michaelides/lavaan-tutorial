@@ -2,7 +2,7 @@
 title: "A Step-by-Step Introduction to Structural Equation Modeling with lavaan in R"
 subtitle: "Structural equation modelling in R with **lavaan**"
 author: "George Michaelides"
-institute: "School of Psychology, University of East Anglia"
+institute: "Norwich Business School, University of East Anglia"
 date: "2026-07-07"
 ---
 

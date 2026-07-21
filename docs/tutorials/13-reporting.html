@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="George Michaelides">
-<meta name="dcterms.date" content="2026-01-01">
+<meta name="dcterms.date" content="2026-07-07">
 
 <title>Reporting lavaan results – A Step-by-Step Introduction to Structural Equation Modeling with lavaan in R</title>
 <style>
@@ -103,9 +103,9 @@ div.csl-indent {
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-d39ef345fed343aacb47def7005ceb5f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-02b65f167c2d966d551ba942f35cfa31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-d39ef345fed343aacb47def7005ceb5f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-5dad907783eb94222aa6c9b08b9eb4a6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-bc5b62d811c1c94b7e95d620c4441ad7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-5dad907783eb94222aa6c9b08b9eb4a6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -631,7 +631,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">January 1, 2026</p>
+      <p class="date">July 7, 2026</p>
     </div>
   </div>
   
@@ -1102,7 +1102,7 @@ Setup code (you have seen this before)
 <pre><code>## [1] 0.8649448</code></pre>
 </div>
 </div>
-<p>Fill in each value in the CFA template. Example: “<span class="math inline">\(\chi^2(8) = 7.93\)</span>, <span class="math inline">\(p = .441\)</span>, CFI = 1.00, TLI = 1.00, RMSEA = 0.00, 90% CI [0.00, 0.07], SRMR = 0.01.”</p>
+<p>Fill in each value in the CFA template. Example: “<span class="math inline">\(\chi^2(8) = 8.79\)</span>, <span class="math inline">\(p = .360\)</span>, CFI = 1.00, TLI = 1.00, RMSEA = 0.02, 90% CI [0.00, 0.06], SRMR = 0.01.”</p>
 <p><strong>Exercise 2</strong></p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>texreg<span class="sc">::</span><span class="fu">htmlreg</span>(fit_sem, <span class="at">file =</span> <span class="st">"tables/table_sem.html"</span>,</span>

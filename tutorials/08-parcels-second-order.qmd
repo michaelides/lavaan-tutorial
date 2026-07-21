@@ -2,7 +2,7 @@
 title: "Parcels and second-order CFA"
 subtitle: "Parcel construction and second-order factors with lavaan"
 author: "George Michaelides"
-institute: "School of Psychology, University of East Anglia"
+institute: "Norwich Business School, University of East Anglia"
 date: "2026-07-07"
 ---
 
@@ -338,7 +338,7 @@ fitMeasures(fit_2nd, c("chisq", "df", "pvalue", "cfi", "tli",
                        "rmsea", "rmsea.ci.lower", "rmsea.ci.upper", "srmr"))
 ```
 
-Compare these to the Tutorial 07 fit indices ($\chi^2(8) = 7.93$, CFI = 1.00, RMSEA = 0.00, SRMR = 0.01). The second-order model should have slightly more degrees of freedom and very similar fit if the second-order structure is appropriate.
+Compare these to the Tutorial 07 fit indices ($\chi^2(8) = 8.79$, CFI = 1.00, RMSEA = 0.02, SRMR = 0.01). The second-order model should have slightly more degrees of freedom and very similar fit if the second-order structure is appropriate.
 
 **Exercise 3**
 

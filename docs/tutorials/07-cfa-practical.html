@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="George Michaelides">
-<meta name="dcterms.date" content="2026-01-01">
+<meta name="dcterms.date" content="2026-07-07">
 
 <title>CFA — practical – A Step-by-Step Introduction to Structural Equation Modeling with lavaan in R</title>
 <style>
@@ -103,9 +103,9 @@ div.csl-indent {
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-d39ef345fed343aacb47def7005ceb5f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-02b65f167c2d966d551ba942f35cfa31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-d39ef345fed343aacb47def7005ceb5f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-5dad907783eb94222aa6c9b08b9eb4a6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-bc5b62d811c1c94b7e95d620c4441ad7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-5dad907783eb94222aa6c9b08b9eb4a6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -614,7 +614,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">January 1, 2026</p>
+      <p class="date">July 7, 2026</p>
     </div>
   </div>
   
@@ -674,7 +674,7 @@ Setup code (you have seen this before)
 <section id="fitting-the-model" class="level2">
 <h2 class="anchored" data-anchor-id="fitting-the-model">Fitting the model</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>fit_pa_na <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model_pa_na, <span class="at">data =</span> ps, <span class="at">estimator =</span> <span class="st">"MLR"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>fit_pa_na <span class="ot">&lt;-</span> <span class="fu">cfa</span>(model_pa_na, <span class="at">data =</span> ps, <span class="at">estimator =</span> <span class="st">"MLR"</span>, <span class="at">missing =</span> <span class="st">"ml"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The model converges silently — no warnings, which means lavaan found a stable solution. If it had not converged, we would see a warning and would need to diagnose the problem (see the Common errors section at the end).</p>
 </section>
@@ -684,68 +684,69 @@ Setup code (you have seen this before)
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit_pa_na, <span class="at">standardized =</span> <span class="cn">TRUE</span>, <span class="at">fit.measures =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>## lavaan 0.6-21 ended normally after 23 iterations
+<pre><code>## lavaan 0.6-21 ended normally after 32 iterations
 ## 
 ##   Estimator                                         ML
 ##   Optimization method                           NLMINB
-##   Number of model parameters                        13
+##   Number of model parameters                        19
 ## 
 ##                                                   Used       Total
-##   Number of observations                           330         343
+##   Number of observations                           342         343
+##   Number of missing patterns                         6            
 ## 
 ## Model Test User Model:
 ##                                               Standard      Scaled
-##   Test Statistic                                 9.870      10.059
+##   Test Statistic                                10.298       8.789
 ##   Degrees of freedom                                 8           8
-##   P-value (Chi-square)                           0.274       0.261
-##   Scaling correction factor                                  0.981
+##   P-value (Chi-square)                           0.245       0.360
+##   Scaling correction factor                                  1.172
 ##     Yuan-Bentler correction (Mplus variant)                       
 ## 
 ## Model Test Baseline Model:
 ## 
-##   Test statistic                              1009.810     961.135
+##   Test statistic                              1005.424     803.338
 ##   Degrees of freedom                                15          15
 ##   P-value                                        0.000       0.000
-##   Scaling correction factor                                  1.051
+##   Scaling correction factor                                  1.252
 ## 
 ## User Model versus Baseline Model:
 ## 
-##   Comparative Fit Index (CFI)                    0.998       0.998
-##   Tucker-Lewis Index (TLI)                       0.996       0.996
+##   Comparative Fit Index (CFI)                    0.998       0.999
+##   Tucker-Lewis Index (TLI)                       0.996       0.998
 ##                                                                   
-##   Robust Comparative Fit Index (CFI)                         0.998
-##   Robust Tucker-Lewis Index (TLI)                            0.996
+##   Robust Comparative Fit Index (CFI)                         1.000
+##   Robust Tucker-Lewis Index (TLI)                            0.999
 ## 
 ## Loglikelihood and Information Criteria:
 ## 
-##   Loglikelihood user model (H0)              -2610.126   -2610.126
-##   Scaling correction factor                                  0.953
+##   Loglikelihood user model (H0)              -2706.285   -2706.285
+##   Scaling correction factor                                  1.045
 ##       for the MLR correction                                      
-##   Loglikelihood unrestricted model (H1)      -2605.191   -2605.191
-##   Scaling correction factor                                  0.964
+##   Loglikelihood unrestricted model (H1)      -2701.136   -2701.136
+##   Scaling correction factor                                  1.082
 ##       for the MLR correction                                      
 ##                                                                   
-##   Akaike (AIC)                                5246.253    5246.253
-##   Bayesian (BIC)                              5295.641    5295.641
-##   Sample-size adjusted Bayesian (SABIC)       5254.405    5254.405
+##   Akaike (AIC)                                5450.570    5450.570
+##   Bayesian (BIC)                              5523.431    5523.431
+##   Sample-size adjusted Bayesian (SABIC)       5463.159    5463.159
 ## 
 ## Root Mean Square Error of Approximation:
 ## 
-##   RMSEA                                          0.027       0.028
+##   RMSEA                                          0.029       0.017
 ##   90 Percent confidence interval - lower         0.000       0.000
-##   90 Percent confidence interval - upper         0.073       0.074
-##   P-value H_0: RMSEA &lt;= 0.050                    0.748       0.734
-##   P-value H_0: RMSEA &gt;= 0.080                    0.025       0.029
+##   90 Percent confidence interval - upper         0.074       0.064
+##   P-value H_0: RMSEA &lt;= 0.050                    0.733       0.846
+##   P-value H_0: RMSEA &gt;= 0.080                    0.026       0.008
 ##                                                                   
-##   Robust RMSEA                                               0.028
+##   Robust RMSEA                                               0.014
 ##   90 Percent confidence interval - lower                     0.000
 ##   90 Percent confidence interval - upper                     0.073
-##   P-value H_0: Robust RMSEA &lt;= 0.050                         0.743
-##   P-value H_0: Robust RMSEA &gt;= 0.080                         0.025
+##   P-value H_0: Robust RMSEA &lt;= 0.050                         0.784
+##   P-value H_0: Robust RMSEA &gt;= 0.080                         0.028
 ## 
 ## Standardized Root Mean Square Residual:
 ## 
-##   SRMR                                           0.015       0.015
+##   SRMR                                           0.013       0.013
 ## 
 ## Parameter Estimates:
 ## 
@@ -756,43 +757,52 @@ Setup code (you have seen this before)
 ## Latent Variables:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
 ##   PA =~                                                                 
-##     pa1               1.000                               0.973    0.829
-##     pa2               1.000    0.061   16.280    0.000    0.972    0.764
-##     pa3               1.086    0.067   16.105    0.000    1.056    0.856
+##     pa1               1.000                               0.976    0.814
+##     pa2               1.017    0.069   14.774    0.000    0.992    0.772
+##     pa3               1.087    0.076   14.267    0.000    1.061    0.852
 ##   neg =~                                                                
-##     na1               1.000                               0.948    0.848
-##     na2               0.935    0.058   16.071    0.000    0.887    0.819
-##     na3               0.983    0.056   17.668    0.000    0.932    0.836
+##     na1               1.000                               0.968    0.846
+##     na2               0.956    0.059   16.304    0.000    0.925    0.835
+##     na3               0.975    0.056   17.562    0.000    0.944    0.830
 ## 
 ## Covariances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
 ##   PA ~~                                                                 
-##     neg              -0.402    0.069   -5.856    0.000   -0.436   -0.436
+##     neg              -0.433    0.073   -5.923    0.000   -0.459   -0.459
+## 
+## Intercepts:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##    .pa1               3.632    0.065   56.018    0.000    3.632    3.029
+##    .pa2               3.378    0.070   48.492    0.000    3.378    2.630
+##    .pa3               3.451    0.068   50.920    0.000    3.451    2.771
+##    .na1               2.764    0.062   44.675    0.000    2.764    2.417
+##    .na2               2.704    0.060   45.042    0.000    2.704    2.441
+##    .na3               2.608    0.062   42.191    0.000    2.608    2.293
 ## 
 ## Variances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##    .pa1               0.431    0.053    8.118    0.000    0.431    0.313
-##    .pa2               0.676    0.071    9.560    0.000    0.676    0.417
-##    .pa3               0.406    0.063    6.480    0.000    0.406    0.267
-##    .na1               0.350    0.046    7.659    0.000    0.350    0.280
-##    .na2               0.386    0.050    7.798    0.000    0.386    0.329
-##    .na3               0.375    0.043    8.677    0.000    0.375    0.302
-##     PA                0.946    0.101    9.358    0.000    1.000    1.000
-##     neg               0.899    0.084   10.683    0.000    1.000    1.000</code></pre>
+##    .pa1               0.485    0.079    6.132    0.000    0.485    0.338
+##    .pa2               0.666    0.069    9.583    0.000    0.666    0.404
+##    .pa3               0.426    0.063    6.746    0.000    0.426    0.275
+##    .na1               0.372    0.053    7.062    0.000    0.372    0.284
+##    .na2               0.371    0.051    7.333    0.000    0.371    0.303
+##    .na3               0.402    0.050    8.079    0.000    0.402    0.311
+##     PA                0.952    0.112    8.512    0.000    1.000    1.000
+##     neg               0.937    0.090   10.367    0.000    1.000    1.000</code></pre>
 </div>
 </div>
 <section id="estimator-and-optimisation" class="level3">
 <h3 class="anchored" data-anchor-id="estimator-and-optimisation">Estimator and optimisation</h3>
-<p>The header tells us the estimator (<code>MLR</code>), the optimisation method (<code>NLMINB</code>), the number of iterations (typically 20–40 for a well-behaved model), and the number of observations used. lavaan uses <a href="../glossary.html#fiml">FIML</a> by default, so all 343 participants are retained even if some have missing values on individual items.</p>
+<p>The header tells us the estimator (<code>MLR</code>), the optimisation method (<code>NLMINB</code>), the number of iterations (typically 20–40 for a well-behaved model), and the number of observations used. Because we passed <code>missing = "ml"</code>, lavaan uses <a href="../glossary.html#fiml">FIML</a> (full-information maximum likelihood): 342 of 343 participants are retained even if some have missing values on individual items. (One case with no data on any of the six items cannot contribute and is dropped.)</p>
 </section>
 <section id="model-fit-indices" class="level3">
 <h3 class="anchored" data-anchor-id="model-fit-indices">Model fit indices</h3>
 <p>The <strong>Model Fit Information</strong> section reports the canonical set:</p>
 <ul>
-<li><p><strong>Chi-Square Test of Model Fit</strong>: <span class="math inline">\(\chi^2\)</span> = 7.927, df = 8, <em>p</em> = .441. The <span class="math inline">\(\chi^2\)</span> is non-significant, meaning we cannot reject the null hypothesis that the model-implied covariance matrix equals the observed one. This is good news for our model. The <code>Scaling correction factor</code> is reported because we are using <code>MLR</code> — the <span class="math inline">\(\chi^2\)</span> has been corrected for non-normality.</p></li>
-<li><p><strong>RMSEA</strong>: 0.000, 90% CI [0.000, 0.068]. The point estimate is at the floor (zero), and the upper bound of the CI is below .08. This indicates close fit.</p></li>
-<li><p><strong>CFI/TLI</strong>: CFI = 1.000, TLI = 1.000. Both are at the maximum, well above the .95 threshold.</p></li>
-<li><p><strong>SRMR</strong>: 0.014. Well below the .08 threshold.</p></li>
+<li><p><strong>Chi-Square Test of Model Fit</strong>: <span class="math inline">\(\chi^2\)</span> = 8.789 (scaled), df = 8, <em>p</em> = .360. The <span class="math inline">\(\chi^2\)</span> is non-significant, meaning we cannot reject the null hypothesis that the model-implied covariance matrix equals the observed one. This is good news for our model. The <code>Scaling correction factor</code> is reported because we are using <code>MLR</code> — the <span class="math inline">\(\chi^2\)</span> has been corrected for non-normality.</p></li>
+<li><p><strong>RMSEA</strong>: 0.017, 90% CI [0.000, 0.064]. The point estimate is well below .05, and the upper bound of the CI is below .08. This indicates close fit.</p></li>
+<li><p><strong>CFI/TLI</strong>: CFI = 0.999, TLI = 0.998. Both are at the maximum, well above the .95 threshold.</p></li>
+<li><p><strong>SRMR</strong>: 0.013. Well below the .08 threshold.</p></li>
 </ul>
 <p>All five indices agree: the model fits the data very well. We will report this in APA format at the end of the tutorial.</p>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -817,15 +827,15 @@ Setup code (you have seen this before)
 <pre><code>Latent Variables:
                    Estimate    Std.Err  z value  P(&gt;|z|)   std.all
   PA =~
-    pa1              1.000                                0.840
-    pa2              1.029       0.082   12.548    0.000    0.764
-    pa3              1.110       0.090   12.387    0.000    0.853
+    pa1              1.000                               0.814
+    pa2              1.017       0.069   14.774    0.000    0.772
+    pa3              1.087       0.076   14.267    0.000    0.852
   neg =~
-    na1              1.000                                0.825
-    na2              0.989       0.065   15.255    0.000    0.846
-    na3              0.992       0.062   16.096    0.000    0.825</code></pre>
+    na1              1.000                               0.846
+    na2              0.956       0.059   16.304    0.000    0.835
+    na3              0.975       0.056   17.562    0.000    0.830</code></pre>
 <p>The <code>Estimate</code> column gives the unstandardised <a href="../glossary.html#factor-loading">factor loading</a> (<span class="math inline">\(\lambda\)</span>). The first loading of each factor (<code>pa1</code> and <code>na1</code>) is fixed to 1.000 — the <a href="../glossary.html#marker-variable">marker-variable method</a>. These fixed loadings have no standard error or p-value, which is why their cells are blank.</p>
-<p>The <code>std.all</code> column gives the fully standardised loadings — the correlation between each indicator and its factor. All six loadings are high (0.76–0.85), indicating that each item is a strong indicator of its underlying factor. A loading below .40 would be concerning; below .30 suggests the item is not measuring the factor well.</p>
+<p>The <code>std.all</code> column gives the fully standardised loadings — the correlation between each indicator and its factor. All six loadings are high (0.77–0.85), indicating that each item is a strong indicator of its underlying factor. A loading below .40 would be concerning; below .30 suggests the item is not measuring the factor well.</p>
 <p>All freely-estimated loadings have <em>p</em> &lt; .001, meaning each is significantly different from zero.</p>
 </section>
 <section id="covariances" class="level4">
@@ -833,29 +843,29 @@ Setup code (you have seen this before)
 <pre><code>Covariances:
                    Estimate    Std.Err  z value  P(&gt;|z|)   std.all
   PA ~~
-    neg             -0.419       0.077   -5.428    0.000   -0.471</code></pre>
-<p>The covariance between PA and neg is -0.419. The <code>std.all</code> value (-0.471) is the <strong>correlation</strong> between the two factors — positive and negative affect are moderately negatively related, which makes theoretical sense. The <em>p</em> &lt; .001 tells us this correlation is significantly different from zero.</p>
+    neg             -0.433       0.073   -5.923    0.000   -0.459</code></pre>
+<p>The covariance between PA and neg is -0.433. The <code>std.all</code> value (-0.459) is the <strong>correlation</strong> between the two factors — positive and negative affect are moderately negatively related, which makes theoretical sense. The <em>p</em> &lt; .001 tells us this correlation is significantly different from zero.</p>
 </section>
 <section id="intercepts" class="level4">
 <h4 class="anchored" data-anchor-id="intercepts">Intercepts</h4>
 <pre><code>Intercepts:
                    Estimate    Std.Err  z value  P(&gt;|z|)   std.all
-   .pa1              3.670       0.069   53.113    0.000    3.080
-   .pa2              3.421       0.075   45.695    0.000    2.544
-    ...</code></pre>
+   .pa1              3.632       0.065   56.018    0.000    3.029
+   .pa2              3.378       0.070   48.492    0.000    2.630
+     ...</code></pre>
 <p>The intercepts are the estimated means of the observed variables. They are not usually of substantive interest in CFA — they tell you the average response on each item — but they are part of the model. The dot prefix (<code>.pa1</code>) indicates that this is an intercept for an observed variable that is dependent on a latent variable.</p>
 </section>
 <section id="variances" class="level4">
 <h4 class="anchored" data-anchor-id="variances">Variances</h4>
 <pre><code>Variances:
                    Estimate    Std.Err  z value  P(&gt;|z|)   std.all
-    PA               0.891       0.122    7.312    0.000    1.000
-    neg              0.885       0.098    9.011    0.000    1.000
-   .pa1              0.498       0.089    5.620    0.000    0.358
-   .pa2              0.673       0.076    8.819    0.000    0.416
-    ...</code></pre>
+     PA               0.952       0.112    8.512    0.000    1.000
+     neg              0.937       0.090   10.367    0.000    1.000
+    .pa1              0.485       0.079    6.132    0.000    0.338
+    .pa2              0.666       0.069    9.583    0.000    0.404
+     ...</code></pre>
 <p>The first two rows are the <strong>latent variances</strong> (<span class="math inline">\(\psi\)</span>) — the variance of each factor. The <code>std.all</code> is 1.000 because a variable’s standardised variance is always 1.</p>
-<p>The remaining rows are the <strong>residual variances</strong> (<span class="math inline">\(\theta\)</span>) — the portion of each indicator’s variance not explained by the factor. The <code>std.all</code> for a residual variance is the proportion of the indicator’s variance that is <em>not</em> explained by the factor. For <code>pa1</code>, that is 0.358, meaning <span class="math inline">\(1 - 0.358 = 0.642\)</span> (or 64.2%) of the variance in <code>pa1</code> is explained by the PA factor. This is the indicator’s <span class="math inline">\(R^2\)</span>.</p>
+<p>The remaining rows are the <strong>residual variances</strong> (<span class="math inline">\(\theta\)</span>) — the portion of each indicator’s variance not explained by the factor. The <code>std.all</code> for a residual variance is the proportion of the indicator’s variance that is <em>not</em> explained by the factor. For <code>pa1</code>, that is 0.338, meaning <span class="math inline">\(1 - 0.338 = 0.662\)</span> (or 66.2%) of the variance in <code>pa1</code> is explained by the PA factor. This is the indicator’s <span class="math inline">\(R^2\)</span>.</p>
 </section>
 </section>
 <section id="r-squared" class="level3">
@@ -864,21 +874,22 @@ Setup code (you have seen this before)
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit_pa_na, <span class="at">standardized =</span> <span class="cn">TRUE</span>, <span class="at">rsquare =</span> <span class="cn">TRUE</span>, <span class="at">fit.measures =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>## lavaan 0.6-21 ended normally after 23 iterations
+<pre><code>## lavaan 0.6-21 ended normally after 32 iterations
 ## 
 ##   Estimator                                         ML
 ##   Optimization method                           NLMINB
-##   Number of model parameters                        13
+##   Number of model parameters                        19
 ## 
 ##                                                   Used       Total
-##   Number of observations                           330         343
+##   Number of observations                           342         343
+##   Number of missing patterns                         6            
 ## 
 ## Model Test User Model:
 ##                                               Standard      Scaled
-##   Test Statistic                                 9.870      10.059
+##   Test Statistic                                10.298       8.789
 ##   Degrees of freedom                                 8           8
-##   P-value (Chi-square)                           0.274       0.261
-##   Scaling correction factor                                  0.981
+##   P-value (Chi-square)                           0.245       0.360
+##   Scaling correction factor                                  1.172
 ##     Yuan-Bentler correction (Mplus variant)                       
 ## 
 ## Parameter Estimates:
@@ -890,38 +901,47 @@ Setup code (you have seen this before)
 ## Latent Variables:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
 ##   PA =~                                                                 
-##     pa1               1.000                               0.973    0.829
-##     pa2               1.000    0.061   16.280    0.000    0.972    0.764
-##     pa3               1.086    0.067   16.105    0.000    1.056    0.856
+##     pa1               1.000                               0.976    0.814
+##     pa2               1.017    0.069   14.774    0.000    0.992    0.772
+##     pa3               1.087    0.076   14.267    0.000    1.061    0.852
 ##   neg =~                                                                
-##     na1               1.000                               0.948    0.848
-##     na2               0.935    0.058   16.071    0.000    0.887    0.819
-##     na3               0.983    0.056   17.668    0.000    0.932    0.836
+##     na1               1.000                               0.968    0.846
+##     na2               0.956    0.059   16.304    0.000    0.925    0.835
+##     na3               0.975    0.056   17.562    0.000    0.944    0.830
 ## 
 ## Covariances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
 ##   PA ~~                                                                 
-##     neg              -0.402    0.069   -5.856    0.000   -0.436   -0.436
+##     neg              -0.433    0.073   -5.923    0.000   -0.459   -0.459
+## 
+## Intercepts:
+##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+##    .pa1               3.632    0.065   56.018    0.000    3.632    3.029
+##    .pa2               3.378    0.070   48.492    0.000    3.378    2.630
+##    .pa3               3.451    0.068   50.920    0.000    3.451    2.771
+##    .na1               2.764    0.062   44.675    0.000    2.764    2.417
+##    .na2               2.704    0.060   45.042    0.000    2.704    2.441
+##    .na3               2.608    0.062   42.191    0.000    2.608    2.293
 ## 
 ## Variances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##    .pa1               0.431    0.053    8.118    0.000    0.431    0.313
-##    .pa2               0.676    0.071    9.560    0.000    0.676    0.417
-##    .pa3               0.406    0.063    6.480    0.000    0.406    0.267
-##    .na1               0.350    0.046    7.659    0.000    0.350    0.280
-##    .na2               0.386    0.050    7.798    0.000    0.386    0.329
-##    .na3               0.375    0.043    8.677    0.000    0.375    0.302
-##     PA                0.946    0.101    9.358    0.000    1.000    1.000
-##     neg               0.899    0.084   10.683    0.000    1.000    1.000
+##    .pa1               0.485    0.079    6.132    0.000    0.485    0.338
+##    .pa2               0.666    0.069    9.583    0.000    0.666    0.404
+##    .pa3               0.426    0.063    6.746    0.000    0.426    0.275
+##    .na1               0.372    0.053    7.062    0.000    0.372    0.284
+##    .na2               0.371    0.051    7.333    0.000    0.371    0.303
+##    .na3               0.402    0.050    8.079    0.000    0.402    0.311
+##     PA                0.952    0.112    8.512    0.000    1.000    1.000
+##     neg               0.937    0.090   10.367    0.000    1.000    1.000
 ## 
 ## R-Square:
 ##                    Estimate
-##     pa1               0.687
-##     pa2               0.583
-##     pa3               0.733
-##     na1               0.720
-##     na2               0.671
-##     na3               0.698</code></pre>
+##     pa1               0.662
+##     pa2               0.596
+##     pa3               0.725
+##     na1               0.716
+##     na2               0.697
+##     na3               0.689</code></pre>
 </div>
 </div>
 <p>The <strong>R-Square</strong> section at the bottom lists each indicator’s <span class="math inline">\(R^2\)</span> — the proportion of its variance explained by its factor. Values above .50 (i.e.&nbsp;standardised loadings above .71) are considered good; all six of our indicators exceed this threshold.</p>
@@ -939,9 +959,9 @@ Setup code (you have seen this before)
 <span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>fit_pa_na_indices</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>##          chisq             df         pvalue            cfi            tli 
-##          9.870          8.000          0.274          0.998          0.996 
+##         10.298          8.000          0.245          0.998          0.996 
 ##          rmsea rmsea.ci.lower rmsea.ci.upper           srmr 
-##          0.027          0.000          0.073          0.015</code></pre>
+##          0.029          0.000          0.074          0.013</code></pre>
 </div>
 </div>
 <p>This gives a named numeric vector — easy to round and drop into a report. We will use this exact call in every tutorial that fits a model.</p>
@@ -954,16 +974,16 @@ Setup code (you have seen this before)
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pe[, <span class="fu">c</span>(<span class="st">"lhs"</span>, <span class="st">"op"</span>, <span class="st">"rhs"</span>, <span class="st">"est"</span>, <span class="st">"se"</span>, <span class="st">"z"</span>, <span class="st">"pvalue"</span>, <span class="st">"std.all"</span>)], <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>##    lhs op rhs    est    se      z pvalue std.all
-## 1   PA =~ pa1  1.000 0.000     NA     NA   0.829
-## 2   PA =~ pa2  1.000 0.061 16.280      0   0.764
-## 3   PA =~ pa3  1.086 0.067 16.105      0   0.856
-## 4  neg =~ na1  1.000 0.000     NA     NA   0.848
-## 5  neg =~ na2  0.935 0.058 16.071      0   0.819
-## 6  neg =~ na3  0.983 0.056 17.668      0   0.836
-## 7   PA ~~ neg -0.402 0.069 -5.856      0  -0.436
-## 8  pa1 ~~ pa1  0.431 0.053  8.118      0   0.313
-## 9  pa2 ~~ pa2  0.676 0.071  9.560      0   0.417
-## 10 pa3 ~~ pa3  0.406 0.063  6.480      0   0.267</code></pre>
+## 1   PA =~ pa1  1.000 0.000     NA     NA   0.814
+## 2   PA =~ pa2  1.017 0.069 14.774      0   0.772
+## 3   PA =~ pa3  1.087 0.076 14.267      0   0.852
+## 4  neg =~ na1  1.000 0.000     NA     NA   0.846
+## 5  neg =~ na2  0.956 0.059 16.304      0   0.835
+## 6  neg =~ na3  0.975 0.056 17.562      0   0.830
+## 7   PA ~~ neg -0.433 0.073 -5.923      0  -0.459
+## 8  pa1 ~~ pa1  0.485 0.079  6.132      0   0.338
+## 9  pa2 ~~ pa2  0.666 0.069  9.583      0   0.404
+## 10 pa3 ~~ pa3  0.426 0.063  6.746      0   0.275</code></pre>
 </div>
 </div>
 <p>Each row is one parameter. The <code>lhs</code>, <code>op</code>, and <code>rhs</code> columns describe the relationship (e.g.&nbsp;<code>PA =~ pa1</code>), <code>est</code> is the unstandardised estimate, <code>se</code> the standard error, <code>z</code> the Wald statistic, <code>pvalue</code> the two-tailed p-value, and <code>std.all</code> the fully standardised estimate. We will use this data frame in Tutorial 13 when we export results to publication-quality tables.</p>
@@ -1082,8 +1102,9 @@ Setup code (you have seen this before)
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">modindices</span>(fit_pa_na, <span class="at">minimum.value =</span> <span class="fl">3.84</span>, <span class="at">sort. =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>##    lhs op rhs    mi    epc sepc.lv sepc.all sepc.nox
-## 31 pa3 ~~ na1 7.036 -0.084  -0.084   -0.224   -0.224</code></pre>
+<pre><code>##    lhs op rhs    mi   epc sepc.lv sepc.all sepc.nox
+## 36 pa2 ~~ na1 5.840 0.089   0.089    0.178    0.178
+## 40 pa3 ~~ na2 4.785 0.071   0.071    0.179    0.179</code></pre>
 </div>
 </div>
 <p>The output lists every fixed parameter whose MI exceeds 3.84, sorted from largest to smallest. The columns are:</p>
@@ -1127,7 +1148,7 @@ Setup code (you have seen this before)
 <li>Two circles (latent variables: PA, neg)</li>
 <li>Six squares (observed indicators)</li>
 <li>Arrows from each factor to its indicators, labelled with the standardised loadings</li>
-<li>A double-headed arrow between the two factors, labelled with their correlation (-0.47)</li>
+<li>A double-headed arrow between the two factors, labelled with their correlation (-0.46)</li>
 </ul>
 <p>This is the same diagrammatic convention we used in Tutorial 06’s concept diagram, but now it is generated from the fitted model — the numbers on the arrows are the actual estimated loadings, not placeholders.</p>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -1153,7 +1174,7 @@ Setup code (you have seen this before)
 <h2 class="anchored" data-anchor-id="writing-up-the-results">Writing up the results</h2>
 <p>An APA-style write-up of this CFA would look something like:</p>
 <blockquote class="blockquote">
-<p>Confirmatory factor analysis was used to test the hypothesised two-factor structure of affect, with positive affect (PA) measured by three items (pa1, pa2, pa3) and negative affect (neg) measured by three items (na1, na2, na3). The model was estimated with robust maximum likelihood (MLR) to correct for non-normality. The model fit the data well, <span class="math inline">\(\chi^2(8) = 7.93\)</span>, <span class="math inline">\(p = .441\)</span>, CFI = 1.00, TLI = 1.00, RMSEA = 0.00, 90% CI [0.00, 0.07], SRMR = 0.01. All factor loadings were significant (<span class="math inline">\(p &lt; .001\)</span>) and substantial (standardised <span class="math inline">\(\lambda\)</span> range: .76–.85). The correlation between PA and neg was <span class="math inline">\(r = -.47\)</span>, <span class="math inline">\(p &lt; .001\)</span>. Cronbach’s alpha was .78 for PA and .82 for neg, indicating acceptable internal consistency for both scales.</p>
+<p>Confirmatory factor analysis was used to test the hypothesised two-factor structure of affect, with positive affect (PA) measured by three items (pa1, pa2, pa3) and negative affect (neg) measured by three items (na1, na2, na3). The model was estimated with robust maximum likelihood (MLR) to correct for non-normality, using full-information maximum likelihood for missing data. The model fit the data well, <span class="math inline">\(\chi^2(8) = 8.79\)</span>, <span class="math inline">\(p = .360\)</span>, CFI = 1.00, TLI = 1.00, RMSEA = 0.02, 90% CI [0.00, 0.06], SRMR = 0.01. All factor loadings were significant (<span class="math inline">\(p &lt; .001\)</span>) and substantial (standardised <span class="math inline">\(\lambda\)</span> range: .77–.85). The correlation between PA and neg was <span class="math inline">\(r = -.46\)</span>, <span class="math inline">\(p &lt; .001\)</span>. Cronbach’s alpha was .85 for PA and .86 for neg, indicating good internal consistency for both scales.</p>
 </blockquote>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -1167,12 +1188,12 @@ Setup code (you have seen this before)
 <div class="callout-body-container callout-body">
 <p>In APA format:</p>
 <ul>
-<li>Report <span class="math inline">\(\chi^2\)</span> with degrees of freedom and p-value: <span class="math inline">\(\chi^2(8) = 7.93\)</span>, <span class="math inline">\(p = .441\)</span></li>
+<li>Report <span class="math inline">\(\chi^2\)</span> with degrees of freedom and p-value: <span class="math inline">\(\chi^2(8) = 8.79\)</span>, <span class="math inline">\(p = .360\)</span></li>
 <li>Report fit indices to two decimal places: CFI = 1.00, RMSEA = 0.00</li>
-<li>Report RMSEA with its 90% CI: RMSEA = 0.00, 90% CI [0.00, 0.07]</li>
+<li>Report RMSEA with its 90% CI: RMSEA = 0.02, 90% CI [0.00, 0.06]</li>
 <li>Report standardised loadings with the symbol <span class="math inline">\(\lambda\)</span> or just “standardised loading”</li>
-<li>Report correlations with <span class="math inline">\(r\)</span>: <span class="math inline">\(r = -.47\)</span></li>
-<li>Suppress leading zeros for values that cannot exceed 1: <span class="math inline">\(r = -.47\)</span>, not <span class="math inline">\(r = -0.47\)</span>; <span class="math inline">\(p = .001\)</span>, not <span class="math inline">\(p = 0.001\)</span></li>
+<li>Report correlations with <span class="math inline">\(r\)</span>: <span class="math inline">\(r = -.46\)</span></li>
+<li>Suppress leading zeros for values that cannot exceed 1: <span class="math inline">\(r = -.46\)</span>, not <span class="math inline">\(r = -0.46\)</span>; <span class="math inline">\(p = .001\)</span>, not <span class="math inline">\(p = 0.001\)</span></li>
 </ul>
 </div>
 </div>

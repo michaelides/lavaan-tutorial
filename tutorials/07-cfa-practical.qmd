@@ -2,7 +2,7 @@
 title: "CFA — practical"
 subtitle: "Two-factor CFA on NA/PA; fit, parameter estimates, modification indices"
 author: "George Michaelides"
-institute: "School of Psychology, University of East Anglia"
+institute: "Norwich Business School, University of East Anglia"
 date: "2026-07-07"
 ---
 
@@ -69,7 +69,7 @@ We use the [marker-variable method](../glossary.qmd#marker-variable) (lavaan's d
 ## Fitting the model
 
 ```{r}
-fit_pa_na <- cfa(model_pa_na, data = ps, estimator = "MLR")
+fit_pa_na <- cfa(model_pa_na, data = ps, estimator = "MLR", missing = "ml")
 ```
 
 The model converges silently — no warnings, which means lavaan found a stable solution. If it had not converged, we would see a warning and would need to diagnose the problem (see the Common errors section at the end).
@@ -84,19 +84,19 @@ summary(fit_pa_na, standardized = TRUE, fit.measures = TRUE)
 
 ### Estimator and optimisation
 
-The header tells us the estimator (`MLR`), the optimisation method (`NLMINB`), the number of iterations (typically 20–40 for a well-behaved model), and the number of observations used. lavaan uses [FIML](../glossary.qmd#fiml) by default, so all 343 participants are retained even if some have missing values on individual items.
+The header tells us the estimator (`MLR`), the optimisation method (`NLMINB`), the number of iterations (typically 20–40 for a well-behaved model), and the number of observations used. Because we passed `missing = "ml"`, lavaan uses [FIML](../glossary.qmd#fiml) (full-information maximum likelihood): 342 of 343 participants are retained even if some have missing values on individual items. (One case with no data on any of the six items cannot contribute and is dropped.)
 
 ### Model fit indices
 
 The **Model Fit Information** section reports the canonical set:
 
-- **Chi-Square Test of Model Fit**: $\chi^2$ = 7.927, df = 8, *p* = .441. The $\chi^2$ is non-significant, meaning we cannot reject the null hypothesis that the model-implied covariance matrix equals the observed one. This is good news for our model. The `Scaling correction factor` is reported because we are using `MLR` — the $\chi^2$ has been corrected for non-normality.
+- **Chi-Square Test of Model Fit**: $\chi^2$ = 8.789 (scaled), df = 8, *p* = .360. The $\chi^2$ is non-significant, meaning we cannot reject the null hypothesis that the model-implied covariance matrix equals the observed one. This is good news for our model. The `Scaling correction factor` is reported because we are using `MLR` — the $\chi^2$ has been corrected for non-normality.
 
-- **RMSEA**: 0.000, 90% CI [0.000, 0.068]. The point estimate is at the floor (zero), and the upper bound of the CI is below .08. This indicates close fit.
+- **RMSEA**: 0.017, 90% CI [0.000, 0.064]. The point estimate is well below .05, and the upper bound of the CI is below .08. This indicates close fit.
 
-- **CFI/TLI**: CFI = 1.000, TLI = 1.000. Both are at the maximum, well above the .95 threshold.
+- **CFI/TLI**: CFI = 0.999, TLI = 0.998. Both are at the maximum, well above the .95 threshold.
 
-- **SRMR**: 0.014. Well below the .08 threshold.
+- **SRMR**: 0.013. Well below the .08 threshold.
 
 All five indices agree: the model fits the data very well. We will report this in APA format at the end of the tutorial.
 
@@ -116,18 +116,18 @@ The **Parameter Estimates** section has several subsections. Let us walk through
 Latent Variables:
                    Estimate    Std.Err  z value  P(>|z|)   std.all
   PA =~
-    pa1              1.000                                0.840
-    pa2              1.029       0.082   12.548    0.000    0.764
-    pa3              1.110       0.090   12.387    0.000    0.853
+    pa1              1.000                               0.814
+    pa2              1.017       0.069   14.774    0.000    0.772
+    pa3              1.087       0.076   14.267    0.000    0.852
   neg =~
-    na1              1.000                                0.825
-    na2              0.989       0.065   15.255    0.000    0.846
-    na3              0.992       0.062   16.096    0.000    0.825
+    na1              1.000                               0.846
+    na2              0.956       0.059   16.304    0.000    0.835
+    na3              0.975       0.056   17.562    0.000    0.830
 ```
 
 The `Estimate` column gives the unstandardised [factor loading](../glossary.qmd#factor-loading) ($\lambda$). The first loading of each factor (`pa1` and `na1`) is fixed to 1.000 — the [marker-variable method](../glossary.qmd#marker-variable). These fixed loadings have no standard error or p-value, which is why their cells are blank.
 
-The `std.all` column gives the fully standardised loadings — the correlation between each indicator and its factor. All six loadings are high (0.76–0.85), indicating that each item is a strong indicator of its underlying factor. A loading below .40 would be concerning; below .30 suggests the item is not measuring the factor well.
+The `std.all` column gives the fully standardised loadings — the correlation between each indicator and its factor. All six loadings are high (0.77–0.85), indicating that each item is a strong indicator of its underlying factor. A loading below .40 would be concerning; below .30 suggests the item is not measuring the factor well.
 
 All freely-estimated loadings have *p* < .001, meaning each is significantly different from zero.
 
@@ -137,19 +137,19 @@ All freely-estimated loadings have *p* < .001, meaning each is significantly dif
 Covariances:
                    Estimate    Std.Err  z value  P(>|z|)   std.all
   PA ~~
-    neg             -0.419       0.077   -5.428    0.000   -0.471
+    neg             -0.433       0.073   -5.923    0.000   -0.459
 ```
 
-The covariance between PA and neg is -0.419. The `std.all` value (-0.471) is the **correlation** between the two factors — positive and negative affect are moderately negatively related, which makes theoretical sense. The *p* < .001 tells us this correlation is significantly different from zero.
+The covariance between PA and neg is -0.433. The `std.all` value (-0.459) is the **correlation** between the two factors — positive and negative affect are moderately negatively related, which makes theoretical sense. The *p* < .001 tells us this correlation is significantly different from zero.
 
 #### Intercepts
 
 ```
 Intercepts:
                    Estimate    Std.Err  z value  P(>|z|)   std.all
-   .pa1              3.670       0.069   53.113    0.000    3.080
-   .pa2              3.421       0.075   45.695    0.000    2.544
-    ...
+   .pa1              3.632       0.065   56.018    0.000    3.029
+   .pa2              3.378       0.070   48.492    0.000    2.630
+     ...
 ```
 
 The intercepts are the estimated means of the observed variables. They are not usually of substantive interest in CFA — they tell you the average response on each item — but they are part of the model. The dot prefix (`.pa1`) indicates that this is an intercept for an observed variable that is dependent on a latent variable.
@@ -159,16 +159,16 @@ The intercepts are the estimated means of the observed variables. They are not u
 ```
 Variances:
                    Estimate    Std.Err  z value  P(>|z|)   std.all
-    PA               0.891       0.122    7.312    0.000    1.000
-    neg              0.885       0.098    9.011    0.000    1.000
-   .pa1              0.498       0.089    5.620    0.000    0.358
-   .pa2              0.673       0.076    8.819    0.000    0.416
-    ...
+     PA               0.952       0.112    8.512    0.000    1.000
+     neg              0.937       0.090   10.367    0.000    1.000
+    .pa1              0.485       0.079    6.132    0.000    0.338
+    .pa2              0.666       0.069    9.583    0.000    0.404
+     ...
 ```
 
 The first two rows are the **latent variances** ($\psi$) — the variance of each factor. The `std.all` is 1.000 because a variable's standardised variance is always 1.
 
-The remaining rows are the **residual variances** ($\theta$) — the portion of each indicator's variance not explained by the factor. The `std.all` for a residual variance is the proportion of the indicator's variance that is *not* explained by the factor. For `pa1`, that is 0.358, meaning $1 - 0.358 = 0.642$ (or 64.2%) of the variance in `pa1` is explained by the PA factor. This is the indicator's $R^2$.
+The remaining rows are the **residual variances** ($\theta$) — the portion of each indicator's variance not explained by the factor. The `std.all` for a residual variance is the proportion of the indicator's variance that is *not* explained by the factor. For `pa1`, that is 0.338, meaning $1 - 0.338 = 0.662$ (or 66.2%) of the variance in `pa1` is explained by the PA factor. This is the indicator's $R^2$.
 
 ### R-squared
 
@@ -277,7 +277,7 @@ The diagram shows:
 - Two circles (latent variables: PA, neg)
 - Six squares (observed indicators)
 - Arrows from each factor to its indicators, labelled with the standardised loadings
-- A double-headed arrow between the two factors, labelled with their correlation (-0.47)
+- A double-headed arrow between the two factors, labelled with their correlation (-0.46)
 
 This is the same diagrammatic convention we used in Tutorial 06's concept diagram, but now it is generated from the fitted model — the numbers on the arrows are the actual estimated loadings, not placeholders.
 
@@ -296,19 +296,19 @@ We used `DiagrammeR` for the concept diagrams in Tutorials 05 and 06; from Tutor
 
 An APA-style write-up of this CFA would look something like:
 
-> Confirmatory factor analysis was used to test the hypothesised two-factor structure of affect, with positive affect (PA) measured by three items (pa1, pa2, pa3) and negative affect (neg) measured by three items (na1, na2, na3). The model was estimated with robust maximum likelihood (MLR) to correct for non-normality. The model fit the data well, $\chi^2(8) = 7.93$, $p = .441$, CFI = 1.00, TLI = 1.00, RMSEA = 0.00, 90% CI [0.00, 0.07], SRMR = 0.01. All factor loadings were significant ($p < .001$) and substantial (standardised $\lambda$ range: .76–.85). The correlation between PA and neg was $r = -.47$, $p < .001$. Cronbach's alpha was .78 for PA and .82 for neg, indicating acceptable internal consistency for both scales.
+> Confirmatory factor analysis was used to test the hypothesised two-factor structure of affect, with positive affect (PA) measured by three items (pa1, pa2, pa3) and negative affect (neg) measured by three items (na1, na2, na3). The model was estimated with robust maximum likelihood (MLR) to correct for non-normality, using full-information maximum likelihood for missing data. The model fit the data well, $\chi^2(8) = 8.79$, $p = .360$, CFI = 1.00, TLI = 1.00, RMSEA = 0.02, 90% CI [0.00, 0.06], SRMR = 0.01. All factor loadings were significant ($p < .001$) and substantial (standardised $\lambda$ range: .77–.85). The correlation between PA and neg was $r = -.46$, $p < .001$. Cronbach's alpha was .85 for PA and .86 for neg, indicating good internal consistency for both scales.
 
 ::: {.callout-note}
 ### Reporting conventions
 
 In APA format:
 
-- Report $\chi^2$ with degrees of freedom and p-value: $\chi^2(8) = 7.93$, $p = .441$
+- Report $\chi^2$ with degrees of freedom and p-value: $\chi^2(8) = 8.79$, $p = .360$
 - Report fit indices to two decimal places: CFI = 1.00, RMSEA = 0.00
-- Report RMSEA with its 90% CI: RMSEA = 0.00, 90% CI [0.00, 0.07]
+- Report RMSEA with its 90% CI: RMSEA = 0.02, 90% CI [0.00, 0.06]
 - Report standardised loadings with the symbol $\lambda$ or just "standardised loading"
-- Report correlations with $r$: $r = -.47$
-- Suppress leading zeros for values that cannot exceed 1: $r = -.47$, not $r = -0.47$; $p = .001$, not $p = 0.001$
+- Report correlations with $r$: $r = -.46$
+- Suppress leading zeros for values that cannot exceed 1: $r = -.46$, not $r = -0.46$; $p = .001$, not $p = 0.001$
 :::
 
 ## Common errors

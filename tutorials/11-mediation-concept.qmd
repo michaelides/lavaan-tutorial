@@ -2,7 +2,7 @@
 title: "Mediation — concept"
 subtitle: "Indirect, direct, total effects; multiple mediators; why we bootstrap"
 author: "George Michaelides"
-institute: "School of Psychology, University of East Anglia"
+institute: "Norwich Business School, University of East Anglia"
 date: "2026-07-07"
 ---
 

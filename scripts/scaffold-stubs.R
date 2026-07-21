@@ -16,7 +16,7 @@ stub_header <- function(title, subtitle, group, order) {
 title: "%s"
 subtitle: "%s"
 author: "George Michaelides"
-institute: "School of Psychology, University of East Anglia"
+institute: "Norwich Business School, University of East Anglia"
 date: "2026"
 sidebar-group: "%s"
 order: %d
@@ -92,7 +92,7 @@ for (cc in cross_cutting) {
 title: "%s"
 subtitle: "%s"
 author: "George Michaelides"
-institute: "School of Psychology, University of East Anglia"
+institute: "Norwich Business School, University of East Anglia"
 date: "2026"
 ---
 

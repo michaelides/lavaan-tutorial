@@ -76,4 +76,4 @@ The site publishes to GitHub Pages automatically via a GitHub Actions workflow (
 
 George Michaelides — g.michaelides@uea.ac.uk
 
-School of Psychology, University of East Anglia, Norwich, UK.
+Norwich Business School, University of East Anglia, Norwich, UK.

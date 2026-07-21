@@ -2,7 +2,7 @@
 title: "RStudio"
 subtitle: "Projects, panes, scripts vs Quarto, packages, help"
 author: "George Michaelides"
-institute: "School of Psychology, University of East Anglia"
+institute: "Norwich Business School, University of East Anglia"
 date: "2026-07-07"
 ---
 

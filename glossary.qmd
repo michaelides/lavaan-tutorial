@@ -2,7 +2,7 @@
 title: "Glossary"
 subtitle: "Key terms used across the tutorials"
 author: "George Michaelides"
-institute: "School of Psychology, University of East Anglia"
+institute: "Norwich Business School, University of East Anglia"
 date: "2026-07-07"
 ---
 
@@ -134,7 +134,7 @@ An unobserved variable that is inferred from its effects on observed [indicators
 
 ### listwise deletion {#listwise-deletion}
 
-Removing any participant with a missing value on any variable in the model. Reduces sample size, reduces power, and can bias parameter estimates if the missingness is not completely random. lavaan uses FIML by default instead.
+Removing any participant with a missing value on any variable in the model. Reduces sample size, reduces power, and can bias parameter estimates if the missingness is not completely random. We request FIML instead by passing `missing = "ml"` to `cfa()` or `sem()`.
 
 ### loadings
 
