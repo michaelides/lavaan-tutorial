@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="George Michaelides">
-<meta name="dcterms.date" content="2026-01-01">
+<meta name="dcterms.date" content="2026-07-07">
 
 <title>Measurement invariance – A Step-by-Step Introduction to Structural Equation Modeling with lavaan in R</title>
 <style>
@@ -621,7 +621,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">January 1, 2026</p>
+      <p class="date">July 7, 2026</p>
     </div>
   </div>
   
@@ -728,8 +728,8 @@ Setup code (you have seen this before)
 <p>Each level nests inside the one above it: scalar invariance implies metric invariance implies configural invariance. You test them in order, and you stop when a constraint clearly damages fit.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="htmlwidget-fe2164bcf6a8c9a60250" style="width:85%;height:420px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-fe2164bcf6a8c9a60250">{"x":{"diagram":"\ndigraph {\n  graph [rankdir = TB, fontsize = 10, fontname = Helvetica,\n         compound = true, nodesep = 0.3, ranksep = 0.35]\n  node  [shape = box, style = \"filled,rounded\", fontname = Helvetica,\n         fontsize = 10, margin = \"0.12,0.06\", penwidth = 1]\n  edge  [color = \"#2c3e50\", arrowsize = 0.8, penwidth = 1.1]\n\n  cfg  [label = \"Configural\nSame structure\",           fillcolor = \"#d6eaf8\"]\n  met  [label = \"Metric (weak)\n+ equal loadings\",      fillcolor = \"#d5dbdb\"]\n  sca  [label = \"Scalar (strong)\n+ equal intercepts\",  fillcolor = \"#fadbd8\"]\n  str  [label = \"Strict\n+ equal residuals\",            fillcolor = \"#f2d7d5\"]\n\n  cfg -> met -> sca -> str\n\n  l1 [label = \"compare structure\",  shape = plaintext, fontsize = 9, fontcolor = \"#566573\"]\n  l2 [label = \"compare paths/variances\", shape = plaintext, fontsize = 9, fontcolor = \"#566573\"]\n  l3 [label = \"compare latent means\",     shape = plaintext, fontsize = 9, fontcolor = \"#566573\"]\n  l4 [label = \"compare observed variances\", shape = plaintext, fontsize = 9, fontcolor = \"#566573\"]\n\n  { rank = same; met; l2 }\n  { rank = same; sca; l3 }\n  { rank = same; str; l4 }\n  { rank = same; cfg; l1 }\n\n  cfg -> l1 [style = invis]\n  met -> l2 [style = invis]\n  sca -> l3 [style = invis]\n  str -> l4 [style = invis]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-ad0611f0ff44df3d5583" style="width:85%;height:420px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-ad0611f0ff44df3d5583">{"x":{"diagram":"\ndigraph {\n  graph [rankdir = TB, fontsize = 10, fontname = Helvetica,\n         compound = true, nodesep = 0.3, ranksep = 0.35]\n  node  [shape = box, style = \"filled,rounded\", fontname = Helvetica,\n         fontsize = 10, margin = \"0.12,0.06\", penwidth = 1]\n  edge  [color = \"#2c3e50\", arrowsize = 0.8, penwidth = 1.1]\n\n  cfg  [label = \"Configural\nSame structure\",           fillcolor = \"#d6eaf8\"]\n  met  [label = \"Metric (weak)\n+ equal loadings\",      fillcolor = \"#d5dbdb\"]\n  sca  [label = \"Scalar (strong)\n+ equal intercepts\",  fillcolor = \"#fadbd8\"]\n  str  [label = \"Strict\n+ equal residuals\",            fillcolor = \"#f2d7d5\"]\n\n  cfg -> met -> sca -> str\n\n  l1 [label = \"compare structure\",  shape = plaintext, fontsize = 9, fontcolor = \"#566573\"]\n  l2 [label = \"compare paths/variances\", shape = plaintext, fontsize = 9, fontcolor = \"#566573\"]\n  l3 [label = \"compare latent means\",     shape = plaintext, fontsize = 9, fontcolor = \"#566573\"]\n  l4 [label = \"compare observed variances\", shape = plaintext, fontsize = 9, fontcolor = \"#566573\"]\n\n  { rank = same; met; l2 }\n  { rank = same; sca; l3 }\n  { rank = same; str; l4 }\n  { rank = same; cfg; l1 }\n\n  cfg -> l1 [style = invis]\n  met -> l2 [style = invis]\n  sca -> l3 [style = invis]\n  str -> l4 [style = invis]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 <p>The measurement-invariance hierarchy. Each level adds equality constraints and licenses a stronger kind of cross-group comparison.</p>
 </div>
 </div>
